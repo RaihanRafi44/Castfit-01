@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_marginHorizontal="2dp"
+    android:layout_marginVertical="8dp"
+    app:cardCornerRadius="12dp"
+    android:backgroundTint="@color/colorOnCustomColor1">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp">
+
+        <!-- Lokasi -->
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/image_location"
+            android:layout_width="26dp"
+            android:layout_height="22dp"
+            android:src="@drawable/location_on_24"
+            android:paddingHorizontal="4dp"
+            android:paddingVertical="2dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/text_current_location"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            tools:text="Sukoharjo, Jawa Tengah"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:paddingHorizontal="8dp"
+            app:layout_constraintStart_toEndOf="@id/image_location"
+            app:layout_constraintTop_toTopOf="@id/image_location"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- Spacer -->
+        <TextView
+            android:id="@+id/tv_space_view_1"
+            android:layout_width="wrap_content"
+            android:layout_height="28dp"
+            app:layout_constraintTop_toBottomOf="@id/image_location"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <!-- Cuaca dan gambar -->
+        <TextView
+            android:id="@+id/text_temperature_home"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="-°C"
+            android:textStyle="bold"
+            android:textSize="56sp"
+            android:paddingHorizontal="4dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_space_view_1" />
+
+        <TextView
+            android:id="@+id/text_weather_status_home"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="-"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:paddingHorizontal="4dp"
+            android:layout_marginTop="12dp"
+            app:layout_constraintStart_toStartOf="@id/text_temperature_home"
+            app:layout_constraintTop_toBottomOf="@id/text_temperature_home" />
+
+        <TextView
+            android:id="@+id/text_current_day_date"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:text="10 Mei 2025"
+            android:paddingVertical="4dp"
+            android:paddingHorizontal="4dp"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:layout_marginTop="8dp"
+            app:layout_constraintStart_toStartOf="@id/text_weather_status_home"
+            app:layout_constraintTop_toBottomOf="@id/text_weather_status_home" />
+
+        <ImageView
+            android:id="@+id/image_weather_icon"
+            android:layout_width="150dp"
+            android:layout_height="80dp"
+            android:src="@drawable/halo_guys"
+            app:layout_constraintTop_toTopOf="@id/text_temperature_home"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- Data Angin dan Curah Hujan -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/weather_data_container"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            app:layout_constraintTop_toBottomOf="@id/text_current_day_date"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <!-- Kec. Angin -->
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/layout_wind_speed"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/layout_rainfall" >
+
+                <TextView
+                    android:id="@+id/text_wind_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Kec. Angin"
+                    android:textStyle="bold"
+                    android:textSize="18sp"
+                    android:paddingHorizontal="4dp"
+                    android:paddingVertical="8dp"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"/>
+
+                <TextView
+                    android:id="@+id/text_wind_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="- km/jam"
+                    android:textStyle="bold"
+                    android:textSize="18sp"
+                    android:paddingHorizontal="4dp"
+                    android:paddingVertical="8dp"
+                    app:layout_constraintTop_toBottomOf="@id/text_wind_label"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"/>
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <!-- Curah Hujan -->
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/layout_rainfall"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                app:layout_constraintStart_toEndOf="@id/layout_wind_speed"
+                app:layout_constraintTop_toTopOf="@id/layout_wind_speed"
+                app:layout_constraintBottom_toBottomOf="@id/layout_wind_speed"
+                app:layout_constraintEnd_toEndOf="parent" >
+
+                <TextView
+                    android:id="@+id/text_rain_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Curah Hujan"
+                    android:textStyle="bold"
+                    android:textSize="18sp"
+                    android:paddingHorizontal="4dp"
+                    android:paddingVertical="8dp"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"/>
+
+                <TextView
+                    android:id="@+id/text_rain_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="- mm"
+                    android:textStyle="bold"
+                    android:textSize="18sp"
+                    android:paddingHorizontal="4dp"
+                    android:paddingVertical="8dp"
+                    app:layout_constraintTop_toBottomOf="@id/text_rain_label"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"/>
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_search_activity"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/weather_data_container"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginTop="12dp"
+            android:layout_marginHorizontal="8dp"
+            android:backgroundTint="@color/colorCustomColor1Container"
+            app:cornerRadius="12dp"
+            android:text="Cari Rekomendasi Aktivitas"
+            android:textSize="18sp"
+            android:textColor="@color/md_theme_onSurfaceVariant_highContrast"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>

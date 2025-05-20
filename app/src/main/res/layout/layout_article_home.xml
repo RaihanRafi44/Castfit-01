@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="180dp"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="12dp"
+    android:backgroundTint="@color/md_theme_primaryContainer">
+
+    <LinearLayout
+        android:id="@+id/ll_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="8dp">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/iv_article_image_home"
+                android:layout_width="match_parent"
+                android:layout_height="120dp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/img_japan"
+                app:shapeAppearanceOverlay="@style/rounded_square"/>
+
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/tv_title_article_home"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Tips dan Trik Puasa di Bulan Ramadhan"
+            android:layout_marginTop="4dp"
+            android:ellipsize="end"
+            android:maxLines="2"/>
+
+
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

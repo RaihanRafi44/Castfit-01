@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".presentation.recommendation.RecommendationActivity">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ImageButton
+            android:id="@+id/btn_back_recommendation"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/tv_title_recommendation"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginTop="20dp"
+            android:layout_marginStart="20dp"
+            android:background="@drawable/circle_button"
+            android:src="@drawable/ic_arrow_back_black"
+            android:scaleType="center"
+            android:backgroundTint="@color/md_theme_secondaryContainer"/>
+
+
+        <TextView
+            android:id="@+id/tv_title_recommendation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/btn_back_recommendation"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:text="Rekomendasi Olahraga Untuk Anda"
+            android:textAlignment="center"
+            android:textSize="26sp"
+            android:textStyle="bold"
+            android:layout_marginTop="20dp"/>
+
+        <include
+            android:id="@+id/inc_outdoor_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            layout="@layout/layout_outdoor_title"
+            app:layout_constraintTop_toBottomOf="@id/tv_title_recommendation"
+            android:layout_marginTop="16dp"
+            android:layout_marginHorizontal="20dp"/>
+        <FrameLayout
+            android:id="@+id/fl_outdoor"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/inc_outdoor_title">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_outdoor_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="12dp"
+                android:layout_marginTop="12dp"
+                app:layout_constraintVertical_bias="0.0"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                tools:listitem="@layout/layout_outdoor_sports"/>
+
+        </FrameLayout>
+        <include
+            android:id="@+id/inc_indoor_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            layout="@layout/layout_indoor_title"
+            app:layout_constraintTop_toBottomOf="@id/fl_outdoor"
+            android:layout_marginTop="12dp"
+            android:layout_marginHorizontal="20dp"/>
+
+        <FrameLayout
+            android:id="@+id/fl_indoor"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/inc_indoor_title">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_indoor_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="12dp"
+                android:layout_marginTop="12dp"
+                app:layout_constraintVertical_bias="0.0"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                tools:listitem="@layout/layout_indoor_sports"/>
+
+        </FrameLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.core.widget.NestedScrollView>

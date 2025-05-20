@@ -1,0 +1,171 @@
+package com.raihan.castfit.presentation.home
+
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.location.Geocoder
+import android.os.Bundle
+import androidx.fragment.app.Fragment
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
+import coil.load
+import com.google.android.gms.location.LocationServices
+import com.raihan.castfit.R
+import com.raihan.castfit.databinding.FragmentHomeBinding
+import com.raihan.castfit.presentation.recommendation.RecommendationActivity
+import org.koin.androidx.viewmodel.ext.android.viewModel
+
+class HomeFragment : Fragment() {
+
+    private lateinit var binding: FragmentHomeBinding
+    private val homeViewModel: HomeViewModel by viewModel()
+
+    private val fusedLocationProviderClient by lazy {
+        LocationServices.getFusedLocationProviderClient(requireContext())
+    }
+
+    private val geocoder by lazy { Geocoder(requireContext()) }
+
+    private val locationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            getCurrentLocation()
+        } else {
+            Toast.makeText(requireContext(), "Location permission denied", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private var isCheckingProfile = false
+
+    override fun onResume() {
+        super.onResume()
+        showUserData()
+    }
+
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        binding = FragmentHomeBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    override fun onViewCreated(
+        view: View,
+        savedInstanceState: Bundle?
+    ) {
+        super.onViewCreated(view, savedInstanceState)
+        showUserData()
+        observeCurrentLocation()
+        homeViewModel.loadSavedLocation()
+        observeWeather()
+        binding.swipeRefreshLayout.isEnabled = false
+        /*binding.homeWeather.btnSearchActivity.setOnClickListener {
+            val intent = Intent(requireContext(), RecommendationActivity::class.java)
+            startActivity(intent)
+        }*/
+        /*binding.homeWeather.btnSearchActivity.setOnClickListener{
+            val intent = Intent(requireContext(), RecommendationActivity::class.java)
+            val weatherCondition = binding.homeWeather.textWeatherStatusHome.text.toString()
+            intent.putExtra("weatherCondition", weatherCondition)
+            startActivity(intent)
+        }*/
+        /*binding.homeWeather.btnSearchActivity.setOnClickListener {
+            homeViewModel.checkUserProfileComplete()
+        }*/
+
+        homeViewModel.isProfileComplete.observe(viewLifecycleOwner) { isComplete ->
+            if (!isCheckingProfile) return@observe
+            if (isComplete == true) {
+                val intent = Intent(requireContext(), RecommendationActivity::class.java)
+                val weatherCondition = binding.homeWeather.textWeatherStatusHome.text.toString()
+                intent.putExtra("weatherCondition", weatherCondition)
+                startActivity(intent)
+            } else {
+                AlertDialog.Builder(requireContext())
+                    .setTitle("Lengkapi Profil")
+                    .setMessage("Silakan lengkapi tanggal lahir di halaman profil terlebih dahulu untuk mendapatkan rekomendasi aktivitas.")
+                    .setPositiveButton("Oke", null)
+                    .show()
+            }
+            isCheckingProfile = false
+        }
+
+        binding.homeWeather.btnSearchActivity.setOnClickListener {
+            if (!isCheckingProfile) {
+                isCheckingProfile = true
+                homeViewModel.checkUserProfileComplete()
+            }
+        }
+
+    }
+
+    private fun showUserData() {
+        homeViewModel.getCurrentUser()?.let { user ->
+            binding.homeProfile.textUsernameHome.text =
+                getString(R.string.text_username_login, user.fullName)
+        }
+    }
+
+    private fun observeCurrentLocation() {
+        homeViewModel.currentLocation.observe(viewLifecycleOwner) { uiState ->
+            when {
+                uiState.error != null -> {
+                    Toast.makeText(requireContext(), uiState.error, Toast.LENGTH_SHORT).show()
+                }
+                uiState.currentLocation != null -> {
+                    val locationName = uiState.currentLocation.location
+                    binding.homeWeather.textCurrentLocation.text = locationName
+                    binding.homeWeather.textCurrentDayDate.text = uiState.currentLocation.date
+                }
+            }
+        }
+
+        binding.btnCurrentLocation.setOnClickListener {
+            binding.swipeRefreshLayout.isRefreshing = true
+            proceedWithCurrentLocation()
+        }
+    }
+
+
+    private fun getCurrentLocation() {
+        homeViewModel.fetchLocation(fusedLocationProviderClient, geocoder)
+    }
+
+    private fun isLocationPermissionGranted(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            requireContext(), Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun requestLocationPermission() {
+        locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+    }
+
+    private fun proceedWithCurrentLocation(){
+        if (isLocationPermissionGranted()) {
+            getCurrentLocation()
+        } else {
+            requestLocationPermission()
+        }
+    }
+
+    private fun observeWeather() {
+        homeViewModel.weather.observe(viewLifecycleOwner) { weather ->
+            weather?.data?.current?.let { currentWeather ->
+                binding.homeWeather.textTemperatureHome.text = "${currentWeather.temperature}°C"
+                binding.homeWeather.textWeatherStatusHome.text = currentWeather.condition.text
+                binding.homeWeather.textWindValue.text = "${currentWeather.wind} km/jam"
+                binding.homeWeather.textRainValue.text = "${currentWeather.precipitation} mm"
+                binding.homeWeather.imageWeatherIcon.load("https:${currentWeather.condition.icon}")
+            }
+            binding.swipeRefreshLayout.isRefreshing = false
+        }
+    }
+}
