@@ -1,6 +1,7 @@
 package com.raihan.castfit.data.repository
 
 import android.util.Log
+import com.google.firebase.auth.FirebaseAuth
 import com.raihan.castfit.data.datasource.progressactivity.ProgressActivityDataSource
 import com.raihan.castfit.data.mapper.toProgressActivityEntity
 import com.raihan.castfit.data.mapper.toProgressActivityList
@@ -11,6 +12,7 @@ import com.raihan.castfit.data.source.local.database.entity.ProgressActivityEnti
 import com.raihan.castfit.utils.ResultWrapper
 import com.raihan.castfit.utils.proceed
 import com.raihan.castfit.utils.proceedFlow
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
@@ -18,6 +20,8 @@ import kotlinx.coroutines.flow.onStart
 
 interface ProgressActivityRepository {
     fun getUserProgressData(): Flow<ResultWrapper<List<ProgressActivity>>>
+
+    fun getProgress(userId: String): Flow<List<ProgressActivityEntity>>
 
     fun createProgress(
         activity: PhysicalActivity,
@@ -34,28 +38,42 @@ interface ProgressActivityRepository {
 class ProgressActivityRepositoryImpl(
     private val dataSource: ProgressActivityDataSource
 ) : ProgressActivityRepository {
+
     override fun getUserProgressData(): Flow<ResultWrapper<List<ProgressActivity>>> {
         return dataSource.getAllProgress()
             .map {
-                // Tambahkan log ini
-
                 Log.d("GetProgress", "Jumlah data DAO = ${it.size}")
                 proceed {
-                    it.toProgressActivityList()
+                    it.toProgressActivityList().also { list ->
+                        Log.d("GetProgress", "Converted to progress list: ${list.size} items")
+                        list.forEach { progress ->
+                            Log.d("GetProgress", "Progress ID: ${progress.id}, Name: ${progress.physicalActivityName}")
+                        }
+                    }
                 }
             }
             .map {
-                if (it.payload?.isEmpty() == false) return@map it
-                ResultWrapper.Empty(it.payload)
+                if (it.payload?.isEmpty() == true) {
+                    Log.d("GetProgress", "Returning empty result wrapper")
+                    ResultWrapper.Empty(it.payload)
+                } else {
+                    Log.d("GetProgress", "Returning success result wrapper with ${it.payload?.size ?: 0} items")
+                    it
+                }
             }
-            .catch {
-                emit(ResultWrapper.Error(Exception(it)))
+            .catch { e ->
+                Log.e("GetProgress", "Error getting progress data", e)
+                emit(ResultWrapper.Error(Exception(e)))
             }
             .onStart {
+                Log.d("GetProgress", "Starting to get progress data")
                 emit(ResultWrapper.Loading())
             }
     }
 
+    override fun getProgress(userId: String): Flow<List<ProgressActivityEntity>> {
+        return dataSource.getUserProgress(userId)
+    }
 
     override fun createProgress(
         activity: PhysicalActivity,
@@ -64,27 +82,55 @@ class ProgressActivityRepositoryImpl(
         startedAt: String,
     ): Flow<ResultWrapper<Boolean>> {
         return proceedFlow {
-            val result = dataSource.insertProgress(
-                ProgressActivityEntity(
-                    id = null, // Biarkan Room yang generate ID
-                    userId = user.id,
-                    physicalActivityId = activity.id,
-                    physicalActivityName = activity.name,
-                    dateStarted = dateStarted,
-                    startedAt = startedAt
-                )
+            if (user.id.isEmpty()) {
+                Log.e("CreateProgress", "Cannot create progress: user ID is empty")
+                throw IllegalStateException("User ID is empty")
+            }
+
+            val entity = ProgressActivityEntity(
+                id = null, // PENTING: Set null agar Room auto-generate ID
+                userId = user.id,
+                physicalActivityId = activity.id,
+                physicalActivityName = activity.name,
+                dateStarted = dateStarted,
+                startedAt = startedAt
             )
-            Log.d("CreateProgress", "Hasil insert progress = $result")
-            result != 0L
+
+            Log.d("CreateProgress", "Inserting progress: $entity")
+            val insertedId = dataSource.insertProgress(entity)
+            Log.d("CreateProgress", "Progress inserted with ID = $insertedId")
+
+            insertedId > 0L // Return true if the insertion was successful
         }
     }
 
-
     override fun deleteProgress(progress: ProgressActivity): Flow<ResultWrapper<Boolean>> {
-        return proceedFlow { dataSource.deleteProgress(progress.toProgressActivityEntity()) == 0 }
+        return proceedFlow {
+            // Validasi sebelum delete
+            if (progress.id == null || progress.id <= 0) {
+                Log.e("DeleteProgress", "Cannot delete: Invalid progress ID (${progress.id})")
+                throw IllegalArgumentException("Invalid progress ID")
+            }
+
+            Log.d("DeleteProgress", "Deleting progress with ID: ${progress.id}, Name: ${progress.physicalActivityName}")
+
+            val entity = progress.toProgressActivityEntity()
+            Log.d("DeleteProgress", "Entity to delete: $entity")
+
+            val result = dataSource.deleteProgress(entity)
+            Log.d("DeleteProgress", "Delete result: $result")
+
+            if (result > 0) {
+                Log.d("DeleteProgress", "Successfully deleted progress with ID: ${progress.id}")
+                true
+            } else {
+                Log.w("DeleteProgress", "No rows affected when deleting progress with ID: ${progress.id}")
+                false
+            }
+        }
     }
 
-    override suspend fun deleteAll() : Flow<ResultWrapper<Boolean>> {
+    override suspend fun deleteAll(): Flow<ResultWrapper<Boolean>> {
         return proceedFlow {
             dataSource.deleteAll()
             true

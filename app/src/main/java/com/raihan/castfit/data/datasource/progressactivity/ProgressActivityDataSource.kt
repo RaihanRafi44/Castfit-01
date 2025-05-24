@@ -7,6 +7,8 @@ import kotlinx.coroutines.flow.Flow
 interface ProgressActivityDataSource {
     fun getAllProgress(): Flow<List<ProgressActivityEntity>>
 
+    fun getUserProgress(userId: String): Flow<List<ProgressActivityEntity>>
+
     suspend fun insertProgress(progress: ProgressActivityEntity): Long
 
     suspend fun updateProgress(progress: ProgressActivityEntity): Int
@@ -20,7 +22,7 @@ class ProgressActivityDataSourceImpl(
     private val dao: ProgressActivityDao
 ) : ProgressActivityDataSource {
     override fun getAllProgress(): Flow<List<ProgressActivityEntity>> = dao.getAllProgress()
-
+    override fun getUserProgress(userId: String): Flow<List<ProgressActivityEntity>> = dao.getUserProgress(userId)
     override suspend fun insertProgress(progress: ProgressActivityEntity): Long = dao.insertProgress(progress)
 
     override suspend fun updateProgress(progress: ProgressActivityEntity): Int = dao.updateProgress(progress)

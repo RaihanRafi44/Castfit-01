@@ -45,7 +45,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="12dp"
-                android:layout_marginTop="12dp"
                 app:layout_constraintVertical_bias="0.0"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 tools:listitem="@layout/layout_scheduled_activity"
@@ -87,7 +86,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="12dp"
-                android:layout_marginTop="12dp"
                 app:layout_constraintVertical_bias="0.0"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 tools:listitem="@layout/layout_activity_on_progress"
@@ -125,11 +123,10 @@
             app:layout_constraintTop_toBottomOf="@id/mcw_history_title">
 
             <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rv_outdoor_list"
+                android:id="@+id/rv_history_list"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="12dp"
-                android:layout_marginTop="12dp"
                 app:layout_constraintVertical_bias="0.0"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 tools:listitem="@layout/layout_activity_history"

@@ -66,20 +66,6 @@ class HomeFragment : Fragment() {
         homeViewModel.loadSavedLocation()
         observeWeather()
         binding.swipeRefreshLayout.isEnabled = false
-        /*binding.homeWeather.btnSearchActivity.setOnClickListener {
-            val intent = Intent(requireContext(), RecommendationActivity::class.java)
-            startActivity(intent)
-        }*/
-        /*binding.homeWeather.btnSearchActivity.setOnClickListener{
-            val intent = Intent(requireContext(), RecommendationActivity::class.java)
-            val weatherCondition = binding.homeWeather.textWeatherStatusHome.text.toString()
-            intent.putExtra("weatherCondition", weatherCondition)
-            startActivity(intent)
-        }*/
-        /*binding.homeWeather.btnSearchActivity.setOnClickListener {
-            homeViewModel.checkUserProfileComplete()
-        }*/
-
         homeViewModel.isProfileComplete.observe(viewLifecycleOwner) { isComplete ->
             if (!isCheckingProfile) return@observe
             if (isComplete == true) {
@@ -98,6 +84,18 @@ class HomeFragment : Fragment() {
         }
 
         binding.homeWeather.btnSearchActivity.setOnClickListener {
+            val weatherData = homeViewModel.weather.value?.data
+            val isWeatherAvailable = weatherData?.location != null && weatherData.current != null
+
+            if (!isWeatherAvailable) {
+                AlertDialog.Builder(requireContext())
+                    .setTitle("Data Cuaca Belum Tersedia")
+                    .setMessage("Silakan tekan tombol 'Deteksi Lokasi' dan tunggu hingga data cuaca muncul.")
+                    .setPositiveButton("Oke", null)
+                    .show()
+                return@setOnClickListener
+            }
+
             if (!isCheckingProfile) {
                 isCheckingProfile = true
                 homeViewModel.checkUserProfileComplete()

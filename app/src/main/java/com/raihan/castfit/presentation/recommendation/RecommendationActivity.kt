@@ -25,6 +25,15 @@ class RecommendationActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
 
+        // Check if user is logged in first
+        if (recommendationViewModel.getCurrentUser() == null) {
+            Toast.makeText(this, "Please log in to continue", Toast.LENGTH_LONG).show()
+            // Redirect to login screen
+            // startActivity(Intent(this, LoginActivity::class.java))
+            finish()
+            return
+        }
+
         indoorAdapter = RecommendationIndoorAdapter { activity ->
             showConfirmationDialog(activity)
         }
@@ -80,5 +89,9 @@ class RecommendationActivity : AppCompatActivity() {
             show()
         }
     }
+
+    /*companion object {
+        const val EXTRA_ACTIVITY = "EXTRA_ACTIVITY"
+    }*/
 
 }

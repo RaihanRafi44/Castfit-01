@@ -17,6 +17,8 @@ import com.raihan.castfit.presentation.register.RegisterViewModel
 import com.raihan.castfit.presentation.splashscreen.SplashScreenViewModel
 import com.raihan.castfit.data.datasource.auth.AuthDataSource
 import com.raihan.castfit.data.datasource.auth.FirebaseAuthDataSource
+import com.raihan.castfit.data.datasource.historyactivity.HistoryActivityDataSource
+import com.raihan.castfit.data.datasource.historyactivity.HistoryActivityDataSourceImpl
 import com.raihan.castfit.data.datasource.location.LocationDataSource
 import com.raihan.castfit.data.datasource.physicalactivity.PhysicalDataSource
 import com.raihan.castfit.data.datasource.physicalactivity.PhysicalDataSourceImpl
@@ -24,11 +26,14 @@ import com.raihan.castfit.data.datasource.progressactivity.ProgressActivityDataS
 import com.raihan.castfit.data.datasource.progressactivity.ProgressActivityDataSourceImpl
 import com.raihan.castfit.data.datasource.weather.WeatherDataSource
 import com.raihan.castfit.data.datasource.weather.WeatherDataSourceImpl
+import com.raihan.castfit.data.repository.HistoryActivityRepository
+import com.raihan.castfit.data.repository.HistoryActivityRepositoryImpl
 import com.raihan.castfit.data.repository.PhysicalActivityRepository
 import com.raihan.castfit.data.repository.PhysicalActivityRepositoryImpl
 import com.raihan.castfit.data.repository.ProgressActivityRepository
 import com.raihan.castfit.data.repository.ProgressActivityRepositoryImpl
 import com.raihan.castfit.data.source.local.database.AppDatabase
+import com.raihan.castfit.data.source.local.database.dao.HistoryActivityDao
 import com.raihan.castfit.data.source.local.database.dao.ProgressActivityDao
 import com.raihan.castfit.presentation.activityuser.ActivityViewModel
 import com.raihan.castfit.presentation.forgotpass.ForgotPassViewModel
@@ -57,6 +62,7 @@ object AppModules {
             single { com.google.gson.Gson() }
             single<AppDatabase> { AppDatabase.createInstance(androidContext()) }
             single<ProgressActivityDao> { get<AppDatabase>().progressActivityDao() }
+            single<HistoryActivityDao> { get<AppDatabase>().historyActivityDao() }
         }
 
     private val dataSource =
@@ -66,6 +72,7 @@ object AppModules {
             single<WeatherDataSource> { WeatherDataSourceImpl(get()) }
             single<PhysicalDataSource>{ PhysicalDataSourceImpl()}
             single<ProgressActivityDataSource> { ProgressActivityDataSourceImpl(get()) }
+            single<HistoryActivityDataSource> { HistoryActivityDataSourceImpl(get()) }
         }
 
     private val repository =
@@ -75,6 +82,7 @@ object AppModules {
             single<WeatherRepository> { WeatherRepositoryImpl(get()) }
             single<PhysicalActivityRepository> { PhysicalActivityRepositoryImpl(get()) }
             single<ProgressActivityRepository> { ProgressActivityRepositoryImpl(get()) }
+            single<HistoryActivityRepository> { HistoryActivityRepositoryImpl(get()) }
         }
 
     private val viewModel =

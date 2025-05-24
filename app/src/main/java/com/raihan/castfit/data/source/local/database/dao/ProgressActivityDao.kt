@@ -12,10 +12,13 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ProgressActivityDao {
-    @Query("SELECT * FROM PROGRESS")
+    @Query("SELECT * FROM progress")
     fun getAllProgress(): Flow<List<ProgressActivityEntity>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Query("SELECT * FROM progress WHERE user_id = :userId")
+    fun getUserProgress(userId: String): Flow<List<ProgressActivityEntity>>
+
+    @Insert
     suspend fun insertProgress(progress: ProgressActivityEntity): Long
 
     @Update
@@ -24,6 +27,6 @@ interface ProgressActivityDao {
     @Delete
     suspend fun deleteProgress(progress: ProgressActivityEntity): Int
 
-    @Query("DELETE FROM PROGRESS")
+    @Query("DELETE FROM progress")
     suspend fun deleteAll()
 }

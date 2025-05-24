@@ -1,5 +1,6 @@
 package com.raihan.castfit.presentation.recommendation
 
+import android.os.Bundle
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -8,6 +9,7 @@ import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.raihan.castfit.data.datasource.physicalactivity.PhysicalDataSource
 import com.raihan.castfit.data.model.PhysicalActivity
+import com.raihan.castfit.data.model.User
 import com.raihan.castfit.data.repository.ProgressActivityRepository
 import com.raihan.castfit.data.repository.UserRepository
 import com.raihan.castfit.utils.ResultWrapper
@@ -16,6 +18,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
 class RecommendationViewModel (
+
     private val dataSource: PhysicalDataSource,
     private val userRepository: UserRepository,
     private val progressRepository: ProgressActivityRepository
@@ -26,6 +29,10 @@ class RecommendationViewModel (
 
     private val _outdoorActivities = MutableLiveData<List<PhysicalActivity>>()
     val outdoorActivities: LiveData<List<PhysicalActivity>> = _outdoorActivities
+
+    // Tambahkan LiveData untuk tracking progress creation
+    private val _progressCreationResult = MutableLiveData<Boolean>()
+    val progressCreationResult: LiveData<Boolean> = _progressCreationResult
 
     fun loadActivitiesBasedOnWeather(condition: String) {
         viewModelScope.launch {
@@ -55,20 +62,77 @@ class RecommendationViewModel (
         }
     }
 
+    /*fun addToProgress(activity: PhysicalActivity) {
+        viewModelScope.launch {
+            // First check if user is logged in
+            val currentUser = userRepository.getCurrentUser()
+            if (currentUser == null) {
+                Log.e("ProgressDebug", "Cannot create progress: user not logged in")
+                return@launch
+            }
+
+            // Use the current user directly instead of getting from repository again
+            val dateStarted = getCurrentDate()
+            val startedAt = getCurrentTime()
+
+            Log.d("ProgressDebug", "Creating progress for ${activity.name}, user=${currentUser.id}")
+
+            progressRepository.createProgress(activity, currentUser, dateStarted, startedAt)
+                .collect { result ->
+                    when (result) {
+                        is ResultWrapper.Success -> {
+                            Log.d("ProgressDebug", "Progress created successfully: ${result.payload}")
+                        }
+                        is ResultWrapper.Error -> {
+                            Log.e("ProgressDebug", "Error creating progress: ${result.exception}")
+                        }
+                        else -> {}
+                    }
+                }
+        }
+    }*/
+
     fun addToProgress(activity: PhysicalActivity) {
         viewModelScope.launch {
-            userRepository.getUserData().collect { result ->
-                val user = (result as? ResultWrapper.Success)?.payload
-                if (user != null) {
-                    val dateStarted = getCurrentDate()
-                    val startedAt = getCurrentTime()
-                    progressRepository.createProgress(activity, user, dateStarted, startedAt).asLiveData(
-                        Dispatchers.IO)
-                }
+            val currentUser = userRepository.getCurrentUser()
+            if (currentUser == null) {
+                Log.e("ProgressDebug", "Cannot create progress: user not logged in")
+                _progressCreationResult.postValue(false)
+                return@launch
             }
+
+            // Validasi user ID
+            if (currentUser.id.isEmpty()) {
+                Log.e("ProgressDebug", "Cannot create progress: user ID is empty")
+                _progressCreationResult.postValue(false)
+                return@launch
+            }
+
+            val dateStarted = getCurrentDate()
+            val startedAt = getCurrentTime()
+
+            Log.d("ProgressDebug", "Creating progress for ${activity.name}, user=${currentUser.id}")
+
+            progressRepository.createProgress(activity, currentUser, dateStarted, startedAt)
+                .collect { result ->
+                    when (result) {
+                        is ResultWrapper.Success -> {
+                            Log.d("ProgressDebug", "Progress created successfully: ${result.payload}")
+                            _progressCreationResult.postValue(true)
+                        }
+                        is ResultWrapper.Error -> {
+                            Log.e("ProgressDebug", "Error creating progress: ${result.exception}")
+                            _progressCreationResult.postValue(false)
+                        }
+                        else -> {}
+                    }
+                }
         }
     }
 
+    fun getCurrentUser(): User? {
+        return userRepository.getCurrentUser()
+    }
 
     private fun getCurrentDate(): String {
         val sdf = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())

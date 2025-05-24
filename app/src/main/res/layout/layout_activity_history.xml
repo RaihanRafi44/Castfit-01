@@ -17,9 +17,30 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/right_info_layout"
+        app:layout_constraintEnd_toStartOf="@id/btn_cancel_activity"
         android:ellipsize="end"
         android:maxLines="1"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_cancel_activity"
+        android:layout_width="44dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/tv_activity_history"
+        app:layout_constraintEnd_toStartOf="@id/right_info_layout"
+        android:backgroundTint="@color/md_theme_errorContainer_mediumContrast"
+        app:icon="@drawable/ic_cross"
+        android:layout_marginHorizontal="12dp"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
+        android:insetLeft="0dp"
+        android:insetRight="0dp"
+        android:stateListAnimator="@null"
+        android:translationZ="4dp"
+        app:cornerRadius="12dp"
+        app:iconGravity="textStart"
+        app:iconPadding="0dp"/>
 
     <LinearLayout
         android:id="@+id/right_info_layout"
@@ -29,7 +50,8 @@
         android:gravity="end"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent">
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/btn_cancel_activity">
 
         <TextView
             android:id="@+id/tv_date"
