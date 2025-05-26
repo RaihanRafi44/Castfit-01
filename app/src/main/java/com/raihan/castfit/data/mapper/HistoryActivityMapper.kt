@@ -8,6 +8,7 @@ import com.raihan.castfit.data.source.local.database.entity.ProgressActivityEnti
 fun HistoryActivity?.toHistoryActivityEntity() =
     HistoryActivityEntity(
         id = this?.id,
+        userId = this?.userId,
         progressId = this?.progressId,
         physicalActivityName = this?.physicalActivityName.orEmpty(),
         dateEnded = this?.dateEnded.orEmpty(),
@@ -18,6 +19,7 @@ fun HistoryActivity?.toHistoryActivityEntity() =
 fun HistoryActivityEntity?.toHistoryActivity() =
     HistoryActivity(
         id = this?.id,
+        userId = this?.userId,
         progressId = this?.progressId,
         physicalActivityName = this?.physicalActivityName.orEmpty(),
         dateEnded = this?.dateEnded.orEmpty(),

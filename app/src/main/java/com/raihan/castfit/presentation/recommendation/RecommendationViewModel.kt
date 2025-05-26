@@ -50,7 +50,7 @@ class RecommendationViewModel (
             }
 
             // Atur kondisi cuaca untuk aktivitas
-            val indoorOnlyWeather = listOf("Storm", "Rain", "Snow", "Thunderstorm")
+            val indoorOnlyWeather = listOf("Storm", "Rain", "Snow", "Thunderstorm", "Drizzle")
             val isBadWeather = indoorOnlyWeather.any { condition.contains(it, ignoreCase = true) }
 
             val indoor = filteredActivities.filter { it.type.equals("Indoor", ignoreCase = true) }
@@ -61,36 +61,6 @@ class RecommendationViewModel (
             _outdoorActivities.postValue(outdoor)
         }
     }
-
-    /*fun addToProgress(activity: PhysicalActivity) {
-        viewModelScope.launch {
-            // First check if user is logged in
-            val currentUser = userRepository.getCurrentUser()
-            if (currentUser == null) {
-                Log.e("ProgressDebug", "Cannot create progress: user not logged in")
-                return@launch
-            }
-
-            // Use the current user directly instead of getting from repository again
-            val dateStarted = getCurrentDate()
-            val startedAt = getCurrentTime()
-
-            Log.d("ProgressDebug", "Creating progress for ${activity.name}, user=${currentUser.id}")
-
-            progressRepository.createProgress(activity, currentUser, dateStarted, startedAt)
-                .collect { result ->
-                    when (result) {
-                        is ResultWrapper.Success -> {
-                            Log.d("ProgressDebug", "Progress created successfully: ${result.payload}")
-                        }
-                        is ResultWrapper.Error -> {
-                            Log.e("ProgressDebug", "Error creating progress: ${result.exception}")
-                        }
-                        else -> {}
-                    }
-                }
-        }
-    }*/
 
     fun addToProgress(activity: PhysicalActivity) {
         viewModelScope.launch {

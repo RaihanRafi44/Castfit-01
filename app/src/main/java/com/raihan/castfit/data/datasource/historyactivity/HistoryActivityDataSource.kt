@@ -7,9 +7,11 @@ import kotlinx.coroutines.flow.Flow
 
 interface HistoryActivityDataSource {
 
+    fun getUserHistory(userId: String): Flow<List<HistoryActivityEntity>>
+
     fun getAllHistory(): Flow<List<HistoryActivityEntity>>
 
-    fun getUserHistory(progressId: Int): Flow<List<HistoryActivityEntity>>
+    fun getUserHistoryByProgressId(progressId: Int): Flow<List<HistoryActivityEntity>>
 
     suspend fun insertHistory(history: HistoryActivityEntity): Long
 
@@ -28,7 +30,9 @@ class HistoryActivityDataSourceImpl(
 
     override fun getAllHistory(): Flow<List<HistoryActivityEntity>> = dao.getAllHistory()
 
-    override fun getUserHistory(progressId: Int): Flow<List<HistoryActivityEntity>> = dao.getUserHistory(progressId)
+    override fun getUserHistory(userId: String): Flow<List<HistoryActivityEntity>> = dao.getUserHistory(userId)
+
+    override fun getUserHistoryByProgressId(progressId: Int): Flow<List<HistoryActivityEntity>> = dao.getUserHistoryByProgressId(progressId)
 
     override suspend fun insertHistory(history: HistoryActivityEntity): Long = dao.insertHistory(history)
 

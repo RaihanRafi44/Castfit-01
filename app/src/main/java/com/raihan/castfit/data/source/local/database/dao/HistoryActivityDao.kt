@@ -13,11 +13,22 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface HistoryActivityDao {
+
+    /*@Query("""
+        SELECT h.* FROM history h 
+        INNER JOIN progress p ON h.progress_id = p.id 
+        WHERE p.user_id = :userId
+    """)
+    fun getUserHistory(userId: String): Flow<List<HistoryActivityEntity>>*/
+
+    @Query("SELECT * FROM history WHERE user_id = :userId ORDER BY date_ended DESC, completed_at DESC")
+    fun getUserHistory(userId: String): Flow<List<HistoryActivityEntity>>
+
     @Query("SELECT * FROM history")
     fun getAllHistory(): Flow<List<HistoryActivityEntity>>
 
     @Query("SELECT * FROM history WHERE progress_id = :progressId")
-    fun getUserHistory(progressId: Int): Flow<List<HistoryActivityEntity>>
+    fun getUserHistoryByProgressId(progressId: Int): Flow<List<HistoryActivityEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertHistory(history: HistoryActivityEntity): Long

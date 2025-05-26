@@ -28,8 +28,6 @@ class RecommendationActivity : AppCompatActivity() {
         // Check if user is logged in first
         if (recommendationViewModel.getCurrentUser() == null) {
             Toast.makeText(this, "Please log in to continue", Toast.LENGTH_LONG).show()
-            // Redirect to login screen
-            // startActivity(Intent(this, LoginActivity::class.java))
             finish()
             return
         }
@@ -62,10 +60,29 @@ class RecommendationActivity : AppCompatActivity() {
         }
     }
 
-    private fun observeViewModel() {
+    /*private fun observeViewModel() {
         recommendationViewModel.indoorActivities.observe(this) { indoorAdapter.setData(it) }
         recommendationViewModel.outdoorActivities.observe(this) { outdoorAdapter.setData(it) }
+    }*/
+
+    private fun observeViewModel() {
+        recommendationViewModel.indoorActivities.observe(this) {
+            indoorAdapter.setData(it)
+        }
+
+        recommendationViewModel.outdoorActivities.observe(this) { outdoorList ->
+            outdoorAdapter.setData(outdoorList)
+
+            if (outdoorList.isNullOrEmpty()) {
+                binding.rvOutdoorList.visibility = android.view.View.GONE
+                binding.tvOutdoorEmpty.visibility = android.view.View.VISIBLE
+            } else {
+                binding.rvOutdoorList.visibility = android.view.View.VISIBLE
+                binding.tvOutdoorEmpty.visibility = android.view.View.GONE
+            }
+        }
     }
+
 
     @Suppress("DEPRECATION")
     private fun backHomePage(){
@@ -90,8 +107,5 @@ class RecommendationActivity : AppCompatActivity() {
         }
     }
 
-    /*companion object {
-        const val EXTRA_ACTIVITY = "EXTRA_ACTIVITY"
-    }*/
 
 }

@@ -8,6 +8,8 @@ import androidx.room.PrimaryKey
 data class HistoryActivityEntity(
     @PrimaryKey(autoGenerate = true)
     var id: Int? = null,
+    @ColumnInfo(name = "user_id")
+    var userId: String? = null,
     @ColumnInfo(name = "progress_id")
     var progressId: Int? = null,
     @ColumnInfo(name = "physical_activity_name")

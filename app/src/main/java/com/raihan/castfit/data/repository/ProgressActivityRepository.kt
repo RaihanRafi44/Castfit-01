@@ -36,18 +36,29 @@ interface ProgressActivityRepository {
 }
 
 class ProgressActivityRepositoryImpl(
-    private val dataSource: ProgressActivityDataSource
+    private val dataSource: ProgressActivityDataSource,
+    private val firebaseAuth: FirebaseAuth
 ) : ProgressActivityRepository {
 
     override fun getUserProgressData(): Flow<ResultWrapper<List<ProgressActivity>>> {
-        return dataSource.getAllProgress()
+        // Get current user ID
+        val currentUserId = firebaseAuth.currentUser?.uid
+
+        if (currentUserId == null) {
+            Log.d("GetProgress", "No user logged in, returning empty list")
+            return kotlinx.coroutines.flow.flowOf(ResultWrapper.Empty(emptyList()))
+        }
+
+        Log.d("GetProgress", "Getting progress for user: $currentUserId")
+
+        return dataSource.getUserProgress(currentUserId)  // Changed from getAllProgress to getUserProgress
             .map {
-                Log.d("GetProgress", "Jumlah data DAO = ${it.size}")
+                Log.d("GetProgress", "Jumlah data DAO untuk user $currentUserId = ${it.size}")
                 proceed {
                     it.toProgressActivityList().also { list ->
                         Log.d("GetProgress", "Converted to progress list: ${list.size} items")
                         list.forEach { progress ->
-                            Log.d("GetProgress", "Progress ID: ${progress.id}, Name: ${progress.physicalActivityName}")
+                            Log.d("GetProgress", "Progress ID: ${progress.id}, Name: ${progress.physicalActivityName}, UserId: ${progress.userId}")
                         }
                     }
                 }
@@ -66,7 +77,7 @@ class ProgressActivityRepositoryImpl(
                 emit(ResultWrapper.Error(Exception(e)))
             }
             .onStart {
-                Log.d("GetProgress", "Starting to get progress data")
+                Log.d("GetProgress", "Starting to get progress data for user: $currentUserId")
                 emit(ResultWrapper.Loading())
             }
     }
@@ -110,6 +121,13 @@ class ProgressActivityRepositoryImpl(
             if (progress.id == null || progress.id <= 0) {
                 Log.e("DeleteProgress", "Cannot delete: Invalid progress ID (${progress.id})")
                 throw IllegalArgumentException("Invalid progress ID")
+            }
+
+            // Validasi user ownership
+            val currentUserId = firebaseAuth.currentUser?.uid
+            if (currentUserId != progress.userId) {
+                Log.e("DeleteProgress", "Cannot delete: User mismatch (current: $currentUserId, progress: ${progress.userId})")
+                throw IllegalArgumentException("User not authorized to delete this progress")
             }
 
             Log.d("DeleteProgress", "Deleting progress with ID: ${progress.id}, Name: ${progress.physicalActivityName}")

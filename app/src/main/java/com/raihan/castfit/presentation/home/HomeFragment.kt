@@ -17,7 +17,9 @@ import coil.load
 import com.google.android.gms.location.LocationServices
 import com.raihan.castfit.R
 import com.raihan.castfit.databinding.FragmentHomeBinding
+import com.raihan.castfit.presentation.chartshistory.ChartsHistoryActivity
 import com.raihan.castfit.presentation.recommendation.RecommendationActivity
+import com.raihan.castfit.presentation.schedule.ScheduleActivity
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class HomeFragment : Fragment() {
@@ -101,6 +103,17 @@ class HomeFragment : Fragment() {
                 homeViewModel.checkUserProfileComplete()
             }
         }
+
+        binding.btnChartsUserActivity.setOnClickListener {
+            val intent = Intent(requireContext(), ChartsHistoryActivity::class.java)
+            startActivity(intent)
+        }
+
+        binding.btnScheduleHome.setOnClickListener {
+            val intent = Intent(requireContext(), ScheduleActivity::class.java)
+            startActivity(intent)
+        }
+
 
     }
 

@@ -63,6 +63,18 @@
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 tools:listitem="@layout/layout_outdoor_sports"/>
 
+            <TextView
+                android:id="@+id/tv_outdoor_empty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Tidak ada aktivitas outdoor yang direkomendasikan untuk cuaca saat ini"
+                android:textAlignment="center"
+                android:padding="16dp"
+                android:textSize="16sp"
+                android:textColor="@android:color/darker_gray"
+                android:visibility="gone"
+                android:layout_marginTop="12dp" />
+
         </FrameLayout>
         <include
             android:id="@+id/inc_indoor_title"

@@ -140,4 +140,6 @@ dependencies {
     implementation("com.google.android.gms:play-services-location:21.0.1")
 
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
+
+    implementation("com.github.AAChartModel:AAChartCore-Kotlin:7.2.0")
 }

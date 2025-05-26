@@ -24,6 +24,8 @@ import com.raihan.castfit.data.datasource.physicalactivity.PhysicalDataSource
 import com.raihan.castfit.data.datasource.physicalactivity.PhysicalDataSourceImpl
 import com.raihan.castfit.data.datasource.progressactivity.ProgressActivityDataSource
 import com.raihan.castfit.data.datasource.progressactivity.ProgressActivityDataSourceImpl
+import com.raihan.castfit.data.datasource.schedule.ScheduleActivityDataSource
+import com.raihan.castfit.data.datasource.schedule.ScheduleActivityDataSourceImpl
 import com.raihan.castfit.data.datasource.weather.WeatherDataSource
 import com.raihan.castfit.data.datasource.weather.WeatherDataSourceImpl
 import com.raihan.castfit.data.repository.HistoryActivityRepository
@@ -35,10 +37,13 @@ import com.raihan.castfit.data.repository.ProgressActivityRepositoryImpl
 import com.raihan.castfit.data.source.local.database.AppDatabase
 import com.raihan.castfit.data.source.local.database.dao.HistoryActivityDao
 import com.raihan.castfit.data.source.local.database.dao.ProgressActivityDao
+import com.raihan.castfit.data.source.local.database.dao.ScheduleActivityDao
 import com.raihan.castfit.presentation.activityuser.ActivityViewModel
+import com.raihan.castfit.presentation.chartshistory.ChartsHistoryViewModel
 import com.raihan.castfit.presentation.forgotpass.ForgotPassViewModel
 import com.raihan.castfit.presentation.main.MainViewModel
 import com.raihan.castfit.presentation.recommendation.RecommendationViewModel
+import com.raihan.castfit.presentation.schedule.ScheduleViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModelOf
 import org.koin.core.module.Module
@@ -63,6 +68,7 @@ object AppModules {
             single<AppDatabase> { AppDatabase.createInstance(androidContext()) }
             single<ProgressActivityDao> { get<AppDatabase>().progressActivityDao() }
             single<HistoryActivityDao> { get<AppDatabase>().historyActivityDao() }
+            single<ScheduleActivityDao> { get<AppDatabase>().scheduleActivityDao() }
         }
 
     private val dataSource =
@@ -73,6 +79,7 @@ object AppModules {
             single<PhysicalDataSource>{ PhysicalDataSourceImpl()}
             single<ProgressActivityDataSource> { ProgressActivityDataSourceImpl(get()) }
             single<HistoryActivityDataSource> { HistoryActivityDataSourceImpl(get()) }
+            single<ScheduleActivityDataSource> { ScheduleActivityDataSourceImpl(get()) }
         }
 
     private val repository =
@@ -81,8 +88,8 @@ object AppModules {
             single<LocationRepository> { LocationRepository(get()) }
             single<WeatherRepository> { WeatherRepositoryImpl(get()) }
             single<PhysicalActivityRepository> { PhysicalActivityRepositoryImpl(get()) }
-            single<ProgressActivityRepository> { ProgressActivityRepositoryImpl(get()) }
-            single<HistoryActivityRepository> { HistoryActivityRepositoryImpl(get()) }
+            single<ProgressActivityRepository> { ProgressActivityRepositoryImpl(get(), get()) }
+            single<HistoryActivityRepository> { HistoryActivityRepositoryImpl(get(), get()) }
         }
 
     private val viewModel =
@@ -96,6 +103,8 @@ object AppModules {
             viewModelOf(::MainViewModel)
             viewModelOf(::RecommendationViewModel)
             viewModelOf(::ActivityViewModel)
+            viewModelOf(::ChartsHistoryViewModel)
+            viewModelOf(::ScheduleViewModel)
 
         }
 

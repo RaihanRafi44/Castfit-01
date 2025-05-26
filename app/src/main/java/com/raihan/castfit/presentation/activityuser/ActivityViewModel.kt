@@ -6,6 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
 import com.raihan.castfit.data.model.HistoryActivity
 import com.raihan.castfit.data.model.ProgressActivity
 import com.raihan.castfit.data.repository.HistoryActivityRepository
@@ -18,58 +19,10 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-/*
-class ActivityViewModel(
-    private val progressRepository: ProgressActivityRepository
-) : ViewModel() {
-
-    // Add this to track delete operation result
-    private val _deleteOperationResult = MutableLiveData<Boolean?>()
-    val deleteOperationResult: LiveData<Boolean?> = _deleteOperationResult
-
-    fun getAllProgress() = progressRepository.getUserProgressData().asLiveData(Dispatchers.IO)
-
-    fun removeProgress(item: ProgressActivity) {
-        viewModelScope.launch(Dispatchers.IO) {
-            // Validasi ID sebelum delete
-            if (item.id == null || item.id <= 0) {
-                Log.e("ActivityViewModel", "Cannot delete: Invalid ID (${item.id})")
-                _deleteOperationResult.postValue(false)
-                return@launch
-            }
-
-            Log.d("ActivityViewModel", "Attempting to delete activity: ${item.physicalActivityName} with ID: ${item.id}")
-
-            progressRepository.deleteProgress(item).collect { result ->
-                when (result) {
-                    is ResultWrapper.Success -> {
-                        Log.d("ActivityViewModel", "Successfully deleted activity: ${item.physicalActivityName} with ID: ${item.id}")
-                        _deleteOperationResult.postValue(true)
-                    }
-                    is ResultWrapper.Error -> {
-                        Log.e("ActivityViewModel", "Failed to delete activity: ${item.physicalActivityName}", result.exception)
-                        _deleteOperationResult.postValue(false)
-                    }
-                    is ResultWrapper.Loading -> {
-                        Log.d("ActivityViewModel", "Deleting activity in progress...")
-                    }
-                    else -> {
-                        Log.w("ActivityViewModel", "Unexpected result state: $result")
-                        _deleteOperationResult.postValue(false)
-                    }
-                }
-            }
-        }
-    }
-
-    fun resetDeleteResult() {
-        _deleteOperationResult.value = null
-    }
-}*/
-
 class ActivityViewModel(
     private val progressRepository: ProgressActivityRepository,
-    private val historyRepository: HistoryActivityRepository
+    private val historyRepository: HistoryActivityRepository,
+    private val firebaseAuth: FirebaseAuth
 ) : ViewModel() {
 
     // Track delete operation result
@@ -88,8 +41,23 @@ class ActivityViewModel(
 
     fun getAllHistory() = historyRepository.getUserHistoryData().asLiveData(Dispatchers.IO)
 
-    fun removeProgress(item: ProgressActivity) {
+    /*fun removeProgress(item: ProgressActivity) {
         viewModelScope.launch(Dispatchers.IO) {
+            // Check if user is logged in
+            val currentUserId = firebaseAuth.currentUser?.uid
+            if (currentUserId == null) {
+                Log.e("ActivityViewModel", "Cannot delete: User not logged in")
+                _deleteOperationResult.postValue(false)
+                return@launch
+            }
+
+            // Check if the progress belongs to current user
+            if (item.userId != currentUserId) {
+                Log.e("ActivityViewModel", "Cannot delete: Progress doesn't belong to current user")
+                _deleteOperationResult.postValue(false)
+                return@launch
+            }
+
             // Validasi ID sebelum delete
             if (item.id == null || item.id <= 0) {
                 Log.e("ActivityViewModel", "Cannot delete: Invalid ID (${item.id})")
@@ -123,6 +91,21 @@ class ActivityViewModel(
 
     fun finishActivity(item: ProgressActivity) {
         viewModelScope.launch(Dispatchers.IO) {
+            // Check if user is logged in
+            val currentUserId = firebaseAuth.currentUser?.uid
+            if (currentUserId == null) {
+                Log.e("ActivityViewModel", "Cannot finish: User not logged in")
+                _finishOperationResult.postValue(false)
+                return@launch
+            }
+
+            // Check if the progress belongs to current user
+            if (item.userId != currentUserId) {
+                Log.e("ActivityViewModel", "Cannot finish: Progress doesn't belong to current user")
+                _finishOperationResult.postValue(false)
+                return@launch
+            }
+
             // Validasi ID sebelum finish
             if (item.id == null || item.id <= 0) {
                 Log.e("ActivityViewModel", "Cannot finish: Invalid ID (${item.id})")
@@ -206,6 +189,284 @@ class ActivityViewModel(
 
     fun removeHistory(item: HistoryActivity) {
         viewModelScope.launch(Dispatchers.IO) {
+            // Check if user is logged in
+            val currentUserId = firebaseAuth.currentUser?.uid
+            if (currentUserId == null) {
+                Log.e("ActivityViewModel", "Cannot delete history: User not logged in")
+                _deleteHistoryResult.postValue(false)
+                return@launch
+            }
+
+            // Check if the history belongs to current user
+            *//*if (item.userId != currentUserId) {
+                Log.e("ActivityViewModel", "Cannot delete history: History doesn't belong to current user")
+                _deleteHistoryResult.postValue(false)
+                return@launch
+            }*//*
+
+            // Validasi ID sebelum delete
+            if (item.id == null || item.id <= 0) {
+                Log.e("ActivityViewModel", "Cannot delete history: Invalid ID (${item.id})")
+                _deleteHistoryResult.postValue(false)
+                return@launch
+            }
+
+            Log.d("ActivityViewModel", "Attempting to delete history with ID: ${item.id}")
+
+            historyRepository.deleteHistory(item).collect { result ->
+                when (result) {
+                    is ResultWrapper.Success -> {
+                        Log.d("ActivityViewModel", "Successfully deleted history with ID: ${item.id}")
+                        _deleteHistoryResult.postValue(true)
+                    }
+                    is ResultWrapper.Error -> {
+                        Log.e("ActivityViewModel", "Failed to delete history", result.exception)
+                        _deleteHistoryResult.postValue(false)
+                    }
+                    is ResultWrapper.Loading -> {
+                        Log.d("ActivityViewModel", "Deleting history in progress...")
+                    }
+                    else -> {
+                        Log.w("ActivityViewModel", "Unexpected result state: $result")
+                        _deleteHistoryResult.postValue(false)
+                    }
+                }
+            }
+        }
+    }
+
+
+    private fun calculateDuration(dateStarted: String, startedAt: String): Int {
+        return try {
+            Log.d("ActivityViewModel", "Input - dateStarted: '$dateStarted', startedAt: '$startedAt'")
+
+            // Coba beberapa format yang mungkin
+            val possibleFormats = listOf(
+                "yyyy-MM-dd HH:mm:ss",
+                "yyyy-MM-dd HH:mm",
+                "HH:mm:ss",
+                "HH:mm"
+            )
+
+            var startDateTime: Date? = null
+
+            // Jika startedAt sudah berisi tanggal lengkap
+            if (startedAt.contains("-")) {
+                for (format in possibleFormats) {
+                    try {
+                        startDateTime = SimpleDateFormat(format, Locale.getDefault()).parse(startedAt)
+                        break
+                    } catch (e: Exception) {
+                        Log.d("ActivityViewModel", "Failed to parse with format: $format")
+                    }
+                }
+            } else {
+                // Jika startedAt hanya berisi waktu, gabungkan dengan dateStarted
+                val combinedDateTime = "$dateStarted $startedAt"
+                for (format in possibleFormats) {
+                    try {
+                        startDateTime = SimpleDateFormat(format, Locale.getDefault()).parse(combinedDateTime)
+                        break
+                    } catch (e: Exception) {
+                        Log.d("ActivityViewModel", "Failed to parse combined datetime with format: $format")
+                    }
+                }
+            }
+
+            if (startDateTime == null) {
+                Log.e("ActivityViewModel", "Could not parse start time with any format")
+                return 0
+            }
+
+            val currentTime = Date()
+            val diffInMillis = currentTime.time - startDateTime.time
+
+            Log.d("ActivityViewModel", "Start time: $startDateTime")
+            Log.d("ActivityViewModel", "Current time: $currentTime")
+            Log.d("ActivityViewModel", "Difference in millis: $diffInMillis")
+
+            if (diffInMillis < 0) {
+                Log.w("ActivityViewModel", "Start time is in the future, returning 0")
+                return 0
+            }
+
+            val diffInMinutes = (diffInMillis / (1000 * 60)).toInt()
+
+            Log.d("ActivityViewModel", "Calculated duration: $diffInMinutes minutes")
+
+            // Pastikan minimal 1 menit jika ada selisih waktu
+            return if (diffInMinutes == 0 && diffInMillis > 0) 1 else diffInMinutes
+
+        } catch (e: Exception) {
+            Log.e("ActivityViewModel", "Error calculating duration", e)
+            Log.e("ActivityViewModel", "dateStarted: '$dateStarted', startedAt: '$startedAt'")
+            0 // Default jika error
+        }
+    }*/
+
+    fun removeProgress(item: ProgressActivity) {
+        viewModelScope.launch(Dispatchers.IO) {
+            // Check if user is logged in
+            val currentUserId = firebaseAuth.currentUser?.uid
+            if (currentUserId == null) {
+                Log.e("ActivityViewModel", "Cannot delete: User not logged in")
+                _deleteOperationResult.postValue(false)
+                return@launch
+            }
+
+            // Check if the progress belongs to current user
+            if (item.userId != currentUserId) {
+                Log.e("ActivityViewModel", "Cannot delete: Progress doesn't belong to current user")
+                _deleteOperationResult.postValue(false)
+                return@launch
+            }
+
+            // Validasi ID sebelum delete
+            if (item.id == null || item.id <= 0) {
+                Log.e("ActivityViewModel", "Cannot delete: Invalid ID (${item.id})")
+                _deleteOperationResult.postValue(false)
+                return@launch
+            }
+
+            Log.d("ActivityViewModel", "Attempting to delete activity: ${item.physicalActivityName} with ID: ${item.id}")
+
+            progressRepository.deleteProgress(item).collect { result ->
+                when (result) {
+                    is ResultWrapper.Success -> {
+                        Log.d("ActivityViewModel", "Successfully deleted activity: ${item.physicalActivityName} with ID: ${item.id}")
+                        _deleteOperationResult.postValue(true)
+                    }
+                    is ResultWrapper.Error -> {
+                        Log.e("ActivityViewModel", "Failed to delete activity: ${item.physicalActivityName}", result.exception)
+                        _deleteOperationResult.postValue(false)
+                    }
+                    is ResultWrapper.Loading -> {
+                        Log.d("ActivityViewModel", "Deleting activity in progress...")
+                    }
+                    else -> {
+                        Log.w("ActivityViewModel", "Unexpected result state: $result")
+                        _deleteOperationResult.postValue(false)
+                    }
+                }
+            }
+        }
+    }
+
+    fun finishActivity(item: ProgressActivity) {
+        viewModelScope.launch(Dispatchers.IO) {
+            // Check if user is logged in
+            val currentUserId = firebaseAuth.currentUser?.uid
+            if (currentUserId == null) {
+                Log.e("ActivityViewModel", "Cannot finish: User not logged in")
+                _finishOperationResult.postValue(false)
+                return@launch
+            }
+
+            // Check if the progress belongs to current user
+            if (item.userId != currentUserId) {
+                Log.e("ActivityViewModel", "Cannot finish: Progress doesn't belong to current user")
+                _finishOperationResult.postValue(false)
+                return@launch
+            }
+
+            // Validasi ID sebelum finish
+            if (item.id == null || item.id <= 0) {
+                Log.e("ActivityViewModel", "Cannot finish: Invalid ID (${item.id})")
+                _finishOperationResult.postValue(false)
+                return@launch
+            }
+
+            Log.d("ActivityViewModel", "Attempting to finish activity: ${item.physicalActivityName} with ID: ${item.id}")
+
+            try {
+                // Buat data untuk history
+                val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+                val currentTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
+
+                // Hitung durasi (contoh: dari dateStarted sampai sekarang)
+                val duration = item.dateStarted?.let { item.startedAt?.let { it1 ->
+                    calculateDuration(it, it1)
+                } }
+
+                Log.d("ActivityViewModel", "Creating history with duration: $duration minutes")
+
+                // FIXED: Implementasi sequential untuk menghindari race condition
+                if (duration != null) {
+                    // Step 1: Buat history terlebih dahulu
+                    historyRepository.createHistory(
+                        progress = item,
+                        dateEnded = currentDate,
+                        completedAt = currentTime,
+                        duration = duration
+                    ).collect { historyResult ->
+                        when (historyResult) {
+                            is ResultWrapper.Success -> {
+                                Log.d("ActivityViewModel", "Successfully created history for: ${item.physicalActivityName}")
+
+                                // Step 2: Setelah history berhasil dibuat, baru hapus dari progress
+                                viewModelScope.launch(Dispatchers.IO) {
+                                    progressRepository.deleteProgress(item).collect { deleteResult ->
+                                        when (deleteResult) {
+                                            is ResultWrapper.Success -> {
+                                                Log.d("ActivityViewModel", "Successfully moved activity to history: ${item.physicalActivityName}")
+                                                _finishOperationResult.postValue(true)
+                                            }
+                                            is ResultWrapper.Error -> {
+                                                Log.e("ActivityViewModel", "Failed to delete from progress after creating history", deleteResult.exception)
+                                                _finishOperationResult.postValue(false)
+                                            }
+                                            is ResultWrapper.Loading -> {
+                                                Log.d("ActivityViewModel", "Deleting from progress...")
+                                            }
+                                            else -> {
+                                                Log.w("ActivityViewModel", "Unexpected delete result: $deleteResult")
+                                                _finishOperationResult.postValue(false)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            is ResultWrapper.Error -> {
+                                Log.e("ActivityViewModel", "Failed to create history", historyResult.exception)
+                                _finishOperationResult.postValue(false)
+                            }
+                            is ResultWrapper.Loading -> {
+                                Log.d("ActivityViewModel", "Creating history...")
+                            }
+                            else -> {
+                                Log.w("ActivityViewModel", "Unexpected history result: $historyResult")
+                                _finishOperationResult.postValue(false)
+                            }
+                        }
+                    }
+                } else {
+                    Log.e("ActivityViewModel", "Cannot calculate duration")
+                    _finishOperationResult.postValue(false)
+                }
+            } catch (e: Exception) {
+                Log.e("ActivityViewModel", "Error finishing activity", e)
+                _finishOperationResult.postValue(false)
+            }
+        }
+    }
+
+    fun removeHistory(item: HistoryActivity) {
+        viewModelScope.launch(Dispatchers.IO) {
+            // Check if user is logged in
+            val currentUserId = firebaseAuth.currentUser?.uid
+            if (currentUserId == null) {
+                Log.e("ActivityViewModel", "Cannot delete history: User not logged in")
+                _deleteHistoryResult.postValue(false)
+                return@launch
+            }
+
+            // FIXED: Check if the history belongs to current user
+            if (item.userId != currentUserId) {
+                Log.e("ActivityViewModel", "Cannot delete history: History doesn't belong to current user")
+                _deleteHistoryResult.postValue(false)
+                return@launch
+            }
+
             // Validasi ID sebelum delete
             if (item.id == null || item.id <= 0) {
                 Log.e("ActivityViewModel", "Cannot delete history: Invalid ID (${item.id})")
@@ -239,20 +500,72 @@ class ActivityViewModel(
 
     private fun calculateDuration(dateStarted: String, startedAt: String): Int {
         return try {
-            val startDateTime = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-                .parse("$dateStarted $startedAt")
-            val currentTime = Date()
+            Log.d("ActivityViewModel", "Input - dateStarted: '$dateStarted', startedAt: '$startedAt'")
 
-            val diffInMillis = currentTime.time - (startDateTime?.time ?: 0)
+            // Coba beberapa format yang mungkin
+            val possibleFormats = listOf(
+                "yyyy-MM-dd HH:mm:ss",
+                "yyyy-MM-dd HH:mm",
+                "HH:mm:ss",
+                "HH:mm"
+            )
+
+            var startDateTime: Date? = null
+
+            // Jika startedAt sudah berisi tanggal lengkap
+            if (startedAt.contains("-")) {
+                for (format in possibleFormats) {
+                    try {
+                        startDateTime = SimpleDateFormat(format, Locale.getDefault()).parse(startedAt)
+                        break
+                    } catch (e: Exception) {
+                        Log.d("ActivityViewModel", "Failed to parse with format: $format")
+                    }
+                }
+            } else {
+                // Jika startedAt hanya berisi waktu, gabungkan dengan dateStarted
+                val combinedDateTime = "$dateStarted $startedAt"
+                for (format in possibleFormats) {
+                    try {
+                        startDateTime = SimpleDateFormat(format, Locale.getDefault()).parse(combinedDateTime)
+                        break
+                    } catch (e: Exception) {
+                        Log.d("ActivityViewModel", "Failed to parse combined datetime with format: $format")
+                    }
+                }
+            }
+
+            if (startDateTime == null) {
+                Log.e("ActivityViewModel", "Could not parse start time with any format")
+                return 0
+            }
+
+            val currentTime = Date()
+            val diffInMillis = currentTime.time - startDateTime.time
+
+            Log.d("ActivityViewModel", "Start time: $startDateTime")
+            Log.d("ActivityViewModel", "Current time: $currentTime")
+            Log.d("ActivityViewModel", "Difference in millis: $diffInMillis")
+
+            if (diffInMillis < 0) {
+                Log.w("ActivityViewModel", "Start time is in the future, returning 0")
+                return 0
+            }
+
             val diffInMinutes = (diffInMillis / (1000 * 60)).toInt()
 
             Log.d("ActivityViewModel", "Calculated duration: $diffInMinutes minutes")
-            diffInMinutes
+
+            // Pastikan minimal 1 menit jika ada selisih waktu
+            return if (diffInMinutes == 0 && diffInMillis > 0) 1 else diffInMinutes
+
         } catch (e: Exception) {
             Log.e("ActivityViewModel", "Error calculating duration", e)
-            0 // Default duration jika ada error
+            Log.e("ActivityViewModel", "dateStarted: '$dateStarted', startedAt: '$startedAt'")
+            0 // Default jika error
         }
     }
+
 
     fun resetDeleteResult() {
         _deleteOperationResult.value = null

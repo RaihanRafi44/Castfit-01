@@ -45,16 +45,6 @@ class ActivityAdapter(
         }
     }
 
-    /*override fun onCreateViewHolder(
-        parent: ViewGroup,
-        viewType: Int
-    ): ItemProgressViewHolder {
-        val binding = LayoutActivityOnProgressBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return ItemProgressViewHolder(binding) { activity, position ->
-            listener(activity, position)
-        }
-    }*/
-
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int
