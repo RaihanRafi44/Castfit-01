@@ -8,7 +8,9 @@ data class User(
     val email: String,
     val age: Int? = null,
     val dateOfBirth: String? = null
-)
+){
+    constructor() : this("", "", "", null, null)
+}
 
 fun FirebaseUser?.toUser() =
     this?.let {

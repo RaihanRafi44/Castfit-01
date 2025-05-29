@@ -34,6 +34,8 @@ import com.raihan.castfit.data.repository.PhysicalActivityRepository
 import com.raihan.castfit.data.repository.PhysicalActivityRepositoryImpl
 import com.raihan.castfit.data.repository.ProgressActivityRepository
 import com.raihan.castfit.data.repository.ProgressActivityRepositoryImpl
+import com.raihan.castfit.data.repository.ScheduleActivityRepository
+import com.raihan.castfit.data.repository.ScheduleActivityRepositoryImpl
 import com.raihan.castfit.data.source.local.database.AppDatabase
 import com.raihan.castfit.data.source.local.database.dao.HistoryActivityDao
 import com.raihan.castfit.data.source.local.database.dao.ProgressActivityDao
@@ -90,6 +92,7 @@ object AppModules {
             single<PhysicalActivityRepository> { PhysicalActivityRepositoryImpl(get()) }
             single<ProgressActivityRepository> { ProgressActivityRepositoryImpl(get(), get()) }
             single<HistoryActivityRepository> { HistoryActivityRepositoryImpl(get(), get()) }
+            single<ScheduleActivityRepository> { ScheduleActivityRepositoryImpl(get(), get()) }
         }
 
     private val viewModel =

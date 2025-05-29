@@ -15,6 +15,9 @@ import com.raihan.castfit.R
 import com.raihan.castfit.databinding.ActivityLoginBinding
 import com.raihan.castfit.presentation.main.MainActivity
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class LoginActivity : AppCompatActivity() {
     private val binding: ActivityLoginBinding by lazy {
@@ -44,6 +47,12 @@ class LoginActivity : AppCompatActivity() {
                 doOnSuccess = {
                     binding.pbLoading.isVisible = false
                     binding.btnLogin.isVisible = true
+                    // Simpan tanggal login pertama jika belum ada
+                    val sharedPref = getSharedPreferences("user_prefs", MODE_PRIVATE)
+                    if (!sharedPref.contains("first_login_date")) {
+                        val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+                        sharedPref.edit().putString("first_login_date", today).apply()
+                    }
                     navigateToMain()
                 },
                 doOnError = {

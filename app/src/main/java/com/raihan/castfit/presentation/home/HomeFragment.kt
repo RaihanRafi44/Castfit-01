@@ -20,12 +20,14 @@ import com.raihan.castfit.databinding.FragmentHomeBinding
 import com.raihan.castfit.presentation.chartshistory.ChartsHistoryActivity
 import com.raihan.castfit.presentation.recommendation.RecommendationActivity
 import com.raihan.castfit.presentation.schedule.ScheduleActivity
+import org.koin.androidx.viewmodel.ext.android.activityViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class HomeFragment : Fragment() {
 
     private lateinit var binding: FragmentHomeBinding
-    private val homeViewModel: HomeViewModel by viewModel()
+    //private val homeViewModel: HomeViewModel by viewModel()
+    private val homeViewModel: HomeViewModel by activityViewModel()
 
     private val fusedLocationProviderClient by lazy {
         LocationServices.getFusedLocationProviderClient(requireContext())

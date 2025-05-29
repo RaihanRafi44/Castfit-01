@@ -55,7 +55,7 @@
 
             <com.github.aachartmodel.aainfographics.aachartcreator.AAChartView
                 android:id="@+id/AAChartView1"
-                android:layout_width="1200dp"
+                android:layout_width="850dp"
                 android:layout_height="match_parent" />
         </LinearLayout>
     </HorizontalScrollView>

@@ -1,5 +1,6 @@
 package com.raihan.castfit.presentation.chartshistory
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
@@ -113,7 +114,17 @@ class ChartsHistoryActivity : AppCompatActivity() {
     }
 
     private fun setupChart(aaChartView: AAChartView, historyList: List<HistoryActivity>) {
-        val chartData = processChartData(historyList)
+        //val chartData = processChartData(historyList)
+        val sharedPref = getSharedPreferences("user_prefs", MODE_PRIVATE)
+        val firstLoginDate = sharedPref.getString("first_login_date", null)
+
+        val chartData = if (firstLoginDate != null) {
+            processChartData(historyList, firstLoginDate)
+        } else {
+            // fallback ke 7 hari terakhir jika first login tidak tersedia
+            processChartData(historyList)
+        }
+
 
         val aaChartModel = AAChartModel()
             .chartType(AAChartType.Column)
@@ -149,7 +160,12 @@ class ChartsHistoryActivity : AppCompatActivity() {
     }
 
     private fun setupEmptyChart(aaChartView: AAChartView) {
-        val emptyData = getEmptyWeekData()
+        //val emptyData = getEmptyWeekData()
+        val firstLoginDate = getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+            .getString("first_login_date", fullDateFormat.format(Date())) ?: fullDateFormat.format(Date())
+
+        val emptyData = getEmptyWeekData(firstLoginDate)
+
 
         val aaChartModel = AAChartModel()
             .chartType(AAChartType.Column)
@@ -175,7 +191,7 @@ class ChartsHistoryActivity : AppCompatActivity() {
         val aaOptions = aaChartModel.aa_toAAOptions()
         aaOptions.chart?.scrollablePlotArea(
             AAScrollablePlotArea()
-                .minWidth(800)
+                .minWidth(600)
                 .scrollPositionX(1f)
         )
 
@@ -233,7 +249,7 @@ class ChartsHistoryActivity : AppCompatActivity() {
         return ChartData(categories, indoorData, outdoorData)
     }*/
 
-    private fun processChartData(historyList: List<HistoryActivity>): ChartData {
+    /*private fun processChartData(historyList: List<HistoryActivity>): ChartData {
         val dateRange = chartsViewModel.getLast7DaysRange()
         val categories = mutableListOf<String>()
         val indoorData = mutableListOf<Any>()
@@ -291,7 +307,75 @@ class ChartsHistoryActivity : AppCompatActivity() {
         val emptyData = List(7) { 0 }
 
         return ChartData(categories, emptyData, emptyData)
+    }*/
+
+    private fun processChartData(
+        historyList: List<HistoryActivity>,
+        firstLoginDate: String? = null
+    ): ChartData {
+        val dateRange = if (firstLoginDate != null) {
+            chartsViewModel.getDateRangeFromFirstLogin(firstLoginDate)
+        } else {
+            chartsViewModel.getLast7DaysRange()
+        }
+        val categories = mutableListOf<String>()
+        val indoorData = mutableListOf<Any>()
+        val outdoorData = mutableListOf<Any>()
+
+        // Group activities by date
+        val activitiesByDate = historyList.groupBy { it.dateEnded }
+
+        for (date in dateRange) {
+            val dateString = fullDateFormat.format(date)
+            val activitiesOnDate = activitiesByDate[dateString] ?: emptyList()
+
+            // Add formatted date to categories
+            categories.add(chartsViewModel.formatDateForChart(date))
+
+            // Calculate total duration for indoor and outdoor activities
+            var indoorDurationMinutes = 0
+            var outdoorDurationMinutes = 0
+
+            for (activity in activitiesOnDate) {
+                // Assuming duration is already in minutes (based on your previous code)
+                val durationMinutes = activity.duration ?: 0
+                val activityType = chartsViewModel.getActivityType(activity.physicalActivityName)
+
+                Log.d("ChartData", "Activity: ${activity.physicalActivityName}, Duration: $durationMinutes minutes, Type: $activityType")
+
+                when (activityType) {
+                    "Indoor" -> indoorDurationMinutes += durationMinutes
+                    "Outdoor" -> outdoorDurationMinutes += durationMinutes
+                }
+            }
+
+            Log.d("ChartData", "Date: $dateString, Indoor: $indoorDurationMinutes min, Outdoor: $outdoorDurationMinutes min")
+
+            // Handle duration display logic - NO CONVERSION needed if duration is already in minutes
+            indoorData.add(when {
+                indoorDurationMinutes == 0 -> 0
+                indoorDurationMinutes < 1 -> 0.5 // Show as 0.5 for chart visualization for very small durations
+                else -> indoorDurationMinutes
+            })
+
+            outdoorData.add(when {
+                outdoorDurationMinutes == 0 -> 0
+                outdoorDurationMinutes < 1 -> 0.5 // Show as 0.5 for chart visualization for very small durations
+                else -> outdoorDurationMinutes
+            })
+        }
+
+        return ChartData(categories, indoorData, outdoorData)
     }
+
+    private fun getEmptyWeekData(firstLoginDate: String): ChartData {
+        val dateRange = chartsViewModel.getDateRangeFromFirstLogin(firstLoginDate)
+        val categories = dateRange.map { chartsViewModel.formatDateForChart(it) }
+        val emptyData = List(categories.size) { 0 }
+
+        return ChartData(categories, emptyData, emptyData)
+    }
+
 
     data class ChartData(
         val categories: List<String>,

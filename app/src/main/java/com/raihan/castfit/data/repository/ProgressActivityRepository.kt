@@ -33,6 +33,8 @@ interface ProgressActivityRepository {
     fun deleteProgress(progress: ProgressActivity): Flow<ResultWrapper<Boolean>>
 
     suspend fun deleteAll() : Flow<ResultWrapper<Boolean>>
+
+    fun createProgressByEntity(progress: ProgressActivity): Flow<ResultWrapper<Boolean>>
 }
 
 class ProgressActivityRepositoryImpl(
@@ -152,6 +154,48 @@ class ProgressActivityRepositoryImpl(
         return proceedFlow {
             dataSource.deleteAll()
             true
+        }
+    }
+
+    override fun createProgressByEntity(progress: ProgressActivity): Flow<ResultWrapper<Boolean>> {
+        return proceedFlow {
+            // Get current user ID from Firebase Auth
+            val currentUserId = firebaseAuth.currentUser?.uid
+            if (currentUserId.isNullOrEmpty()) {
+                Log.e("CreateProgress", "Cannot create progress: User not logged in")
+                throw IllegalStateException("User not logged in")
+            }
+
+            // Validate input
+            if (progress.physicalActivityName.isNullOrBlank()) {
+                Log.e("CreateProgress", "Cannot create progress: Activity name is blank")
+                throw IllegalArgumentException("Activity name cannot be blank")
+            }
+
+            if (progress.dateStarted.isNullOrBlank()) {
+                Log.e("CreateProgress", "Cannot create progress: Date started is blank")
+                throw IllegalArgumentException("Date started cannot be blank")
+            }
+
+            if (progress.startedAt.isNullOrBlank()) {
+                Log.e("CreateProgress", "Cannot create progress: Started time is blank")
+                throw IllegalArgumentException("Started time cannot be blank")
+            }
+
+            val entity = ProgressActivityEntity(
+                id = null, // Set null agar Room auto-generate ID
+                userId = currentUserId,
+                physicalActivityId = progress.physicalActivityId,
+                physicalActivityName = progress.physicalActivityName,
+                dateStarted = progress.dateStarted,
+                startedAt = progress.startedAt
+            )
+
+            Log.d("CreateProgress", "Inserting progress: $entity")
+            val insertedId = dataSource.insertProgress(entity)
+            Log.d("CreateProgress", "Progress inserted with ID = $insertedId")
+
+            insertedId > 0L // Return true if the insertion was successful
         }
     }
 }

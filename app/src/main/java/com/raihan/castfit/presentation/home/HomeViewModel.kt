@@ -1,6 +1,7 @@
 package com.raihan.castfit.presentation.home
 
 import android.location.Geocoder
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -53,9 +54,37 @@ class HomeViewModel(
         )
     }
 
+    /*fun loadSavedLocation() {
+        val savedLocation = locationRepository.getSavedLocation()
+        emitUiState(currentLocation = savedLocation)
+    }*/
+
     fun loadSavedLocation() {
         val savedLocation = locationRepository.getSavedLocation()
         emitUiState(currentLocation = savedLocation)
+
+        // If location exists and weather data is not available, fetch weather
+        savedLocation?.let { location ->
+            if (location.latitude != null && location.longitude != null) {
+                // Check if weather data is already available
+                val currentWeatherState = _weather.value
+                if (currentWeatherState?.data == null && currentWeatherState?.isLoading != true) {
+                    Log.d("HomeViewModel", "Location available but no weather data, fetching weather")
+                    fetchWeather(location.latitude, location.longitude)
+                }
+            }
+        }
+    }
+
+    fun refreshWeather() {
+        val currentLocation = _currentLocation.value?.currentLocation
+        if (currentLocation?.latitude != null && currentLocation.longitude != null) {
+            Log.d("HomeViewModel", "Refreshing weather data for location: ${currentLocation.latitude}, ${currentLocation.longitude}")
+            fetchWeather(currentLocation.latitude, currentLocation.longitude)
+        } else {
+            Log.w("HomeViewModel", "Cannot refresh weather: no location available")
+            _weather.postValue(WeatherUiState(error = "Location not available for weather refresh"))
+        }
     }
 
     private fun fetchWeather(lat: Double?, lon: Double?) {
@@ -108,9 +137,6 @@ class HomeViewModel(
             }
         }
     }
-
-
-
     data class WeatherUiState(
         val isLoading: Boolean = false,
         val data: Weather? = null,

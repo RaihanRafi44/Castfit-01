@@ -21,3 +21,4 @@
 #-renamesourcefileattribute SourceFile
 
 -keep class com.github.aachartmodel.aainfographics.** { *; }
+-keep class com.raihan.castfit.data.model.User { *; }

@@ -10,7 +10,6 @@ import com.raihan.castfit.data.model.ProgressActivity
 import com.raihan.castfit.databinding.LayoutActivityOnProgressBinding
 
 class ActivityAdapter(
-    //private val listener: (ProgressActivity, Int) -> Unit
     private val onCancelClick: (ProgressActivity, Int) -> Unit,
     private val onFinishClick: (ProgressActivity, Int) -> Unit
 ) : RecyclerView.Adapter<ActivityAdapter.ItemProgressViewHolder>() {
@@ -64,7 +63,6 @@ class ActivityAdapter(
 
     class ItemProgressViewHolder(
         private val binding: LayoutActivityOnProgressBinding,
-        //val itemClick: (ProgressActivity, Int) -> Unit
         private val onCancelClick: (ProgressActivity, Int) -> Unit,
         private val onFinishClick: (ProgressActivity, Int) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
@@ -73,7 +71,6 @@ class ActivityAdapter(
             with(item) {
                 binding.tvActivityProgress.text = physicalActivityName
                 binding.btnCancelActivity.setOnClickListener {
-                    //itemClick(this, position)
                     onCancelClick(this, position)
                 }
                 binding.btnFinishingActivity.setOnClickListener {
