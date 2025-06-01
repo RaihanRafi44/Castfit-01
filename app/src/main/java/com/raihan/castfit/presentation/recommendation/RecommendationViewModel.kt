@@ -14,8 +14,10 @@ import com.raihan.castfit.data.repository.ProgressActivityRepository
 import com.raihan.castfit.data.repository.UserRepository
 import com.raihan.castfit.utils.ResultWrapper
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 
 class RecommendationViewModel (
 
@@ -113,8 +115,28 @@ class RecommendationViewModel (
         val sdf = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
         return sdf.format(java.util.Date())
     }
+    suspend fun checkIfUserHasProgressSuspend(): Boolean {
+        val result = progressRepository.getUserProgressData().first {
+            it !is ResultWrapper.Loading // tunggu sampai bukan loading
+        }
 
-
+        return when (result) {
+            is ResultWrapper.Success -> {
+                val hasProgress = result.payload?.isNotEmpty() == true
+                Log.d("RecommendationDebug", "Has Progress? $hasProgress")
+                hasProgress
+            }
+            is ResultWrapper.Empty -> {
+                Log.d("RecommendationDebug", "No progress found.")
+                false
+            }
+            is ResultWrapper.Error -> {
+                Log.e("RecommendationDebug", "Error while checking progress", result.exception)
+                false
+            }
+            else -> false
+        }
+    }
 
 
 }

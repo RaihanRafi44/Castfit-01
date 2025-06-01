@@ -129,6 +129,7 @@ class HistoryActivityRepositoryImpl(
             Log.d("CreateHistory", "Creating history: $historyEntity")
             val insertedId = dataSource.insertHistory(historyEntity)
             Log.d("CreateHistory", "History inserted with ID = $insertedId")
+            Log.d("HistoryRepository", "Received duration: $duration")
 
             insertedId > 0L // Return true if insertion was successful
         }

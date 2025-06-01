@@ -2,6 +2,7 @@ package com.raihan.castfit.presentation.activityuser
 
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.AsyncListDiffer
 import androidx.recyclerview.widget.DiffUtil
@@ -9,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.raihan.castfit.data.model.ScheduleActivity
 import com.raihan.castfit.databinding.LayoutScheduledActivityBinding
 import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
 class ScheduleAdapter(
@@ -46,6 +48,10 @@ class ScheduleAdapter(
         }
     }
 
+    fun getItemPosition(schedule: ScheduleActivity): Int {
+        return differ.currentList.indexOfFirst { it.id == schedule.id }
+    }
+
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int
@@ -76,8 +82,19 @@ class ScheduleAdapter(
                 binding.btnCancelScheduled.setOnClickListener {
                     onCancelClick(this, position)
                 }
-                binding.btnContinueScheduled.setOnClickListener {
+                /*binding.btnContinueScheduled.setOnClickListener {
                     onFinishClick(this, position)
+                }*/
+                // Tombol continue hanya muncul jika tanggal adalah hari ini
+                val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+
+                if (dateScheduled == today) {
+                    binding.btnContinueScheduled.visibility = View.VISIBLE
+                    binding.btnContinueScheduled.setOnClickListener {
+                        onFinishClick(this, position)
+                    }
+                } else {
+                    binding.btnContinueScheduled.visibility = View.GONE
                 }
             }
         }

@@ -10,18 +10,50 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
+        <LinearLayout
+            android:id="@+id/ll_time_count"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/mcw_scheduled_title"
+            android:background="@color/colorCustomColor5Container"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Time Count"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:layout_marginStart="16dp"
+                android:layout_marginVertical="8dp" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="end"
+                tools:text="00:00"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="16dp"
+                android:layout_marginVertical="8dp" />
+        </LinearLayout>
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/mcw_scheduled_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="2dp"
-            android:layout_marginTop="28dp"
+            android:layout_marginTop="16dp"
             android:layout_marginBottom="16dp"
             app:cardCornerRadius="8dp"
             android:layout_marginStart="16dp"
             android:layout_marginEnd="16dp"
             android:backgroundTint="#7DAFF0"
-            app:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintTop_toBottomOf="@id/ll_time_count">
 
             <TextView
                 android:layout_width="match_parent"

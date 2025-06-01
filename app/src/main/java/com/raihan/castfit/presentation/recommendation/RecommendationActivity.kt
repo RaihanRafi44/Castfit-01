@@ -5,9 +5,11 @@ import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.raihan.castfit.data.model.PhysicalActivity
 import com.raihan.castfit.databinding.ActivityRecommendationBinding
+import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class RecommendationActivity : AppCompatActivity() {
@@ -21,6 +23,9 @@ class RecommendationActivity : AppCompatActivity() {
     private lateinit var indoorAdapter: RecommendationIndoorAdapter
     private lateinit var outdoorAdapter: RecommendationOutdoorAdapter
 
+    private var isDialogShown = false
+    private var isCheckingProgress = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
@@ -33,11 +38,13 @@ class RecommendationActivity : AppCompatActivity() {
         }
 
         indoorAdapter = RecommendationIndoorAdapter { activity ->
-            showConfirmationDialog(activity)
+            //showConfirmationDialog(activity)
+            handleActivitySelection(activity)
         }
 
         outdoorAdapter = RecommendationOutdoorAdapter { activity ->
-            showConfirmationDialog(activity)
+            //showConfirmationDialog(activity)
+            handleActivitySelection(activity)
         }
         proceedList()
         observeViewModel()
@@ -46,6 +53,7 @@ class RecommendationActivity : AppCompatActivity() {
         Log.d("RecommendationActivity", "Received weather condition: $weatherCondition")
         recommendationViewModel.loadActivitiesBasedOnWeather(weatherCondition)
         backHomePage()
+
     }
 
     private fun proceedList(){
@@ -91,7 +99,7 @@ class RecommendationActivity : AppCompatActivity() {
         }
     }
 
-    private fun showConfirmationDialog(activity: PhysicalActivity) {
+    /*private fun showConfirmationDialog(activity: PhysicalActivity) {
         AlertDialog.Builder(this).apply {
             setTitle("Konfirmasi")
             setMessage("Apakah Anda ingin memulai aktivitas \"${activity.name}\"?")
@@ -105,7 +113,50 @@ class RecommendationActivity : AppCompatActivity() {
             create()
             show()
         }
+    }*/
+    private fun showConfirmationDialog(activity: PhysicalActivity) {
+        AlertDialog.Builder(this).apply {
+            setTitle("Konfirmasi")
+            setMessage("Apakah Anda ingin memulai aktivitas \"${activity.name}\"?")
+            setPositiveButton("OK") { _, _ ->
+                recommendationViewModel.addToProgress(activity)
+                Toast.makeText(this@RecommendationActivity, "Aktivitas ditambahkan ke progress", Toast.LENGTH_SHORT).show()
+                isCheckingProgress = false
+                finish()
+            }
+            setNegativeButton("Batal") { _, _ ->
+                isCheckingProgress = false
+            }
+            setOnDismissListener {
+                isCheckingProgress = false
+            }
+            create()
+            show()
+        }
     }
 
+
+
+    private fun handleActivitySelection(activity: PhysicalActivity) {
+        if (isCheckingProgress) return
+        isCheckingProgress = true
+
+        lifecycleScope.launch {
+            val hasProgress = recommendationViewModel.checkIfUserHasProgressSuspend()
+            Log.d("RecommendationDebug", "Has Progress? $hasProgress")
+            if (hasProgress) {
+                AlertDialog.Builder(this@RecommendationActivity).apply {
+                    setTitle("Aktivitas Sedang Berjalan")
+                    setMessage("Hanya satu aktivitas yang bisa berlangsung dalam satu waktu. Selesaikan atau batalkan aktivitas sebelumnya terlebih dahulu.")
+                    setPositiveButton("OK", null)
+                    setOnDismissListener { isCheckingProgress = false }
+                    create()
+                    show()
+                }
+            } else {
+                showConfirmationDialog(activity)
+            }
+        }
+    }
 
 }

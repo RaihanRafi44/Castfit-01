@@ -204,20 +204,6 @@ class ScheduleActivity : AppCompatActivity() {
         }
     }
 
-    /*private fun setupDatePicker() {
-        val calendar = Calendar.getInstance()
-        binding.etDateOfSchedule.setOnClickListener {
-            DatePickerDialog(this, { _, year, month, day ->
-                // Simpan dalam format database (yyyy-MM-dd)
-                selectedDate = String.format("%04d-%02d-%02d", year, month + 1, day)
-                // Tampilkan dalam format display (dd/MM/yyyy)
-                val displayDate = String.format("%02d/%02d/%04d", day, month + 1, year)
-                binding.etDateOfSchedule.setText(displayDate)
-                Log.d("ScheduleActivity", "Date selected - Display: $displayDate, Database: $selectedDate")
-            }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).show()
-        }
-    }*/
-
     private fun setupDatePicker() {
         val calendar = Calendar.getInstance()
         binding.etDateOfSchedule.setOnClickListener {

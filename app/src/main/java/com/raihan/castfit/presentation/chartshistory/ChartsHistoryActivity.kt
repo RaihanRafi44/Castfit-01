@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.github.aachartmodel.aainfographics.aachartcreator.*
+import com.github.aachartmodel.aainfographics.aaoptionsmodel.AADataLabels
 import com.github.aachartmodel.aainfographics.aaoptionsmodel.AAScrollablePlotArea
 import com.raihan.castfit.R
 import com.raihan.castfit.data.model.HistoryActivity
@@ -78,9 +79,11 @@ class ChartsHistoryActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_charts_history)
+        //setContentView(R.layout.activity_charts_history)
+        setContentView(binding.root)
 
-        val aaChartView = findViewById<AAChartView>(R.id.AAChartView1)
+        //val aaChartView = findViewById<AAChartView>(R.id.AAChartView1)
+        val aaChartView = binding.AAChartView1
 
         // Observe history data and setup chart
         observeHistoryData(aaChartView)
@@ -135,6 +138,7 @@ class ChartsHistoryActivity : AppCompatActivity() {
             .yAxisTitle("Durasi (Menit)")
             .xAxisVisible(true)
             .stacking(AAChartStackingType.Normal)
+            .tooltipValueSuffix(" menit")
             .series(arrayOf(
                 AASeriesElement()
                     .name("Indoor")
@@ -148,6 +152,15 @@ class ChartsHistoryActivity : AppCompatActivity() {
             ))
 
         val aaOptions = aaChartModel.aa_toAAOptions()
+
+        // Tambahkan formatter untuk data labels
+        aaOptions.plotOptions?.column?.dataLabels = AADataLabels()
+            .enabled(true)
+            .formatter("""
+            function () {
+                return this.y + ' menit';
+            }
+        """.trimIndent())
 
         // Aktifkan scroll horizontal
         aaOptions.chart?.scrollablePlotArea(

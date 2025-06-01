@@ -16,6 +16,7 @@ import com.raihan.castfit.data.repository.ScheduleActivityRepository
 import com.raihan.castfit.utils.ResultWrapper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -353,9 +354,19 @@ class ActivityViewModel(
                 val currentTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
 
                 // Hitung durasi (contoh: dari dateStarted sampai sekarang)
-                val duration = item.dateStarted?.let { item.startedAt?.let { it1 ->
+                /*val duration = item.dateStarted?.let { item.startedAt?.let { it1 ->
                     calculateDuration(it, it1)
-                } }
+                } }*/
+                val date = item.dateStarted
+                val time = item.startedAt
+                val duration = if (date != null && time != null) {
+                    val result = calculateDuration(date, time)
+                    Log.d("ActivityViewModel", "Result from calculateDuration(): $result")
+                    result
+                } else {
+                    null
+                }
+
 
                 Log.d("ActivityViewModel", "Creating history with duration: $duration minutes")
 
@@ -524,14 +535,40 @@ class ActivityViewModel(
             val diffInMinutes = (diffInMillis / (1000 * 60)).toInt()
 
             Log.d("ActivityViewModel", "Calculated duration: $diffInMinutes minutes")
+            Log.d("ActivityViewModel", "Difference in millis: $diffInMillis")
+            Log.d("ActivityViewModel", "Difference in seconds: ${diffInMillis / 1000}")
 
             // Pastikan minimal 1 menit jika ada selisih waktu
-            return if (diffInMinutes == 0 && diffInMillis > 0) 1 else diffInMinutes
+            //return if (diffInMinutes == 0 && diffInMillis > 0) 1 else diffInMinutes
+            return diffInMinutes
 
         } catch (e: Exception) {
             Log.e("ActivityViewModel", "Error calculating duration", e)
             Log.e("ActivityViewModel", "dateStarted: '$dateStarted', startedAt: '$startedAt'")
             0 // Default jika error
+        }
+    }
+
+    suspend fun checkIfUserHasProgressSuspend(): Boolean {
+        val result = progressRepository.getUserProgressData().first {
+            it !is ResultWrapper.Loading // tunggu sampai bukan loading
+        }
+
+        return when (result) {
+            is ResultWrapper.Success -> {
+                val hasProgress = result.payload?.isNotEmpty() == true
+                Log.d("RecommendationDebug", "Has Progress? $hasProgress")
+                hasProgress
+            }
+            is ResultWrapper.Empty -> {
+                Log.d("RecommendationDebug", "No progress found.")
+                false
+            }
+            is ResultWrapper.Error -> {
+                Log.e("RecommendationDebug", "Error while checking progress", result.exception)
+                false
+            }
+            else -> false
         }
     }
 
