@@ -112,7 +112,7 @@ class RecommendationViewModel (
     }
 
     private fun getCurrentTime(): String {
-        val sdf = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
+        val sdf = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault())
         return sdf.format(java.util.Date())
     }
     suspend fun checkIfUserHasProgressSuspend(): Boolean {

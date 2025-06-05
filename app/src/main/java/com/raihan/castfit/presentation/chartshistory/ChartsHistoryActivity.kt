@@ -3,6 +3,7 @@ package com.raihan.castfit.presentation.chartshistory
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.github.aachartmodel.aainfographics.aachartcreator.*
@@ -82,6 +83,8 @@ class ChartsHistoryActivity : AppCompatActivity() {
         //setContentView(R.layout.activity_charts_history)
         setContentView(binding.root)
 
+        // Initialize with empty state first
+        //showEmptyState()
         //val aaChartView = findViewById<AAChartView>(R.id.AAChartView1)
         val aaChartView = binding.AAChartView1
 
@@ -102,18 +105,64 @@ class ChartsHistoryActivity : AppCompatActivity() {
             result.proceedWhen(
                 doOnSuccess = {
                     it.payload?.let { historyList ->
+                        hideLoading()
+                        showChart()
                         setupChart(aaChartView, historyList)
+                        /*Log.d("ChartsHistory", "History data loaded: ${historyList.size} items")
+                        if (historyList.isNotEmpty()) {
+                            // Check if there's actual activity data (not just empty records)
+                            val hasValidData = historyList.any { activity ->
+                                (activity.duration ?: 0) > 0
+                            }
+                            if (hasValidData) {
+                                showChart()
+                                setupChart(aaChartView, historyList)
+                            } else {
+                                showEmptyState()
+                            }
+                        } else {
+                            showEmptyState()
+                        }*/
                     } ?: setupEmptyChart(aaChartView)
                 },
                 doOnError = {
+                    /*Log.e("ChartsHistory", "Error loading history data", it.exception)
+                    setupEmptyChart(aaChartView)*/
+                    hideLoading()
                     Log.e("ChartsHistory", "Error loading history data", it.exception)
-                    setupEmptyChart(aaChartView)
+                    showEmptyState()
                 },
                 doOnLoading = {
+                    showLoading()
                     Log.d("ChartsHistory", "Loading history data...")
+                },
+                doOnEmpty = {
+                    showEmptyState()
+                    hideLoading()
+                    Log.d("ChartsHistory", "History data is empty")
                 }
             )
         }
+    }
+
+    private fun showLoading() {
+        binding.progressBar.visibility = View.VISIBLE
+        binding.horizontalScrollCharts.visibility = View.GONE
+        binding.llEmptyState.visibility = View.GONE
+    }
+
+    private fun hideLoading() {
+        binding.progressBar.visibility = View.GONE
+    }
+
+    private fun showChart() {
+        binding.horizontalScrollCharts.visibility = View.VISIBLE
+        binding.llEmptyState.visibility = View.GONE
+    }
+
+    private fun showEmptyState() {
+        binding.horizontalScrollCharts.visibility = View.GONE
+        binding.llEmptyState.visibility = View.VISIBLE
     }
 
     private fun setupChart(aaChartView: AAChartView, historyList: List<HistoryActivity>) {

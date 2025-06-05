@@ -18,20 +18,22 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toTopOf="@id/mcw_scheduled_title"
+            app:layout_constraintBottom_toTopOf="@id/mcw_on_progress_title"
             android:background="@color/colorCustomColor5Container"
             android:visibility="gone">
 
             <TextView
+                android:id="@+id/tv_time_count_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Time Count"
+                android:text="Time Count Progress"
                 android:textSize="22sp"
                 android:textStyle="bold"
                 android:layout_marginStart="16dp"
                 android:layout_marginVertical="8dp" />
 
             <TextView
+                android:id="@+id/tv_time_count_value"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -42,28 +44,102 @@
                 android:layout_marginEnd="16dp"
                 android:layout_marginVertical="8dp" />
         </LinearLayout>
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/mcw_on_progress_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
+            android:backgroundTint="#18D200"
+            app:cardCornerRadius="8dp"
+            app:layout_constraintTop_toBottomOf="@id/ll_time_count">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="12dp"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="On Progress"
+                    android:textStyle="bold"
+                    android:textSize="18sp"
+                    android:textColor="@color/md_theme_scrim" />
+
+                <ImageView
+                    android:id="@+id/iv_arrow_drop_progress"
+                    android:layout_width="16dp"
+                    android:layout_height="14dp"
+                    android:layout_marginEnd="4dp"
+                    android:src="@drawable/ic_arrow_black_rotate"
+                    android:contentDescription="Arrow" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+
+        <FrameLayout
+            android:id="@+id/fl_on_progress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/mcw_on_progress_title">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_on_progress_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="12dp"
+                app:layout_constraintVertical_bias="0.0"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                tools:listitem="@layout/layout_activity_on_progress"
+                android:visibility="gone"/>
+
+        </FrameLayout>
+
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/mcw_scheduled_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="2dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="16dp"
+            android:layout_marginVertical="8dp"
             app:cardCornerRadius="8dp"
             android:layout_marginStart="16dp"
             android:layout_marginEnd="16dp"
             android:backgroundTint="#7DAFF0"
-            app:layout_constraintTop_toBottomOf="@id/ll_time_count">
+            app:layout_constraintTop_toBottomOf="@id/fl_on_progress">
 
-            <TextView
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Scheduled"
-                android:textStyle="bold"
-                android:textSize="18sp"
-                android:textColor="@color/md_theme_scrim"
-                android:paddingHorizontal="16dp"
-                android:paddingVertical="12dp"/>
+                android:orientation="horizontal"
+                android:padding="12dp"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Scheduled"
+                    android:textStyle="bold"
+                    android:textSize="18sp"
+                    android:textColor="@color/md_theme_scrim" />
+
+                <ImageView
+                    android:id="@+id/iv_arrow_drop_scheduled"
+                    android:layout_width="16dp"
+                    android:layout_height="14dp"
+                    android:layout_marginEnd="4dp"
+                    android:src="@drawable/ic_arrow_black_rotate"
+                    android:contentDescription="Arrow" />
+
+            </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
 
@@ -85,47 +161,7 @@
 
         </FrameLayout>
 
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/mcw_on_progress_title"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="2dp"
-            android:layout_marginVertical="8dp"
-            app:cardCornerRadius="8dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:backgroundTint="#18D200"
-            app:layout_constraintTop_toBottomOf="@id/fl_scheduled">
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="On Progress"
-                android:textStyle="bold"
-                android:textSize="18sp"
-                android:textColor="@color/md_theme_scrim"
-                android:paddingHorizontal="16dp"
-                android:paddingVertical="12dp"/>
-
-        </com.google.android.material.card.MaterialCardView>
-
-        <FrameLayout
-            android:id="@+id/fl_on_progress"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:layout_constraintTop_toBottomOf="@id/mcw_on_progress_title">
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rv_on_progress_list"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="12dp"
-                app:layout_constraintVertical_bias="0.0"
-                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                tools:listitem="@layout/layout_activity_on_progress"
-                android:visibility="gone"/>
-
-        </FrameLayout>
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/mcw_history_title"
@@ -137,17 +173,33 @@
             android:layout_marginStart="16dp"
             android:layout_marginEnd="16dp"
             android:backgroundTint="#C3C4BA"
-            app:layout_constraintTop_toBottomOf="@id/fl_on_progress">
+            app:layout_constraintTop_toBottomOf="@id/fl_scheduled">
 
-            <TextView
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="History"
-                android:textStyle="bold"
-                android:textSize="18sp"
-                android:textColor="@color/md_theme_scrim"
-                android:paddingHorizontal="16dp"
-                android:paddingVertical="12dp"/>
+                android:orientation="horizontal"
+                android:padding="12dp"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="History"
+                    android:textStyle="bold"
+                    android:textSize="18sp"
+                    android:textColor="@color/md_theme_scrim" />
+
+                <ImageView
+                    android:id="@+id/iv_arrow_drop_history"
+                    android:layout_width="16dp"
+                    android:layout_height="14dp"
+                    android:layout_marginEnd="4dp"
+                    android:src="@drawable/ic_arrow_black_rotate"
+                    android:contentDescription="Arrow" />
+
+            </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
 

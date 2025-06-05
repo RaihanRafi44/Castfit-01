@@ -36,12 +36,14 @@
         app:layout_constraintStart_toEndOf="@id/btn_back_charts_activity"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- Chart Container -->
     <HorizontalScrollView
         android:id="@+id/horizontalScrollCharts"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:scrollbars="horizontal"
         android:layout_marginTop="16dp"
+        android:visibility="visible"
         app:layout_constraintTop_toBottomOf="@id/btn_back_charts_activity"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -56,8 +58,55 @@
             <com.github.aachartmodel.aainfographics.aachartcreator.AAChartView
                 android:id="@+id/AAChartView1"
                 android:layout_width="850dp"
-                android:layout_height="match_parent" />
+                android:layout_height="match_parent"
+                android:visibility="visible"/>
         </LinearLayout>
     </HorizontalScrollView>
+
+    <!-- Empty State Container -->
+    <LinearLayout
+        android:id="@+id/ll_empty_state"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="32dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/btn_back_charts_activity"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Belum Ada Aktivitas"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@color/md_theme_onSurface"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Mulai lakukan aktivitas fisik untuk melihat grafik perkembanganmu!"
+            android:textSize="16sp"
+            android:textColor="@color/md_theme_onSurfaceVariant"
+            android:textAlignment="center"
+            android:lineSpacingExtra="4dp"
+            app:layout_constraintWidth_percent="0.8" />
+
+    </LinearLayout>
+
+    <!-- Loading State -->
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -10,6 +10,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.provider.Settings
 import android.util.Log
 import androidx.fragment.app.Fragment
@@ -51,6 +52,17 @@ class ActivityFragment : Fragment() {
     private var selectedSchedulePosition: Int? = null
 
     private var isCheckingProgress = false
+
+    // Timer variables
+    private var countDownTimer: CountDownTimer? = null
+    private var isTimerRunning = false
+    private var currentProgressActivity: ProgressActivity? = null
+    private var timerStartTime: Long = 0L
+
+    // Dropdown Adapter
+    private var isScheduledExpanded = false
+    private var isOnProgressExpanded = false
+    private var isHistoryExpanded = false
 
     private val scheduledAdapter = ScheduleAdapter(
         onCancelClick = { schedule, position ->
@@ -109,6 +121,29 @@ class ActivityFragment : Fragment() {
         observeDeleteScheduleResult()
         observeStartScheduledActivityResult()
         loadWeatherData()
+
+        binding.mcwScheduledTitle.setOnClickListener {
+            isScheduledExpanded = !isScheduledExpanded
+            binding.rvScheduledList.visibility = if (isScheduledExpanded) View.VISIBLE else View.GONE
+            binding.ivArrowDropScheduled.rotation = if (isScheduledExpanded) 180f else 0f
+        }
+
+        binding.mcwOnProgressTitle.setOnClickListener {
+            isOnProgressExpanded = !isOnProgressExpanded
+            binding.rvOnProgressList.visibility = if (isOnProgressExpanded) View.VISIBLE else View.GONE
+            binding.ivArrowDropProgress.rotation = if (isOnProgressExpanded) 180f else 0f
+        }
+
+        binding.mcwHistoryTitle.setOnClickListener {
+            isHistoryExpanded = !isHistoryExpanded
+            binding.rvHistoryList.visibility = if (isHistoryExpanded) View.VISIBLE else View.GONE
+            binding.ivArrowDropHistory.rotation = if (isHistoryExpanded) 180f else 0f
+        }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        stopTimeCounter()
     }
 
     private fun refreshWeatherData() {
@@ -171,7 +206,8 @@ class ActivityFragment : Fragment() {
         activityPhysicalViewModel.getAllSchedule().observe(viewLifecycleOwner) { result ->
             result.proceedWhen(
                 doOnSuccess = {
-                    binding.rvScheduledList.isVisible = true
+                    //binding.rvScheduledList.isVisible = true
+                    if (isScheduledExpanded) binding.rvScheduledList.visibility = View.VISIBLE
                     it.payload?.let { list ->
                         Log.d("ActivityFragment", "Data schedule size: ${list.size}")
                         scheduledAdapter.setData(list)
@@ -195,15 +231,33 @@ class ActivityFragment : Fragment() {
         activityPhysicalViewModel.getAllProgress().observe(viewLifecycleOwner) { result ->
             result.proceedWhen(
                 doOnSuccess = {
-                    binding.rvOnProgressList.isVisible = true
+                    //binding.rvOnProgressList.isVisible = true
+                    if (isOnProgressExpanded) binding.rvOnProgressList.visibility = View.VISIBLE
                     it.payload?.let { list ->
                         Log.d("ActivityFragment", "Data on progress size: ${list.size}")
                         progressAdapter.setData(list)
-                    } ?: Log.d("ActivityFragment", "Progress payload null")
+                        if (list.isNotEmpty()){
+                            val latestActivity = list.firstOrNull()
+                            if (latestActivity != null) {
+                                // Check if this is a different activity than current
+                                if (currentProgressActivity?.id != latestActivity.id) {
+                                    Log.d("ActivityFragment", "Starting timer for new activity: ${latestActivity.physicalActivityName}")
+                                    startTimeCounter(latestActivity)
+                                }
+                                // If same activity, keep current timer running
+                            }
+                        } else {
+                            stopTimeCounter()
+                        }
+                    } ?: run {
+                        Log.d("ActivityFragment", "Progress payload null")
+                        stopTimeCounter()
+                    }
                 },
                 doOnError = {
                     Log.e("ActivityFragment", "Error loading progress: ${it.exception}")
                     binding.rvOnProgressList.isVisible = false
+                    stopTimeCounter()
                 },
                 doOnLoading = {
                     Log.d("ActivityFragment", "Loading on progress data...")
@@ -215,7 +269,8 @@ class ActivityFragment : Fragment() {
         activityPhysicalViewModel.getAllHistory().observe(viewLifecycleOwner) { result ->
             result.proceedWhen(
                 doOnSuccess = {
-                    binding.rvHistoryList.isVisible = true
+                    //binding.rvHistoryList.isVisible = true
+                    if (isHistoryExpanded) binding.rvHistoryList.visibility = View.VISIBLE
                     it.payload?.let { list ->
                         Log.d("ActivityFragment", "Data history size: ${list.size}")
                         historyAdapter.setData(list)
@@ -260,11 +315,6 @@ class ActivityFragment : Fragment() {
             .setNegativeButton("Tidak", null)
             .show()
     }
-
-    /*private fun showContinueScheduledDialog(schedule: ScheduleActivity, position: Int) {
-        // TODO: Implement continue scheduled functionality
-        Toast.makeText(requireContext(), "Fitur lanjutkan jadwal akan diimplementasikan nanti", Toast.LENGTH_SHORT).show()
-    }*/
 
     private fun showStartScheduledActivityDialog(schedule: ScheduleActivity, position: Int) {
         selectedSchedulePosition = position
@@ -421,6 +471,7 @@ class ActivityFragment : Fragment() {
             .setTitle("Batalkan Aktivitas?")
             .setMessage("Apakah kamu yakin ingin membatalkan aktivitas ini?")
             .setPositiveButton("Ya") { _, _ ->
+                stopTimeCounter()
                 activityPhysicalViewModel.removeProgress(activity)
                 progressAdapter.removeItem(position)
                 Log.d("ActivityLog", "Aktivitas '${activity.physicalActivityName}' akan dihapus dari halaman Activity.")
@@ -434,6 +485,7 @@ class ActivityFragment : Fragment() {
             .setTitle("Selesaikan Aktivitas?")
             .setMessage("Apakah kamu yakin ingin menyelesaikan aktivitas '${activity.physicalActivityName}'? Aktivitas akan dipindahkan ke riwayat.")
             .setPositiveButton("Ya") { _, _ ->
+                stopTimeCounter()
                 activityPhysicalViewModel.finishActivity(activity)
                 progressAdapter.removeItem(position) //Hapus UI list dari progress
                 Log.d("ActivityLog", "Aktivitas '${activity.physicalActivityName}' akan dipindahkan ke history.")
@@ -514,159 +566,6 @@ class ActivityFragment : Fragment() {
             }
         }
     }
-
-    /*@SuppressLint("ServiceCast", "MissingPermission")
-    private fun scheduleNotification(schedule: ScheduleActivity) {
-        val context = requireContext()
-
-        // Parse tanggal jadwal ke Calendar
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val date: Date? = try {
-            sdf.parse(schedule.dateScheduled)
-        } catch (e: Exception) {
-            null
-        }
-
-        if (date == null) {
-            Log.e("ActivityFragment", "Tanggal jadwal tidak valid untuk notifikasi: ${schedule.dateScheduled}")
-            return
-        }
-
-        *//*val calendar = Calendar.getInstance().apply {
-            time = date
-            set(Calendar.HOUR_OF_DAY, 12)  // Misal notifikasi jam 8 pagi
-            set(Calendar.MINUTE, 18)
-            set(Calendar.SECOND, 0)
-        }*//*
-
-
-        // Jangan schedule alarm untuk tanggal yang sudah lewat
-        *//*if (calendar.timeInMillis <= System.currentTimeMillis()) {
-            Log.d("ActivityFragment", "Tanggal jadwal sudah lewat, skip notifikasi")
-            return
-        }*//*
-
-
-        *//*val intent = Intent(context, NotificationReceiver::class.java).apply {
-            putExtra("title", "Aktivitas Terjadwal Hari Ini")
-            putExtra("message", "Ingat untuk melakukan: ${schedule.physicalActivityName}")
-            putExtra("notificationId", schedule.id ?: 0)
-        }
-
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            schedule.id ?: 0, // unique request code pakai id schedule
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        *//**//*val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        alarmManager.setExactAndAllowWhileIdle(
-            AlarmManager.RTC_WAKEUP,
-            calendar.timeInMillis,
-            pendingIntent
-        )*//**//*
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            if (alarmManager.canScheduleExactAlarms()) {
-                alarmManager.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    calendar.timeInMillis,
-                    pendingIntent
-                )
-            } else {
-                // (Opsional) Ajak user ke settings untuk mengaktifkan izin
-                val intentNotifications = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
-                    data = Uri.parse("package:${context.packageName}")
-                }
-                context.startActivity(intentNotifications)
-            }
-        } else {
-            // Untuk Android 11 ke bawah, langsung jalankan
-            alarmManager.setExactAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                calendar.timeInMillis,
-                pendingIntent
-            )
-        }*//*
-
-
-        Log.d("ActivityFragment", "Notifikasi dijadwalkan untuk: ${schedule.physicalActivityName} pada ${schedule.dateScheduled}")
-        }
-    }*/
-
-    /*private fun scheduleNotification(schedule: ScheduleActivity) {
-        val context = requireContext()
-
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val date = try {
-            sdf.parse(schedule.dateScheduled)
-        } catch (e: Exception) {
-            null
-        }
-
-        if (date == null) return
-
-        val baseCalendar = Calendar.getInstance().apply {
-            time = date
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
-
-        // Start at 04:00
-        baseCalendar.set(Calendar.HOUR_OF_DAY, 4)
-        baseCalendar.set(Calendar.MINUTE, 0)
-
-        val now = System.currentTimeMillis()
-        val intervalMillis = (2.5 * 60 * 60 * 1000).toLong() // 2.5 jam
-
-        for (i in 0..5) { // 6 kali: 04:00, 06:30, 09:00, 11:30, 14:00, 16:30, 19:00
-            val notificationTime = baseCalendar.timeInMillis + (intervalMillis * i)
-
-            if (notificationTime > now) {
-                val intent = Intent(context, NotificationReceiver::class.java).apply {
-                    putExtra("title", "Aktivitas Terjadwal")
-                    putExtra("message", "Ingat untuk melakukan: ${schedule.physicalActivityName}")
-                    putExtra("notificationId", (schedule.id ?: 0) * 100 + i)
-                }
-
-                val pendingIntent = PendingIntent.getBroadcast(
-                    context,
-                    (schedule.id ?: 0) * 100 + i,
-                    intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                )
-
-                val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    if (alarmManager.canScheduleExactAlarms()) {
-                        alarmManager.setExactAndAllowWhileIdle(
-                            AlarmManager.RTC_WAKEUP,
-                            notificationTime,
-                            pendingIntent
-                        )
-                    } else {
-                        val settingsIntent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
-                            data = Uri.parse("package:${context.packageName}")
-                        }
-                        context.startActivity(settingsIntent)
-                    }
-                } else {
-                    alarmManager.setExactAndAllowWhileIdle(
-                        AlarmManager.RTC_WAKEUP,
-                        notificationTime,
-                        pendingIntent
-                    )
-                }
-
-                Log.d("ActivityFragment", "Notifikasi ${i + 1} dijadwalkan: ${Date(notificationTime)} untuk ${schedule.physicalActivityName}")
-            } else {
-                Log.d("ActivityFragment", "Lewati notifikasi ${i + 1}, sudah lewat: ${Date(notificationTime)}")
-            }
-        }
-    }*/
 
     private fun scheduleNotification(schedule: ScheduleActivity) {
         val context = requireContext()
@@ -749,27 +648,6 @@ class ActivityFragment : Fragment() {
         }
     }
 
-
-    /*private fun cancelScheduledNotification(schedule: ScheduleActivity) {
-        val context = requireContext()
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-
-        val totalNotifs = 7  // karena kita jadwalkan 7 notifikasi per hari
-
-        for (i in 0 until totalNotifs) {
-            val intent = Intent(context, NotificationReceiver::class.java)
-
-            val pendingIntent = PendingIntent.getBroadcast(
-                context,
-                (schedule.id ?: 0) * 100 + i,
-                intent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-
-            alarmManager.cancel(pendingIntent)
-            Log.d("ActivityFragment", "Canceled notification id ${(schedule.id ?: 0) * 100 + i}")
-        }
-    }*/
     private fun cancelScheduledNotification(schedule: ScheduleActivity) {
         val context = requireContext()
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -865,5 +743,159 @@ class ActivityFragment : Fragment() {
         }
     }
 
+    // 2. Method untuk memulai timer
+    private fun startTimeCounter(progressActivity: ProgressActivity) {
+        // Stop existing timer if running
+        stopTimeCounter()
 
+        currentProgressActivity = progressActivity
+
+        try {
+            // Parse waktu mulai dari database
+            val startTime = parseStartTime(progressActivity.dateStarted, progressActivity.startedAt)
+
+            if (startTime != null) {
+                // Gunakan waktu dari database sebagai referensi
+                timerStartTime = startTime.time
+                Log.d("ActivityFragment", "Using database start time: ${Date(timerStartTime)}")
+            } else {
+                // Fallback jika parsing gagal
+                timerStartTime = System.currentTimeMillis()
+                Log.w("ActivityFragment", "Failed to parse database time, using current time")
+            }
+
+            // Show time counter layout
+            binding.llTimeCount.visibility = View.VISIBLE
+
+            // Start timer that updates every second
+            countDownTimer = object : CountDownTimer(Long.MAX_VALUE, 1000) {
+                override fun onTick(millisUntilFinished: Long) {
+                    updateTimeDisplay()
+                }
+
+                override fun onFinish() {
+                    // This won't be called since we use Long.MAX_VALUE
+                }
+            }.start()
+
+            isTimerRunning = true
+            Log.d("ActivityFragment", "Timer started for activity: ${progressActivity.physicalActivityName}")
+
+            // Initial display update
+            updateTimeDisplay()
+
+        } catch (e: Exception) {
+            Log.e("ActivityFragment", "Error starting timer", e)
+        }
+    }
+
+    // 3. Method untuk menghentikan timer
+    private fun stopTimeCounter() {
+        countDownTimer?.cancel()
+        countDownTimer = null
+        isTimerRunning = false
+        currentProgressActivity = null
+        timerStartTime = 0L
+
+        // Immediately hide time counter UI
+        binding.llTimeCount.visibility = View.GONE
+        binding.tvTimeCountValue.text = "00:00:00"
+
+        Log.d("ActivityFragment", "Timer stopped and UI hidden")
+    }
+
+    // 4. Method untuk update display waktu
+    private fun updateTimeDisplay() {
+        try {
+            if (timerStartTime == 0L) {
+                binding.tvTimeCountValue.text = "00:00:00"
+                return
+            }
+
+            val currentTime = System.currentTimeMillis()
+            val diffInMillis = currentTime - timerStartTime
+
+            if (diffInMillis < 0) {
+                binding.tvTimeCountValue.text = "00:00:00"
+                return
+            }
+
+            // Hitung total detik yang sudah berlalu
+            val totalSeconds = (diffInMillis / 1000).toInt()
+
+            // Konversi ke jam, menit, detik untuk display
+            val hours = totalSeconds / 3600
+            val minutes = (totalSeconds % 3600) / 60
+            val seconds = totalSeconds % 60
+
+            val timeString = String.format("%02d:%02d:%02d", hours, minutes, seconds)
+            binding.tvTimeCountValue.text = timeString
+
+            Log.d("ActivityFragment", "Time display updated: $timeString (total seconds: $totalSeconds, diff: ${diffInMillis}ms)")
+
+        } catch (e: Exception) {
+            Log.e("ActivityFragment", "Error updating time display", e)
+            binding.tvTimeCountValue.text = "00:00:00"
+        }
+    }
+
+    // Method untuk parse start time - SUDAH DIPERBAIKI
+    private fun parseStartTime(dateStarted: String?, startedAt: String?): Date? {
+        if (dateStarted == null || startedAt == null) {
+            Log.w("ActivityFragment", "dateStarted or startedAt is null")
+            return null
+        }
+
+        return try {
+            Log.d("ActivityFragment", "Parsing time - dateStarted: $dateStarted, startedAt: $startedAt")
+
+            val possibleFormats = listOf(
+                "yyyy-MM-dd HH:mm:ss",
+                "yyyy-MM-dd HH:mm",
+                "HH:mm:ss",
+                "HH:mm"
+            )
+
+            var startDateTime: Date? = null
+
+            // Jika startedAt sudah berisi tanggal lengkap
+            if (startedAt.contains("-")) {
+                Log.d("ActivityFragment", "startedAt contains date, parsing directly")
+                for (format in possibleFormats) {
+                    try {
+                        startDateTime = SimpleDateFormat(format, Locale.getDefault()).parse(startedAt)
+                        Log.d("ActivityFragment", "Successfully parsed with format: $format, result: $startDateTime")
+                        break
+                    } catch (e: Exception) {
+                        Log.d("ActivityFragment", "Failed to parse with format: $format")
+                        continue
+                    }
+                }
+            } else {
+                // Jika startedAt hanya berisi waktu, gabungkan dengan dateStarted
+                val combinedDateTime = "$dateStarted $startedAt"
+                Log.d("ActivityFragment", "Combined datetime: $combinedDateTime")
+
+                for (format in possibleFormats) {
+                    try {
+                        startDateTime = SimpleDateFormat(format, Locale.getDefault()).parse(combinedDateTime)
+                        Log.d("ActivityFragment", "Successfully parsed combined with format: $format, result: $startDateTime")
+                        break
+                    } catch (e: Exception) {
+                        Log.d("ActivityFragment", "Failed to parse combined with format: $format")
+                        continue
+                    }
+                }
+            }
+
+            if (startDateTime == null) {
+                Log.e("ActivityFragment", "All parsing attempts failed")
+            }
+
+            startDateTime
+        } catch (e: Exception) {
+            Log.e("ActivityFragment", "Error parsing start time", e)
+            null
+        }
+    }
 }

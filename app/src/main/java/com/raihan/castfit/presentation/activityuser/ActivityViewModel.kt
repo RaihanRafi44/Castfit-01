@@ -478,7 +478,7 @@ class ActivityViewModel(
         }
     }
 
-    private fun calculateDuration(dateStarted: String, startedAt: String): Int {
+    fun calculateDuration(dateStarted: String, startedAt: String): Int {
         return try {
             Log.d("ActivityViewModel", "Input - dateStarted: '$dateStarted', startedAt: '$startedAt'")
 
