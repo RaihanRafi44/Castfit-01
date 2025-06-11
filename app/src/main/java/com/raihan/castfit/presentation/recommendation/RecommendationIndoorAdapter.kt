@@ -57,6 +57,7 @@ class RecommendationIndoorAdapter(
         fun bind(item: PhysicalActivity){
             with(item){
                 binding.tvIndoorList.text = name
+                binding.ivIndoorIcon.setImageResource(physicalImg)
                 binding.root.setOnClickListener { itemClick(this) }
             }
         }

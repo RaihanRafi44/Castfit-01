@@ -8,6 +8,8 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.os.PowerManager
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.raihan.castfit.R
@@ -60,7 +62,7 @@ class NotificationReceiver: BroadcastReceiver() {
     }
 }*/
 
-class NotificationReceiver : BroadcastReceiver() {
+/*class NotificationReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         if (context == null || intent == null) return
 
@@ -93,15 +95,92 @@ class NotificationReceiver : BroadcastReceiver() {
             .setContentText(message)
             .setContentIntent(pendingIntent) // 🔥 ini yang bikin notifikasimu bisa ditekan
             .setAutoCancel(true)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
             .build()
 
-        /*val notification = NotificationCompat.Builder(context, channelId)
+        *//*val notification = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.ic_profile) // ganti sesuai icon app kamu
             .setContentTitle(title)
             .setContentText(message)
             .setAutoCancel(true)
-            .build()*/
+            .build()*//*
 
         notificationManager.notify(notificationId, notification)
+    }
+}*/
+
+class NotificationReceiver : BroadcastReceiver() {
+
+    companion object {
+        private const val WAKE_LOCK_TIMEOUT = 10000L // 10 detik
+    }
+
+    override fun onReceive(context: Context?, intent: Intent?) {
+        if (context == null || intent == null) return
+
+        // 5. Acquire wake lock untuk memastikan device bangun
+        val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+        val wakeLock = powerManager.newWakeLock(
+            PowerManager.PARTIAL_WAKE_LOCK,
+            "MyApp::NotificationWakeLock"
+        )
+
+        try {
+            wakeLock.acquire(WAKE_LOCK_TIMEOUT)
+
+            val title = intent.getStringExtra("title") ?: "Aktivitas Terjadwal"
+            val message = intent.getStringExtra("message") ?: "Ada aktivitas yang harus dilakukan hari ini."
+            val notificationId = intent.getIntExtra("notificationId", 0)
+
+            val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val channelId = "schedule_channel"
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val channel = NotificationChannel(
+                    channelId,
+                    "Schedule Notifications",
+                    NotificationManager.IMPORTANCE_HIGH
+                ).apply {
+                    // 6. Konfigurasi channel untuk bypass DND
+                    setBypassDnd(true)
+                    enableVibration(true)
+                    enableLights(true)
+                }
+                notificationManager.createNotificationChannel(channel)
+            }
+
+            val openAppIntent = Intent(context, SplashScreenActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+            val pendingIntent = PendingIntent.getActivity(
+                context,
+                0,
+                openAppIntent,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
+
+            val notification = NotificationCompat.Builder(context, channelId)
+                .setSmallIcon(R.drawable.ic_profile)
+                .setContentTitle(title)
+                .setContentText(message)
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(true)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setCategory(NotificationCompat.CATEGORY_REMINDER)
+                // 7. Tambahan untuk memastikan notifikasi muncul
+                .setVibrate(longArrayOf(0, 250, 250, 250))
+                .setDefaults(NotificationCompat.DEFAULT_ALL)
+                .setFullScreenIntent(pendingIntent, false) // untuk urgent notifications
+                .build()
+
+            notificationManager.notify(notificationId, notification)
+
+            Log.d("NotificationReceiver", "Notification sent at ${System.currentTimeMillis()}")
+
+        } finally {
+            if (wakeLock.isHeld) {
+                wakeLock.release()
+            }
+        }
     }
 }

@@ -1,7 +1,7 @@
 <resources>
 
     <style name="AppTheme" parent="Theme.Material3.Dark.NoActionBar">
-        <item name="colorPrimary">@color/md_theme_primary</item>
+        <!--<item name="colorPrimary">@color/md_theme_primary</item>
         <item name="colorOnPrimary">@color/md_theme_onPrimary</item>
         <item name="colorPrimaryContainer">@color/md_theme_primaryContainer</item>
         <item name="colorOnPrimaryContainer">@color/md_theme_onPrimaryContainer</item>
@@ -70,7 +70,7 @@
         <item name="colorCustomColor5">@color/colorCustomColor5</item>
         <item name="colorOnCustomColor5">@color/colorOnCustomColor5</item>
         <item name="colorCustomColor5Container">@color/colorCustomColor5Container</item>
-        <item name="colorOnCustomColor5Container">@color/colorOnCustomColor5Container</item>
+        <item name="colorOnCustomColor5Container">@color/colorOnCustomColor5Container</item>-->
     </style>
     <!-- Base application theme. -->
     <style name="Base.AppTheme" parent="Theme.Material3.DayNight.NoActionBar">

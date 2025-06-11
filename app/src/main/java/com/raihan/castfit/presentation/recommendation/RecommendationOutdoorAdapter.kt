@@ -57,6 +57,7 @@ class RecommendationOutdoorAdapter (
         fun bind(item: PhysicalActivity){
             with(item){
                 binding.tvOutdoorList.text = name
+                binding.ivOutdoorIcon.setImageResource(physicalImg)
                 binding.root.setOnClickListener { itemClick(this) }
             }
         }

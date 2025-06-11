@@ -3,6 +3,7 @@ package com.raihan.castfit.presentation.splashscreen
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.lifecycleScope
 import com.raihan.castfit.presentation.login.LoginActivity
 import com.raihan.castfit.databinding.ActivitySplashScreenBinding
@@ -19,6 +20,7 @@ class SplashScreenActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         setContentView(binding.root)
         checkIfUserLogin()
     }

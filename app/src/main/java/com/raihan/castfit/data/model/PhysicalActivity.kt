@@ -11,4 +11,5 @@ data class PhysicalActivity(
     val type: String,
     val minAge : Int,
     val maxAge : Int,
+    val physicalImg: Int
 ) : Parcelable

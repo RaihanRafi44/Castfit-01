@@ -40,7 +40,8 @@
         android:translationZ="4dp"
         app:cornerRadius="12dp"
         app:iconGravity="textStart"
-        app:iconPadding="0dp"/>
+        app:iconPadding="0dp"
+        android:visibility="gone"/>
 
     <LinearLayout
         android:id="@+id/right_info_layout"

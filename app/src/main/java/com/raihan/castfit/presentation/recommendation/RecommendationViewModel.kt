@@ -52,7 +52,14 @@ class RecommendationViewModel (
             }
 
             // Atur kondisi cuaca untuk aktivitas
-            val indoorOnlyWeather = listOf("Storm", "Rain", "Snow", "Thunderstorm", "Drizzle")
+            val indoorOnlyWeather = listOf("rain", "drizzle", "snow", "storm", "thunderstorm",
+                "heavy rain", "light rain", "moderate rain",
+                "heavy snow", "light snow", "moderate snow",
+                "blizzard", "sleet", "hail", "freezing rain",
+                "thundery outbreaks possible", "patchy rain possible",
+                "patchy snow possible", "patchy sleet possible",
+                "patchy freezing drizzle possible", "mist", "fog",
+                "overcast")
             val isBadWeather = indoorOnlyWeather.any { condition.contains(it, ignoreCase = true) }
 
             val indoor = filteredActivities.filter { it.type.equals("Indoor", ignoreCase = true) }

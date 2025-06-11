@@ -127,6 +127,8 @@ dependencies {
     implementation(libs.http.logging)
     implementation(libs.paging.runtime)
     implementation(libs.circleImageView)
+    implementation(libs.groupie)
+    implementation(libs.groupie.viewbinding)
     testImplementation(libs.junit)
     //testImplementation(libs.junit.jupiter)
     androidTestImplementation(libs.androidx.junit)

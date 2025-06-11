@@ -27,7 +27,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Time Count Progress"
-                android:textSize="22sp"
+                android:textSize="18sp"
                 android:textStyle="bold"
                 android:layout_marginStart="16dp"
                 android:layout_marginVertical="8dp" />
@@ -38,8 +38,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:gravity="end"
-                tools:text="00:00"
-                android:textSize="22sp"
+                tools:text="00:00:00"
+                android:textSize="18sp"
                 android:textStyle="bold"
                 android:layout_marginEnd="16dp"
                 android:layout_marginVertical="8dp" />

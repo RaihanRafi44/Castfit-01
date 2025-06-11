@@ -1,5 +1,5 @@
 <resources>
-    <color name="md_theme_primary">#DBC66E</color>
+    <!--<color name="md_theme_primary">#DBC66E</color>
     <color name="md_theme_onPrimary">#3A3000</color>
     <color name="md_theme_primaryContainer">#534600</color>
     <color name="md_theme_onPrimaryContainer">#F8E287</color>
@@ -211,5 +211,5 @@
     <color name="colorCustomColor5_highContrast">#FFEED6</color>
     <color name="colorOnCustomColor5_highContrast">#000000</color>
     <color name="colorCustomColor5Container_highContrast">#EABB69</color>
-    <color name="colorOnCustomColor5Container_highContrast">#120A00</color>
+    <color name="colorOnCustomColor5Container_highContrast">#120A00</color>-->
 </resources>
