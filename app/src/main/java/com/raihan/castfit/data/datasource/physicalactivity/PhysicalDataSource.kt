@@ -14,35 +14,35 @@ class PhysicalDataSourceImpl : PhysicalDataSource {
             PhysicalActivity(
                 name = "Jogging",
                 type = "Outdoor",
-                minAge = 6,
+                minAge = 5,
                 maxAge = 64,
                 physicalImg = R.drawable.img_jogging
             ),
             PhysicalActivity(
                 name = "Walking",
                 type = "Outdoor",
-                minAge = 6,
+                minAge = 5,
                 maxAge = 90,
                 physicalImg = R.drawable.img_walking
             ),
             PhysicalActivity(
                 name = "Cycling",
                 type = "Outdoor",
-                minAge = 6,
+                minAge = 5,
                 maxAge = 90,
                 physicalImg = R.drawable.img_cycling
             ),
             PhysicalActivity(
                 name = "Senam Otak",
                 type = "Indoor",
-                minAge = 6,
+                minAge = 5,
                 maxAge = 90,
                 physicalImg = R.drawable.img_brain
             ),
             PhysicalActivity(
                 name = "Senam Poco-Poco",
                 type = "Indoor",
-                minAge = 0,
+                minAge = 5,
                 maxAge = 90,
                 physicalImg = R.drawable.img_exercise
             ),
@@ -63,7 +63,7 @@ class PhysicalDataSourceImpl : PhysicalDataSource {
             PhysicalActivity(
                 name = "Jumping Jack",
                 type = "Indoor",
-                minAge = 6,
+                minAge = 5,
                 maxAge = 64,
                 physicalImg = R.drawable.img_jumping_jack
             ),

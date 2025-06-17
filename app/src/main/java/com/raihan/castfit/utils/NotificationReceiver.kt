@@ -7,6 +7,8 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.media.AudioAttributes
+import android.media.RingtoneManager
 import android.os.Build
 import android.os.PowerManager
 import android.util.Log
@@ -160,7 +162,7 @@ class NotificationReceiver : BroadcastReceiver() {
             )
 
             val notification = NotificationCompat.Builder(context, channelId)
-                .setSmallIcon(R.drawable.ic_profile)
+                .setSmallIcon(R.drawable.ic_android_castfit_removebg)
                 .setContentTitle(title)
                 .setContentText(message)
                 .setContentIntent(pendingIntent)

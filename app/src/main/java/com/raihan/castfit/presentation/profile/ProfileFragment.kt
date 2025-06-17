@@ -32,6 +32,12 @@ class ProfileFragment : Fragment() {
     private var dateOfBirthClickListener: View.OnClickListener? = null
     private var hasSavedAge = false
 
+    private var tempDateOfBirth: String? = null
+    private var tempAge: Int? = null
+
+    private var originalDateOfBirth: String? = null
+    private var originalAge: Int? = null
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -105,11 +111,18 @@ class ProfileFragment : Fragment() {
         checkDateOfBirthStatus()
     }
 
-    private fun exitEditMode() {
+    /*private fun exitEditMode() {
         profileViewModel.changeEditMode(isCancel = true)
 
         // Kembalikan teks ke nilai sebelumnya
         binding.layoutProfile.etName.setText(profileViewModel.editedFullName.value)
+
+        // Reset DOB jika belum disimpan
+        if (!hasSavedAge) {
+            checkDateOfBirthStatus()
+            tempDateOfBirth = null
+            tempAge = null
+        }
 
         binding.layoutProfile.btnEditProfile.visibility = View.VISIBLE
         binding.layoutProfile.btnCancelEdit.visibility = View.GONE
@@ -122,14 +135,59 @@ class ProfileFragment : Fragment() {
         // Hapus listener agar tidak bisa dibuka saat bukan edit mode
         binding.layoutProfile.etDateOfBirth.setOnClickListener(null)
         dateOfBirthClickListener = null
+    }*/
+
+    private fun exitEditMode() {
+        profileViewModel.changeEditMode(isCancel = true)
+
+        // Kembalikan teks ke nama sebelumnya
+        binding.layoutProfile.etName.setText(profileViewModel.editedFullName.value)
+
+        // Reset DOB & usia jika belum disimpan
+        if (!hasSavedAge && tempDateOfBirth != null && tempAge != null) {
+            // Reset ke nilai awal dari Firestore
+            binding.layoutProfile.etDateOfBirth.setText(originalDateOfBirth ?: "")
+            binding.layoutProfile.tvUserCurrentAge.text = if (originalAge != null) "${originalAge} Tahun" else ""
+
+            tempDateOfBirth = null
+            tempAge = null
+        }
+
+        binding.layoutProfile.btnEditProfile.visibility = View.VISIBLE
+        binding.layoutProfile.btnCancelEdit.visibility = View.GONE
+        binding.layoutProfile.llChangePassSave.visibility = View.GONE
+        binding.layoutProfile.flBtnLogout.visibility = View.VISIBLE
+
+        isSaveProfileButtonEnabled = false
+        updateSaveButtonState()
+
+        // Hapus listener DOB
+        binding.layoutProfile.etDateOfBirth.setOnClickListener(null)
+        dateOfBirthClickListener = null
     }
 
-    private fun doEditProfile() {
+
+    /*private fun doEditProfile() {
         if (checkNameValidation()) {
             val fullName = binding.layoutProfile.etName.text.toString().trim()
             proceedEdit(fullName)
         }
+    }*/
+
+    private fun doEditProfile() {
+        if (!checkNameValidation()) return
+
+        val fullName = binding.layoutProfile.etName.text.toString().trim()
+
+        // Simpan nama
+        proceedEdit(fullName)
+
+        // Simpan tanggal lahir jika dipilih dan belum pernah disimpan
+        if (!hasSavedAge && tempDateOfBirth != null && tempAge != null) {
+            saveDateOfBirthToFirestore(tempDateOfBirth!!, tempAge!!)
+        }
     }
+
 
     private fun proceedEdit(fullName: String) {
         profileViewModel.updateProfileName(fullName = fullName)
@@ -198,7 +256,7 @@ class ProfileFragment : Fragment() {
             .show()
     }
 
-    private fun showDatePickerDialog() {
+    /*private fun showDatePickerDialog() {
         if (hasSavedAge) return
 
         val calendar = Calendar.getInstance()
@@ -224,9 +282,40 @@ class ProfileFragment : Fragment() {
 
         datePickerDialog.datePicker.maxDate = System.currentTimeMillis()
         datePickerDialog.show()
+    }*/
+
+    private fun showDatePickerDialog() {
+        if (hasSavedAge) return
+
+        val calendar = Calendar.getInstance()
+        val year = calendar.get(Calendar.YEAR)
+        val month = calendar.get(Calendar.MONTH)
+        val day = calendar.get(Calendar.DAY_OF_MONTH)
+
+        val datePickerDialog = DatePickerDialog(requireContext(), { _, selectedYear, selectedMonth, selectedDay ->
+            val age = calculateAge(selectedYear, selectedMonth, selectedDay)
+            val dobString = "${selectedDay}/${selectedMonth + 1}/${selectedYear}"
+
+            // Simpan ke variabel sementara
+            tempDateOfBirth = dobString
+            tempAge = age
+
+            // Tampilkan ke UI tapi belum simpan
+            binding.layoutProfile.etDateOfBirth.setText(dobString)
+            binding.layoutProfile.tvUserCurrentAge.text = "$age Tahun"
+
+            // Tandai bahwa ada perubahan untuk di-save
+            isSaveProfileButtonEnabled = true
+            updateSaveButtonState()
+
+        }, year, month, day)
+
+        datePickerDialog.datePicker.maxDate = System.currentTimeMillis()
+        datePickerDialog.show()
     }
 
-    private fun checkDateOfBirthStatus() {
+
+    /*private fun checkDateOfBirthStatus() {
         profileViewModel.fetchDateOfBirthAndAge().observe(viewLifecycleOwner) { result ->
             result.proceedWhen(
                 doOnSuccess = {
@@ -263,9 +352,53 @@ class ProfileFragment : Fragment() {
                 }
             )
         }
+    }*/
+
+    private fun checkDateOfBirthStatus() {
+        profileViewModel.fetchDateOfBirthAndAge().observe(viewLifecycleOwner) { result ->
+            result.proceedWhen(
+                doOnSuccess = {
+                    val (dob, age) = it.payload ?: Pair(null, null)
+                    val isEdit = profileViewModel.isEditMode.value == true
+
+                    dob?.let {
+                        binding.layoutProfile.etDateOfBirth.setText(it)
+                        originalDateOfBirth = it // Simpan DOB asli
+                    }
+
+                    if (age != null && age > 0) {
+                        hasSavedAge = true
+                        originalAge = age // Simpan usia asli
+                        binding.layoutProfile.tvUserCurrentAge.text = "$age Tahun"
+                        binding.layoutProfile.etDateOfBirth.isEnabled = false
+                        binding.layoutProfile.etDateOfBirth.setOnClickListener(null)
+                    } else {
+                        hasSavedAge = false
+                        if (isEdit) {
+                            binding.layoutProfile.etDateOfBirth.isEnabled = true
+                            binding.layoutProfile.etDateOfBirth.setOnClickListener {
+                                AlertDialog.Builder(requireContext())
+                                    .setTitle("Input Tanggal Lahir")
+                                    .setMessage("Tanggal lahir hanya bisa diisi satu kali dan tidak bisa diubah. Lanjutkan?")
+                                    .setPositiveButton("Ya") { _, _ -> showDatePickerDialog() }
+                                    .setNegativeButton("Batal", null)
+                                    .show()
+                            }
+                        } else {
+                            binding.layoutProfile.etDateOfBirth.isEnabled = false
+                            binding.layoutProfile.etDateOfBirth.setOnClickListener(null)
+                        }
+                    }
+                },
+                doOnError = {
+                    Log.e("ProfileFragment", "Gagal memuat data DOB/age: ${it.exception}")
+                }
+            )
+        }
     }
 
-    private fun saveDateOfBirthToFirestore(day: Int, month: Int, year: Int, age: Int) {
+
+    /*private fun saveDateOfBirthToFirestore(day: Int, month: Int, year: Int, age: Int) {
         val dobString = "$day/${month + 1}/$year"
 
         profileViewModel.saveDateOfBirthAndAge(dobString, age).observe(viewLifecycleOwner) {
@@ -278,5 +411,28 @@ class ProfileFragment : Fragment() {
                 }
             )
         }
+    }*/
+
+    private fun saveDateOfBirthToFirestore(dobString: String, age: Int) {
+        profileViewModel.saveDateOfBirthAndAge(dobString, age).observe(viewLifecycleOwner) {
+            it.proceedWhen(
+                doOnSuccess = {
+                    hasSavedAge = true
+                    Toast.makeText(requireContext(), "Tanggal lahir berhasil disimpan.", Toast.LENGTH_SHORT).show()
+
+                    // Setelah disimpan, disable input
+                    binding.layoutProfile.etDateOfBirth.isEnabled = false
+                    binding.layoutProfile.etDateOfBirth.setOnClickListener(null)
+
+                    // Kosongkan variabel sementara
+                    tempDateOfBirth = null
+                    tempAge = null
+                },
+                doOnError = {
+                    Toast.makeText(requireContext(), "Gagal menyimpan tanggal lahir. Coba lagi.", Toast.LENGTH_SHORT).show()
+                }
+            )
+        }
     }
+
 }

@@ -54,11 +54,6 @@ class HomeViewModel(
         )
     }
 
-    /*fun loadSavedLocation() {
-        val savedLocation = locationRepository.getSavedLocation()
-        emitUiState(currentLocation = savedLocation)
-    }*/
-
     fun loadSavedLocation() {
         val savedLocation = locationRepository.getSavedLocation()
         emitUiState(currentLocation = savedLocation)

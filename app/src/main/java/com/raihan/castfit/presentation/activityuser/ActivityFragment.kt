@@ -102,8 +102,6 @@ class ActivityFragment : Fragment() {
     }*/
 
     private val groupAdapter = GroupAdapter<GroupieViewHolder>()
-
-
     private var currentWeatherCondition: String? = null
 
     override fun onCreateView(
@@ -116,7 +114,7 @@ class ActivityFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.POST_NOTIFICATIONS)
                 != PackageManager.PERMISSION_GRANTED
             ) {
@@ -126,7 +124,7 @@ class ActivityFragment : Fragment() {
                     1001
                 )
             }
-        }
+        }*/
 
         refreshWeatherData()
         observeCurrentWeather()
@@ -234,7 +232,10 @@ class ActivityFragment : Fragment() {
                         list.forEach { schedule ->
                             scheduleNotification(schedule)
                         }
-                    } ?: Log.d("ActivityFragment", "Schedule payload null")
+                    } ?: run{
+                        Log.d("ActivityFragment", "Schedule payload null")
+                        scheduleGroupieAdapter.setData(emptyList()) // Penting jika list kosong
+                    }
                 },
                 doOnError = {
                     Log.e("ActivityFragment", "Error loading schedule: ${it.exception}")
@@ -364,7 +365,8 @@ class ActivityFragment : Fragment() {
             .setPositiveButton("Ya") { _, _ ->
                 cancelScheduledNotification(schedule)
                 //scheduledAdapter.removeItem(position)
-                scheduleGroupieAdapter.removeItem(position) // Ganti dengan removeItem yang baru
+                //scheduleGroupieAdapter.removeItem(position) // Ganti dengan removeItem yang baru
+                scheduleGroupieAdapter.removeSchedule(schedule)
                 activityPhysicalViewModel.removeSchedule(schedule)
                 //scheduledAdapter.removeItem(position)
                 Log.d("ActivityLog", "Jadwal '${schedule.physicalActivityName}' akan dihapus dari scheduled list.")
@@ -446,7 +448,9 @@ class ActivityFragment : Fragment() {
                             cancelScheduledNotification(weatherCheck.schedule)
                             activityPhysicalViewModel.removeSchedule(weatherCheck.schedule)
                             selectedSchedulePosition?.let { position ->
-                                scheduleGroupieAdapter.removeItem(position)
+                                //scheduleGroupieAdapter.removeItem(position)
+                                scheduleGroupieAdapter.removeSchedule(weatherCheck.schedule)
+                                Toast.makeText(requireContext(), "Jadwal aktivitas berhasil dihapus", Toast.LENGTH_SHORT).show()
                             }
                         }
                         .setNegativeButton("Nanti Saja", null)
@@ -462,6 +466,13 @@ class ActivityFragment : Fragment() {
         activityPhysicalViewModel.startScheduledActivityResult.observe(viewLifecycleOwner) { result ->
             result?.let { success ->
                 if (success) {
+                    selectedSchedulePosition?.let { position ->
+                        val schedule = scheduleGroupieAdapter.getScheduleList().getOrNull(position)
+                        schedule?.let {
+                            scheduleGroupieAdapter.removeSchedule(it)
+                        }
+                    }
+                    selectedSchedulePosition = null
                     Log.d("ActivityFragment", "Start scheduled activity successful")
                     Toast.makeText(
                         requireContext(),
@@ -763,9 +774,6 @@ class ActivityFragment : Fragment() {
     private fun scheduleNotification(schedule: ScheduleActivity) {
         val context = requireContext()
 
-        // 1. Request battery optimization whitelist
-        //requestBatteryOptimizationWhitelist()
-
         val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
         val date = try {
@@ -825,10 +833,12 @@ class ActivityFragment : Fragment() {
                     )
                     alarmManager.setAlarmClock(alarmClockInfo, pendingIntent)
                 } else {
-                    val intentSettings = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                    /*val intentSettings = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
                         data = Uri.parse("package:${context.packageName}")
                     }
                     context.startActivity(intentSettings)
+                    break*/
+                    Log.w("ActivityFragment", "Cannot schedule exact alarms, skipping notification for ${startTime.time}")
                     break
                 }
             } else {
@@ -852,27 +862,6 @@ class ActivityFragment : Fragment() {
             startTime.add(Calendar.MINUTE, 30)
         }
     }
-
-    // 4. Fungsi untuk request battery optimization whitelist
-    /*@SuppressLint("ServiceCast", "BatteryLife", "ObsoleteSdkInt")
-    private fun requestBatteryOptimizationWhitelist() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val context = requireContext()
-            val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
-            val packageName = context.packageName
-
-            if (!powerManager.isIgnoringBatteryOptimizations(packageName)) {
-                val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
-                    data = Uri.parse("package:$packageName")
-                }
-                try {
-                    context.startActivity(intent)
-                } catch (e: Exception) {
-                    Log.e("ActivityFragment", "Failed to request battery optimization whitelist", e)
-                }
-            }
-        }
-    }*/
 
     private fun cancelScheduledNotification(schedule: ScheduleActivity) {
         val context = requireContext()
@@ -954,7 +943,7 @@ class ActivityFragment : Fragment() {
                 cancelScheduledNotification(activity)
                 //scheduledAdapter.removeItem(position)
                 selectedSchedulePosition?.let { position ->
-                    scheduleGroupieAdapter.removeItem(position)
+                    //scheduleGroupieAdapter.removeItem(position)
                 }
                 isCheckingProgress = false
             }

@@ -28,7 +28,7 @@
         android:layout_marginTop="28dp"
         android:text="Grafik Perkembanganmu"
         android:textAlignment="center"
-        android:textSize="24sp"
+        android:textSize="22sp"
         android:textStyle="bold"
         android:layout_marginEnd="16dp"
         app:layout_constraintEnd_toEndOf="parent"

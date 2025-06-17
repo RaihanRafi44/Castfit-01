@@ -121,10 +121,13 @@ class ScheduleGroupieAdapter(
 
     fun getAdapter(): GroupAdapter<GroupieViewHolder> = groupAdapter
 
+    fun getScheduleList(): List<ScheduleActivity> = scheduleList
+
     fun setData(data: List<ScheduleActivity>) {
         Log.d("ScheduleGroupieAdapter", "Setting data with ${data.size} items")
         scheduleList.clear()
         scheduleList.addAll(data)
+        //scheduleList = data
         updateGroupedData()
     }
 
@@ -144,37 +147,6 @@ class ScheduleGroupieAdapter(
     fun getItemPosition(schedule: ScheduleActivity): Int {
         return scheduleList.indexOfFirst { it.id == schedule.id }
     }
-
-    /*private fun updateGroupedData() {
-        val groupedItems = mutableListOf<Item<*>>()
-
-        // Group schedules by date, sama seperti logika di scheduledAdapter
-        val groupedByDate = scheduleList
-            .sortedBy { it.dateScheduled }
-            .groupBy { it.dateScheduled }
-
-        Log.d("ScheduleGroupieAdapter", "Grouped by ${groupedByDate.size} dates")
-
-        groupedByDate.forEach { (date, schedules) ->
-            // Add date header
-            val formattedDate = formatDateHeader(date)
-            groupedItems.add(DateHeaderItem(formattedDate))
-
-            // Add schedule items for this date
-            schedules.forEach { schedule ->
-                val originalPosition = scheduleList.indexOfFirst { it.id == schedule.id }
-                val scheduleItem = ScheduleItem(
-                    schedule = schedule,
-                    onCancelClick = onCancelClick,
-                    onFinishClick = onFinishClick
-                )
-                groupedItems.add(scheduleItem)
-            }
-        }
-
-        Log.d("ScheduleGroupieAdapter", "Total grouped items: ${groupedItems.size}")
-        groupAdapter.updateAsync(groupedItems)
-    }*/
 
     private fun updateGroupedData() {
         val groupedItems = mutableListOf<Item<*>>()
@@ -216,74 +188,6 @@ class ScheduleGroupieAdapter(
         groupAdapter.updateAsync(groupedItems)
     }
 
-    /*private fun updateGroupedData() {
-        val groupedItems = mutableListOf<Item<*>>()
-        val today = Calendar.getInstance()
-
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-
-        // Buat list sementara dan filter yang sudah lewat 14 hari
-        val expiredSchedules = mutableListOf<ScheduleActivity>()
-        val validSchedules = scheduleList.filter { schedule ->
-            try {
-                val scheduleDate = Calendar.getInstance().apply {
-                    time = dateFormat.parse(schedule.dateScheduled) ?: return@filter false
-                }
-                val diff = today.timeInMillis - scheduleDate.timeInMillis
-                val daysDiff = TimeUnit.MILLISECONDS.toDays(diff)
-
-                if (daysDiff > 14) {
-                    expiredSchedules.add(schedule)
-                    false // exclude from display
-                } else {
-                    true
-                }
-            } catch (e: Exception) {
-                false
-            }
-        }
-
-        // Hapus yang expired dari database
-        expiredSchedules.forEach { expired ->
-            removeSchedule(expired) // Implementasikan sesuai Room
-        }
-
-        // Update scheduleList agar tidak menampilkan yang dihapus
-        scheduleList.clear()
-        scheduleList.addAll(validSchedules)
-
-        // Pisahkan ke yang akan datang & sudah lewat
-        val (pastSchedules, upcomingSchedules) = validSchedules.partition {
-            val scheduleDate = Calendar.getInstance().apply {
-                time = dateFormat.parse(it.dateScheduled) ?: Date()
-            }
-            scheduleDate.before(today) && !isSameDay(scheduleDate, today)
-        }
-
-        fun buildGroupedItems(data: List<ScheduleActivity>) {
-            val grouped = data.sortedBy { it.dateScheduled }.groupBy { it.dateScheduled }
-            grouped.forEach { (date, schedules) ->
-                val formattedDate = formatDateHeader(date)
-                groupedItems.add(DateHeaderItem(formattedDate))
-                schedules.forEach { schedule ->
-                    groupedItems.add(
-                        ScheduleItem(
-                            schedule = schedule,
-                            onCancelClick = onCancelClick,
-                            onFinishClick = onFinishClick
-                        )
-                    )
-                }
-            }
-        }
-
-        buildGroupedItems(upcomingSchedules)
-        buildGroupedItems(pastSchedules.sortedByDescending { it.dateScheduled })
-
-        groupAdapter.updateAsync(groupedItems)
-    }*/
-
-
     private fun formatDateHeader(dateString: String?): String {
         return try {
             if (dateString.isNullOrEmpty()) return "Tanggal Tidak Valid"
@@ -314,109 +218,3 @@ class ScheduleGroupieAdapter(
                 cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR)
     }
 }
-/*
-class ScheduleAdapter(
-    private val onCancelClick: (ScheduleActivity, Int) -> Unit,
-    private val onFinishClick: (ScheduleActivity, Int) -> Unit
-) : RecyclerView.Adapter<ScheduleAdapter.ItemScheduleViewHolder>() {
-
-    private val differ = AsyncListDiffer(this,
-        object : DiffUtil.ItemCallback<ScheduleActivity>() {
-            override fun areItemsTheSame(
-                oldItem: ScheduleActivity,
-                newItem: ScheduleActivity
-            ): Boolean {
-                return oldItem.id == newItem.id
-            }
-
-            override fun areContentsTheSame(
-                oldItem: ScheduleActivity,
-                newItem: ScheduleActivity
-            ): Boolean {
-                return oldItem.hashCode() == newItem.hashCode()
-            }
-        })
-
-    fun setData(data: List<ScheduleActivity>) {
-        Log.d("ActivityAdapter", "Submit list size: ${data.size}")
-        differ.submitList(data)
-    }
-
-    fun removeItem(position: Int) {
-        val currentList = differ.currentList.toMutableList()
-        if (position >= 0 && position < currentList.size) {
-            currentList.removeAt(position)
-            differ.submitList(currentList.toList())
-        }
-    }
-
-    fun getItemPosition(schedule: ScheduleActivity): Int {
-        return differ.currentList.indexOfFirst { it.id == schedule.id }
-    }
-
-    override fun onCreateViewHolder(
-        parent: ViewGroup,
-        viewType: Int
-    ): ItemScheduleViewHolder {
-        val binding = LayoutScheduledActivityBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return ItemScheduleViewHolder(binding, onCancelClick, onFinishClick)
-    }
-
-    override fun getItemCount(): Int = differ.currentList.size
-
-    override fun onBindViewHolder(
-        holder: ItemScheduleViewHolder,
-        position: Int
-    ) {
-        holder.bind(differ.currentList[position], position)
-    }
-
-    class ItemScheduleViewHolder(
-        private val binding: LayoutScheduledActivityBinding,
-        private val onCancelClick: (ScheduleActivity, Int) -> Unit,
-        private val onFinishClick: (ScheduleActivity, Int) -> Unit
-    ) : RecyclerView.ViewHolder(binding.root) {
-
-        fun bind(item: ScheduleActivity, position: Int) {
-            with(item) {
-                binding.tvScheduledList.text = physicalActivityName
-                binding.tvDateScheduled.text = formatDateToDisplay(dateScheduled)
-                binding.btnCancelScheduled.setOnClickListener {
-                    onCancelClick(this, position)
-                }
-                */
-/*binding.btnContinueScheduled.setOnClickListener {
-                    onFinishClick(this, position)
-                }*//*
-
-                // Tombol continue hanya muncul jika tanggal adalah hari ini
-                val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-
-                if (dateScheduled == today) {
-                    binding.btnContinueScheduled.visibility = View.VISIBLE
-                    binding.btnContinueScheduled.setOnClickListener {
-                        onFinishClick(this, position)
-                    }
-                } else {
-                    binding.btnContinueScheduled.visibility = View.GONE
-                }
-            }
-        }
-
-        private fun formatDateToDisplay(dateString: String?): String {
-            return try {
-                if (dateString.isNullOrEmpty()) return ""
-
-                // Parse dari format yyyy-MM-dd
-                val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                val outputFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
-
-                val date = inputFormat.parse(dateString)
-                date?.let { outputFormat.format(it) } ?: dateString
-            } catch (e: Exception) {
-                Log.e("ScheduleAdapter", "Error formatting date: $dateString", e)
-                dateString ?: ""
-            }
-        }
-    }
-}*/

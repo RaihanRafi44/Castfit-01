@@ -47,6 +47,8 @@ class HomeFragment : Fragment() {
 
     private var isCheckingProfile = false
 
+    private var lastClickedButton: String? = null
+
     override fun onResume() {
         super.onResume()
         showUserData()
@@ -65,6 +67,11 @@ class HomeFragment : Fragment() {
         savedInstanceState: Bundle?
     ) {
         super.onViewCreated(view, savedInstanceState)
+        if (isLocationPermissionGranted()) {
+            getCurrentLocation()
+        } else {
+            requestLocationPermission()
+        }
         showUserData()
         observeCurrentLocation()
         homeViewModel.loadSavedLocation()
@@ -72,20 +79,33 @@ class HomeFragment : Fragment() {
         binding.swipeRefreshLayout.isEnabled = false
         homeViewModel.isProfileComplete.observe(viewLifecycleOwner) { isComplete ->
             if (!isCheckingProfile) return@observe
+
             if (isComplete == true) {
-                val intent = Intent(requireContext(), RecommendationActivity::class.java)
-                val weatherCondition = binding.homeWeather.textWeatherStatusHome.text.toString()
-                intent.putExtra("weatherCondition", weatherCondition)
-                startActivity(intent)
+                when (lastClickedButton) {
+                    "search" -> {
+                        val intent = Intent(requireContext(), RecommendationActivity::class.java)
+                        val weatherCondition = binding.homeWeather.textWeatherStatusHome.text.toString()
+                        intent.putExtra("weatherCondition", weatherCondition)
+                        startActivity(intent)
+                    }
+                    "schedule" -> {
+                        val intent = Intent(requireContext(), ScheduleActivity::class.java)
+                        startActivity(intent)
+                    }
+                }
             } else {
                 AlertDialog.Builder(requireContext())
                     .setTitle("Lengkapi Profil")
-                    .setMessage("Silakan lengkapi tanggal lahir di halaman profil terlebih dahulu untuk mendapatkan rekomendasi aktivitas.")
+                    .setMessage("Silakan lengkapi tanggal lahir di halaman profil terlebih dahulu untuk menggunakan fitur ini.")
                     .setPositiveButton("Oke", null)
                     .show()
             }
+
+            // Reset flag
             isCheckingProfile = false
+            lastClickedButton = null
         }
+
 
         binding.homeWeather.btnSearchActivity.setOnClickListener {
             val weatherData = homeViewModel.weather.value?.data
@@ -102,9 +122,11 @@ class HomeFragment : Fragment() {
 
             if (!isCheckingProfile) {
                 isCheckingProfile = true
+                lastClickedButton = "search"
                 homeViewModel.checkUserProfileComplete()
             }
         }
+
 
         binding.btnChartsUserActivity.setOnClickListener {
             val intent = Intent(requireContext(), ChartsHistoryActivity::class.java)
@@ -112,8 +134,11 @@ class HomeFragment : Fragment() {
         }
 
         binding.btnScheduleHome.setOnClickListener {
-            val intent = Intent(requireContext(), ScheduleActivity::class.java)
-            startActivity(intent)
+            if (!isCheckingProfile) {
+                isCheckingProfile = true
+                lastClickedButton = "schedule"
+                homeViewModel.checkUserProfileComplete()
+            }
         }
 
 
