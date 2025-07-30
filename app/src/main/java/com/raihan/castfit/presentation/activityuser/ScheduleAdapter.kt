@@ -21,7 +21,6 @@ import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
-// DateHeaderItem - sudah benar, tapi saya tambahkan beberapa improvement
 class DateHeaderItem(private val date: String) : BindableItem<LayoutDateHeaderScheduledBinding>() {
     override fun getLayout() = R.layout.layout_date_header_scheduled
 
@@ -33,7 +32,6 @@ class DateHeaderItem(private val date: String) : BindableItem<LayoutDateHeaderSc
         return LayoutDateHeaderScheduledBinding.bind(view)
     }
 
-    // Tambahkan untuk membedakan item yang sama
     override fun isSameAs(other: Item<*>): Boolean {
         return other is DateHeaderItem && other.date == date
     }
@@ -43,7 +41,6 @@ class DateHeaderItem(private val date: String) : BindableItem<LayoutDateHeaderSc
     }
 }
 
-// ScheduleItem - perlu diperbaiki berdasarkan scheduledAdapter
 class ScheduleItem(
     private val schedule: ScheduleActivity,
     private val onCancelClick: (ScheduleActivity, Int) -> Unit,
@@ -61,8 +58,6 @@ class ScheduleItem(
                 onCancelClick(this, position)
             }
 
-            // Tombol continue hanya muncul jika tanggal adalah hari ini
-            // (sama seperti di scheduledAdapter yang di-comment)
             val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
 
             if (dateScheduled == today) {
@@ -80,7 +75,6 @@ class ScheduleItem(
         return LayoutScheduledActivityBinding.bind(view)
     }
 
-    // Tambahkan untuk performa dan diferensiasi item
     override fun isSameAs(other: Item<*>): Boolean {
         return other is ScheduleItem && other.schedule.id == schedule.id
     }
@@ -89,15 +83,12 @@ class ScheduleItem(
         return other is ScheduleItem && other.schedule.hashCode() == schedule.hashCode()
     }
 
-    // Method untuk mengakses schedule dari luar (diperlukan untuk adapter)
     fun getSchedule(): ScheduleActivity = schedule
 
-    // Method formatDateToDisplay sama seperti di scheduledAdapter
     private fun formatDateToDisplay(dateString: String?): String {
         return try {
             if (dateString.isNullOrEmpty()) return ""
 
-            // Parse dari format yyyy-MM-dd
             val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
             val outputFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
 
@@ -110,7 +101,6 @@ class ScheduleItem(
     }
 }
 
-// ScheduleGroupieAdapter yang menggunakan item-item di atas
 class ScheduleGroupieAdapter(
     private val onCancelClick: (ScheduleActivity, Int) -> Unit,
     private val onFinishClick: (ScheduleActivity, Int) -> Unit
@@ -127,12 +117,10 @@ class ScheduleGroupieAdapter(
         Log.d("ScheduleGroupieAdapter", "Setting data with ${data.size} items")
         scheduleList.clear()
         scheduleList.addAll(data)
-        //scheduleList = data
         updateGroupedData()
     }
 
     fun removeItem(position: Int) {
-        // Cari schedule berdasarkan position di list asli
         if (position >= 0 && position < scheduleList.size) {
             scheduleList.removeAt(position)
             updateGroupedData()
@@ -160,7 +148,6 @@ class ScheduleGroupieAdapter(
             scheduleDate.before(today) && !isSameDay(scheduleDate, today)
         }
 
-        // Fungsi untuk mengelompokkan dan membuat item Groupie per tanggal
         fun buildGroupedItems(data: List<ScheduleActivity>) {
             val grouped = data.sortedBy { it.dateScheduled }.groupBy { it.dateScheduled }
 
@@ -179,9 +166,7 @@ class ScheduleGroupieAdapter(
             }
         }
 
-        // Urutan: upcoming & today dulu, lalu past
         buildGroupedItems(upcomingSchedules)
-        //buildGroupedItems(pastSchedules)
         buildGroupedItems(pastSchedules.sortedByDescending { it.dateScheduled })
 
         Log.d("ScheduleGroupieAdapter", "Total grouped items: ${groupedItems.size}")

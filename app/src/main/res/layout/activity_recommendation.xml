@@ -75,6 +75,18 @@
                 android:visibility="gone"
                 android:layout_marginTop="12dp" />
 
+            <TextView
+                android:id="@+id/tv_outdoor_age_not_capable"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Tidak ada aktivitas outdoor yang direkomendasikan untuk usia anda"
+                android:textAlignment="center"
+                android:padding="16dp"
+                android:textSize="16sp"
+                android:textColor="@android:color/darker_gray"
+                android:visibility="gone"
+                android:layout_marginTop="12dp" />
+
         </FrameLayout>
         <include
             android:id="@+id/inc_indoor_title"
@@ -100,6 +112,18 @@
                 app:layout_constraintVertical_bias="0.0"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 tools:listitem="@layout/layout_indoor_sports"/>
+
+            <TextView
+                android:id="@+id/tv_indoor_age_not_capable"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Tidak ada aktivitas indoor yang direkomendasikan untuk usia anda"
+                android:textAlignment="center"
+                android:padding="16dp"
+                android:textSize="16sp"
+                android:textColor="@android:color/darker_gray"
+                android:visibility="gone"
+                android:layout_marginTop="12dp" />
 
         </FrameLayout>
 

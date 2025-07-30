@@ -14,17 +14,6 @@ class ForgotPassViewModel (private val repository: UserRepository) : ViewModel()
     val loginResult: LiveData<ResultWrapper<Boolean>>
         get() = _loginResult
 
-    fun doLogin(
-        email: String,
-        password: String
-    ){
-        viewModelScope.launch(Dispatchers.IO){
-            repository.doLogin(email, password).collect{
-                _loginResult.postValue(it)
-            }
-        }
-    }
-
     fun requestForgotPassword(email: String) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.requestForgotPassword(email).collect {

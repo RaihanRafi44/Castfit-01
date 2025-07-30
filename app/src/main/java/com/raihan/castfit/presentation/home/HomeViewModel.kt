@@ -22,17 +22,22 @@ class HomeViewModel(
     private val weatherRepository: WeatherRepository
 ) : ViewModel() {
 
+    // State lokasi saat ini
     private val _currentLocation = MutableLiveData<CurrentLocationUiState>()
     val currentLocation: LiveData<CurrentLocationUiState> get() = _currentLocation
 
+    // State cuaca saat ini
     private val _weather = MutableLiveData<WeatherUiState>()
     val weather: LiveData<WeatherUiState> get() = _weather
 
+    // Status kelengkapan profil
     private val _isProfileComplete = MutableLiveData<Boolean>()
     val isProfileComplete: LiveData<Boolean> get() = _isProfileComplete
 
+    // Mendapatkan data user saat ini
     fun getCurrentUser() = userRepository.getCurrentUser()
 
+    // Ambil lokasi terkini dan simpan, lalu ambil data cuaca berdasarkan lokasi
     fun fetchLocation(
         fusedLocationProviderClient: FusedLocationProviderClient,
         geocoder: Geocoder
@@ -54,14 +59,15 @@ class HomeViewModel(
         )
     }
 
+    // Muat lokasi tersimpan dan ambil data cuaca jika belum ada
     fun loadSavedLocation() {
         val savedLocation = locationRepository.getSavedLocation()
         emitUiState(currentLocation = savedLocation)
 
-        // If location exists and weather data is not available, fetch weather
+        // Jika lokasi ada dan data cuaca tidak tersedia, fetch weather
         savedLocation?.let { location ->
             if (location.latitude != null && location.longitude != null) {
-                // Check if weather data is already available
+                // Cek apakah data cuaca sudah tersedia
                 val currentWeatherState = _weather.value
                 if (currentWeatherState?.data == null && currentWeatherState?.isLoading != true) {
                     Log.d("HomeViewModel", "Location available but no weather data, fetching weather")
@@ -82,6 +88,7 @@ class HomeViewModel(
         }
     }
 
+    // Ambil data cuaca dari repository menggunakan lat dan lon
     private fun fetchWeather(lat: Double?, lon: Double?) {
         if (lat == null || lon == null) return
         viewModelScope.launch {
@@ -104,6 +111,7 @@ class HomeViewModel(
         }
     }
 
+    // Update UI state untuk lokasi
     private fun emitUiState(
         isLoading: Boolean = false,
         currentLocation: Location? = null,
@@ -112,6 +120,7 @@ class HomeViewModel(
         _currentLocation.postValue(CurrentLocationUiState(isLoading, currentLocation, error))
     }
 
+    // Cek apakah profil user sudah lengkap (tanggal lahir dan usia)
     fun checkUserProfileComplete() {
         viewModelScope.launch {
             userRepository.getUserDateOfBirthAndAge().collect { result ->
@@ -132,12 +141,15 @@ class HomeViewModel(
             }
         }
     }
+
+    // UI state untuk data cuaca
     data class WeatherUiState(
         val isLoading: Boolean = false,
         val data: Weather? = null,
         val error: String? = null
     )
 
+    // UI state untuk data lokasi
     data class CurrentLocationUiState(
         val isLoading: Boolean,
         val currentLocation: Location?,

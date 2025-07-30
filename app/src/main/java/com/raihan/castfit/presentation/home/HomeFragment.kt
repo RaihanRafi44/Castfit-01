@@ -26,15 +26,16 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 class HomeFragment : Fragment() {
 
     private lateinit var binding: FragmentHomeBinding
-    //private val homeViewModel: HomeViewModel by viewModel()
     private val homeViewModel: HomeViewModel by activityViewModel()
 
+    // Inisialisasi fused location client dan geocoder untuk deteksi lokasi
     private val fusedLocationProviderClient by lazy {
         LocationServices.getFusedLocationProviderClient(requireContext())
     }
 
     private val geocoder by lazy { Geocoder(requireContext()) }
 
+    // Request permission launcher untuk akses lokasi
     private val locationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -51,7 +52,7 @@ class HomeFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        showUserData()
+        showUserData() // Tampilkan data pengguna saat fragment kembali aktif
     }
 
     override fun onCreateView(
@@ -78,8 +79,11 @@ class HomeFragment : Fragment() {
         observeWeather()
         binding.swipeRefreshLayout.isEnabled = false
         homeViewModel.isProfileComplete.observe(viewLifecycleOwner) { isComplete ->
+
+            // Jika tidak dalam pengecekan profil, langsung keluar dari observer.
             if (!isCheckingProfile) return@observe
 
+            // Jika profil sudah lengkap, maka lanjut sesuai tombol yang terakhir ditekan user
             if (isComplete == true) {
                 when (lastClickedButton) {
                     "search" -> {
@@ -94,14 +98,14 @@ class HomeFragment : Fragment() {
                     }
                 }
             } else {
-                AlertDialog.Builder(requireContext())
+                AlertDialog.Builder(requireContext()) // Jika profil belum lengkap, tampilkan dialog peringatan ke pengguna.
                     .setTitle("Lengkapi Profil")
                     .setMessage("Silakan lengkapi tanggal lahir di halaman profil terlebih dahulu untuk menggunakan fitur ini.")
                     .setPositiveButton("Oke", null)
                     .show()
             }
 
-            // Reset flag
+            // Setelah aksi dilakukan atau dibatalkan, reset flag
             isCheckingProfile = false
             lastClickedButton = null
         }
@@ -151,6 +155,7 @@ class HomeFragment : Fragment() {
         }
     }
 
+    // Observe lokasi dari ViewModel dan tampilkan ke UI
     private fun observeCurrentLocation() {
         homeViewModel.currentLocation.observe(viewLifecycleOwner) { uiState ->
             when {
@@ -171,21 +176,24 @@ class HomeFragment : Fragment() {
         }
     }
 
-
+    // Meminta lokasi saat ini dari ViewModel menggunakan fused location
     private fun getCurrentLocation() {
         homeViewModel.fetchLocation(fusedLocationProviderClient, geocoder)
     }
 
+    // Mengecek apakah izin lokasi sudah diberikan
     private fun isLocationPermissionGranted(): Boolean {
         return ContextCompat.checkSelfPermission(
             requireContext(), Manifest.permission.ACCESS_FINE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
     }
 
+    // Meminta izin akses lokasi kepada pengguna
     private fun requestLocationPermission() {
         locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
     }
 
+    // Lanjutkan proses ambil lokasi jika izin diberikan
     private fun proceedWithCurrentLocation(){
         if (isLocationPermissionGranted()) {
             getCurrentLocation()
@@ -194,6 +202,7 @@ class HomeFragment : Fragment() {
         }
     }
 
+    // Observe data cuaca dan tampilkan info cuaca ke UI
     private fun observeWeather() {
         homeViewModel.weather.observe(viewLifecycleOwner) { weather ->
             weather?.data?.current?.let { currentWeather ->

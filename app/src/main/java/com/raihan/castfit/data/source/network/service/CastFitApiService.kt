@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit
 
 interface CastFitApiService {
 
+    // Mendefinisikan endpoint API untuk mengambil data cuaca dengan parameter key dan lokasi.
     @GET("forecast.json")
     suspend fun getWeatherData(
         @Query("key") key: String = API_KEY,
@@ -19,6 +20,8 @@ interface CastFitApiService {
     ): WeatherData
 
     companion object {
+        // Membuat instance Retrofit yang terhubung dengan OkHttpClient
+        // untuk melakukan request ke server dan parsing response ke objek Kotlin.
         @JvmStatic
         operator fun invoke(): CastFitApiService {
             val okHttpClient =
@@ -29,8 +32,8 @@ interface CastFitApiService {
             val retrofit =
                 Retrofit.Builder()
                     .baseUrl(BuildConfig.BASE_URL)
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .client(okHttpClient)
+                    .addConverterFactory(GsonConverterFactory.create()) // Gson parsing
+                    .client(okHttpClient) // menghubungkan Retrofit ke OkHttp
                     .build()
             return retrofit.create(CastFitApiService::class.java)
         }

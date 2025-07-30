@@ -46,10 +46,12 @@ class RegisterActivity : AppCompatActivity() {
     }
 
     private fun doRegister() {
-        if (isFormValid()) {
-            val email = binding.layoutRegister.etEmail.text.toString().trim()
-            val password = binding.layoutRegister.etPassword.text.toString().trim()
-            val fullName = binding.layoutRegister.etName.text.toString().trim()
+        val email = binding.layoutRegister.etEmail.text.toString().trim()
+        val password = binding.layoutRegister.etPassword.text.toString().trim()
+        val confirmPassword = binding.layoutRegister.etConfirmPassword.text.toString().trim()
+        val fullName = binding.layoutRegister.etName.text.toString().trim()
+
+        if (isFormValid(fullName, email, password, confirmPassword)) {
             proceedRegister(email, password, fullName)
         }
     }
@@ -92,17 +94,19 @@ class RegisterActivity : AppCompatActivity() {
         }
     }
 
-    private fun isFormValid(): Boolean {
-        val password = binding.layoutRegister.etPassword.text.toString().trim()
-        val confirmPassword = binding.layoutRegister.etConfirmPassword.text.toString().trim()
-        val fullName = binding.layoutRegister.etName.text.toString().trim()
-        val email = binding.layoutRegister.etEmail.text.toString().trim()
-
-        return checkNameValidation(fullName) && checkEmailValidation(email) &&
+    private fun isFormValid(
+        fullName: String,
+        email: String,
+        password: String,
+        confirmPassword: String
+    ): Boolean {
+        return checkNameValidation(fullName) &&
+                checkEmailValidation(email) &&
                 checkPasswordValidation(password, binding.layoutRegister.tilPassword) &&
                 checkPasswordValidation(confirmPassword, binding.layoutRegister.tilConfirmPassword) &&
                 checkPwdAndConfirmPwd(password, confirmPassword)
     }
+
 
     private fun checkNameValidation(fullName: String): Boolean {
         return if (fullName.isEmpty()) {

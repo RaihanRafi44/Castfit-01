@@ -28,7 +28,6 @@ class SplashScreenActivity : AppCompatActivity() {
     private fun checkIfUserLogin() {
         lifecycleScope.launch {
             delay(2000)
-            // todo : checking user login
             if (splashViewModel.isUserLoggedIn()) {
                 navigateToMain()
             } else {

@@ -2,9 +2,11 @@ package com.raihan.castfit.presentation.recommendation
 
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.raihan.castfit.data.model.PhysicalActivity
@@ -23,35 +25,38 @@ class RecommendationActivity : AppCompatActivity() {
     private lateinit var indoorAdapter: RecommendationIndoorAdapter
     private lateinit var outdoorAdapter: RecommendationOutdoorAdapter
 
-    private var isDialogShown = false
+    //private var isDialogShown = false
+    // Menandai apakah sedang memeriksa progress aktivitas
     private var isCheckingProgress = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
 
-        // Check if user is logged in first
+        // Cek apakah user sudah login, jika belum keluar dari activity
         if (recommendationViewModel.getCurrentUser() == null) {
             Toast.makeText(this, "Please log in to continue", Toast.LENGTH_LONG).show()
             finish()
             return
         }
 
+        // Inisialisasi adapter dan listener pemilihan aktivitas
         indoorAdapter = RecommendationIndoorAdapter { activity ->
-            //showConfirmationDialog(activity)
             handleActivitySelection(activity)
         }
 
         outdoorAdapter = RecommendationOutdoorAdapter { activity ->
-            //showConfirmationDialog(activity)
             handleActivitySelection(activity)
         }
+
         proceedList()
         observeViewModel()
-        //recommendationViewModel.loadActivities()
+
+        // Ambil kondisi cuaca dari intent dan load aktivitas yang sesuai
         val weatherCondition = intent.getStringExtra("weatherCondition") ?: ""
         Log.d("RecommendationActivity", "Received weather condition: $weatherCondition")
         recommendationViewModel.loadActivitiesBasedOnWeather(weatherCondition)
+
         backHomePage()
 
     }
@@ -68,28 +73,60 @@ class RecommendationActivity : AppCompatActivity() {
         }
     }
 
-    /*private fun observeViewModel() {
-        recommendationViewModel.indoorActivities.observe(this) { indoorAdapter.setData(it) }
-        recommendationViewModel.outdoorActivities.observe(this) { outdoorAdapter.setData(it) }
-    }*/
-
+    // Mengamati perubahan data dari ViewModel dan menyesuaikan UI
     private fun observeViewModel() {
         recommendationViewModel.indoorActivities.observe(this) {
             indoorAdapter.setData(it)
         }
 
+        // Observe outdoor list dan data lengkap sekaligus
         recommendationViewModel.outdoorActivities.observe(this) { outdoorList ->
             outdoorAdapter.setData(outdoorList)
 
-            if (outdoorList.isNullOrEmpty()) {
-                binding.rvOutdoorList.visibility = android.view.View.GONE
-                binding.tvOutdoorEmpty.visibility = android.view.View.VISIBLE
-            } else {
-                binding.rvOutdoorList.visibility = android.view.View.VISIBLE
-                binding.tvOutdoorEmpty.visibility = android.view.View.GONE
+            val userAge = recommendationViewModel.userAge.value
+            val allActivities = recommendationViewModel.allActivities.value
+
+            if (userAge != null && allActivities != null) {
+                val outdoorAll = allActivities.filter { it.type.equals("Outdoor", ignoreCase = true) }
+
+                val isOutdoorCapable = outdoorAll.any { activity ->
+                    userAge >= activity.minAge
+                }
+
+                when {
+                    !isOutdoorCapable -> {
+                        binding.rvOutdoorList.isVisible = false
+                        binding.tvOutdoorEmpty.isVisible = false
+                        binding.tvOutdoorAgeNotCapable.isVisible = true
+                    }
+                    outdoorList.isNullOrEmpty() -> {
+                        binding.rvOutdoorList.isVisible = false
+                        binding.tvOutdoorEmpty.isVisible = true
+                        binding.tvOutdoorAgeNotCapable.isVisible = false
+                    }
+                    else -> {
+                        binding.rvOutdoorList.isVisible = true
+                        binding.tvOutdoorEmpty.isVisible = false
+                        binding.tvOutdoorAgeNotCapable.isVisible = false
+                    }
+                }
             }
         }
+
+        recommendationViewModel.allActivities.observe(this) { allActivities ->
+            val userAge = recommendationViewModel.userAge.value
+            val indoorAll = allActivities.filter { it.type.equals("Indoor", ignoreCase = true) }
+
+            val isIndoorCapable = indoorAll.any { activity ->
+                userAge != null && userAge >= activity.minAge
+            }
+
+            binding.tvIndoorAgeNotCapable.visibility = if (!isIndoorCapable) View.VISIBLE else View.GONE
+            binding.rvIndoorList.visibility = if (!isIndoorCapable) View.GONE else View.VISIBLE
+
+        }
     }
+
 
 
     @Suppress("DEPRECATION")
@@ -99,21 +136,7 @@ class RecommendationActivity : AppCompatActivity() {
         }
     }
 
-    /*private fun showConfirmationDialog(activity: PhysicalActivity) {
-        AlertDialog.Builder(this).apply {
-            setTitle("Konfirmasi")
-            setMessage("Apakah Anda ingin memulai aktivitas \"${activity.name}\"?")
-            setPositiveButton("OK") { _, _ ->
-                recommendationViewModel.addToProgress(activity)
-                Toast.makeText(this@RecommendationActivity, "Aktivitas ditambahkan ke progress", Toast.LENGTH_SHORT).show()
-                Log.d("ActivityLog", "Aktivitas '${activity.name}' berhasil ditambahkan ke halaman Activity.")
-                finish() // Kembali ke halaman utama
-            }
-            setNegativeButton("Batal", null)
-            create()
-            show()
-        }
-    }*/
+    // Menampilkan dialog konfirmasi sebelum memulai aktivitas
     private fun showConfirmationDialog(activity: PhysicalActivity) {
         AlertDialog.Builder(this).apply {
             setTitle("Konfirmasi")
@@ -136,7 +159,7 @@ class RecommendationActivity : AppCompatActivity() {
     }
 
 
-
+    // Menangani pemilihan aktivitas, dan cek apakah user sudah punya aktivitas berjalan
     private fun handleActivitySelection(activity: PhysicalActivity) {
         if (isCheckingProgress) return
         isCheckingProgress = true

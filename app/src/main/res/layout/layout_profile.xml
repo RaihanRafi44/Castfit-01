@@ -95,7 +95,7 @@
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/et_name"
                 android:layout_width="match_parent"
-                android:layout_height="50dp"
+                android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"/>
 
         </com.google.android.material.textfield.TextInputLayout>
@@ -123,7 +123,7 @@
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/et_email"
                 android:layout_width="match_parent"
-                android:layout_height="50dp"
+                android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
                 android:inputType="textEmailAddress" />
 
@@ -188,71 +188,68 @@
             android:textSize="20sp"
             android:textStyle="bold"/>
 
-        <LinearLayout
-            android:id="@+id/ll_change_pass_save"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/cl_change_pass_save"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
             android:paddingHorizontal="16dp"
-            android:gravity="center_vertical"
-            android:visibility="gone">
+            android:paddingVertical="16dp"
+            android:visibility="visible">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_change_pass"
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_marginEnd="12dp"
+                android:text="Ubah Password"
+                android:textColor="@color/md_theme_scrim_highContrast"
+                android:backgroundTint="@color/md_theme_primaryFixed"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                app:iconGravity="end"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/fl_save_container"/>
 
             <FrameLayout
+                android:id="@+id/fl_save_container"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="start"
-                android:layout_marginVertical="16dp">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_change_pass"
-                    android:layout_width="match_parent"
-                    android:layout_height="44dp"
-                    android:layout_marginHorizontal="12dp"
-                    android:gravity="center"
-                    android:text="Ubah Password"
-                    android:textColor="@color/md_theme_scrim_highContrast"
-                    app:iconGravity="end"
-                    android:backgroundTint="@color/md_theme_primaryFixed" />
-
-            </FrameLayout>
-
-            <FrameLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="end"
-                android:layout_marginVertical="16dp">
+                android:layout_height="44dp"
+                android:layout_marginStart="12dp"
+                app:layout_constraintStart_toEndOf="@id/btn_change_pass"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_save"
                     android:layout_width="match_parent"
-                    android:layout_height="44dp"
-                    android:layout_marginHorizontal="12dp"
-                    android:gravity="center"
+                    android:layout_height="match_parent"
                     android:text="Save"
                     android:textColor="@color/md_theme_scrim_highContrast"
-                    app:iconGravity="end"
-                    android:backgroundTint="@color/saveButton" />
+                    android:backgroundTint="@color/saveButton"
+                    android:gravity="center"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    app:iconGravity="end" />
 
                 <com.google.android.material.progressindicator.CircularProgressIndicator
                     android:id="@+id/pb_loading_save"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
                     android:layout_gravity="center"
-                    app:indicatorColor="@color/md_theme_primaryFixedDim"
-                    android:indeterminate="true"
-                    android:layout_marginEnd="4dp"
-                    android:visibility="gone" />
+                    android:visibility="gone"
+                    app:indicatorColor="@color/md_theme_primaryFixedDim" />
             </FrameLayout>
 
-        </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
 
         <FrameLayout
             android:id="@+id/fl_btn_logout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:visibility="visible"
+            android:visibility="gone"
             android:layout_marginVertical="16dp">
 
             <com.google.android.material.button.MaterialButton

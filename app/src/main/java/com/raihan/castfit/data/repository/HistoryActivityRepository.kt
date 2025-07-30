@@ -46,7 +46,7 @@ class HistoryActivityRepositoryImpl(
 ) : HistoryActivityRepository {
 
     override fun getUserHistoryData(): Flow<ResultWrapper<List<HistoryActivity>>> {
-        // Get current user ID
+
         val currentUserId = firebaseAuth.currentUser?.uid
 
         if (currentUserId == null) {
@@ -117,8 +117,8 @@ class HistoryActivityRepositoryImpl(
             }
 
             val historyEntity = HistoryActivityEntity(
-                id = null, // Auto-generate ID
-                userId = currentUserId,  // FIXED: Simpan userId langsung
+                id = null,
+                userId = currentUserId,
                 progressId = progress.id,
                 physicalActivityName = progress.physicalActivityName,
                 dateEnded = dateEnded,

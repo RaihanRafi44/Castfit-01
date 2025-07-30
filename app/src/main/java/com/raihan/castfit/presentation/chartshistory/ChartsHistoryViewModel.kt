@@ -16,29 +16,24 @@ class ChartsHistoryViewModel(
     private val dateFormat = SimpleDateFormat("dd/MM", Locale.getDefault())
     private val fullDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
-    // Cache physical activities data untuk performance
+    // Peta aktivitas fisik berdasarkan nama
     private val physicalActivitiesMap by lazy {
         physicalDataSource.getPhysicalActivitiesData().associateBy { it.name }
     }
 
     fun getAllHistory() = historyRepository.getUserHistoryData().asLiveData(Dispatchers.IO)
 
-    /**
-     * Get activity type based on activity name from PhysicalDataSource
-     */
+    // Mengambil tipe aktivitas berdasarkan nama
     fun getActivityType(activityName: String?): String {
-        return physicalActivitiesMap[activityName]?.type ?: "Indoor" // Default to Indoor if not found
+        return physicalActivitiesMap[activityName]?.type ?: "Indoor" // Default ke Indoor
     }
 
-    /**
-     * Get the last 7 days date range
-     * This method handles the sliding window logic where dates update every day
-     */
+    // Menghasilkan daftar 7 tanggal terakhir (termasuk hari ini) untuk grafik
     fun getLast7DaysRange(): List<Date> {
         val calendar = Calendar.getInstance()
         val dates = mutableListOf<Date>()
 
-        // Start from 6 days ago to today (total 7 days)
+        // Start dari 6 hari yang lalu hingga hari ini (total 7 hari)
         calendar.add(Calendar.DAY_OF_YEAR, -6)
 
         for (i in 0..6) {
@@ -49,10 +44,7 @@ class ChartsHistoryViewModel(
         return dates
     }
 
-    /**
-     * Get date range from user's first login until now
-     * This is used for the initial period when user has less than 7 days of activity
-     */
+    // Menghasilkan rentang tanggal dari tanggal login pertama hingga hari ini (maks. 7 hari)
     fun getDateRangeFromFirstLogin(firstLoginDate: String): List<Date> {
         val calendar = Calendar.getInstance()
         val today = calendar.time
@@ -68,7 +60,7 @@ class ChartsHistoryViewModel(
                     calendar.add(Calendar.DAY_OF_YEAR, 1)
                 }
 
-                // If more than 7 days, return only last 7 days
+                // Jika lebih dari 7 hari, akan menampilkan hanya 7 hari terakhir
                 return if (dates.size > 7) {
                     dates.takeLast(7)
                 } else {
@@ -76,52 +68,15 @@ class ChartsHistoryViewModel(
                 }
             }
         } catch (e: Exception) {
-            // If parsing fails, return last 7 days
+            // Jika parsing gagal, kembalikan 7 hari terakhir
             return getLast7DaysRange()
         }
 
         return getLast7DaysRange()
     }
 
-    /**
-     * Format date for chart categories
-     */
+    // Format tanggal menjadi string pendek (dd/MM) untuk ditampilkan di grafik
     fun formatDateForChart(date: Date): String {
         return dateFormat.format(date)
-    }
-
-    /**
-     * Format duration for display
-     * Returns appropriate string based on duration rules
-     */
-    fun formatDuration(durationInSeconds: Int): Any {
-        val durationInMinutes = durationInSeconds / 60
-        return when {
-            durationInMinutes == 0 -> 0
-            durationInMinutes < 1 -> "<1 menit"
-            else -> durationInMinutes
-        }
-    }
-
-    /**
-     * Check if current date is within the first 7 days since user registration
-     */
-    fun isWithinFirstWeek(firstLoginDate: String): Boolean {
-        try {
-            val firstLogin = fullDateFormat.parse(firstLoginDate)
-            if (firstLogin != null) {
-                val calendar = Calendar.getInstance()
-                calendar.time = firstLogin
-                calendar.add(Calendar.DAY_OF_YEAR, 7)
-
-                val sevenDaysAfterFirstLogin = calendar.time
-                val today = Date()
-
-                return today <= sevenDaysAfterFirstLogin
-            }
-        } catch (e: Exception) {
-            return false
-        }
-        return false
     }
 }

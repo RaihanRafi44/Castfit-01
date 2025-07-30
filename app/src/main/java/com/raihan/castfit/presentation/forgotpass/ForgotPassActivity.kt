@@ -11,16 +11,20 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class ForgotPassActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityForgotPassBinding
+    private val binding: ActivityForgotPassBinding by lazy {
+        ActivityForgotPassBinding.inflate(layoutInflater)
+    }
     private val forgotPassViewModel: ForgotPassViewModel by viewModel()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityForgotPassBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
         setupForm()
+        setCLickListeners()
+        observeForgotPasswordResult()
+    }
 
+    private fun setCLickListeners(){
         binding.btnForgotPassword.setOnClickListener {
             val email = binding.layoutFpass.etEmail.text.toString().trim()
             if (email.isEmpty()) {
@@ -29,8 +33,6 @@ class ForgotPassActivity : AppCompatActivity() {
                 forgotPassViewModel.requestForgotPassword(email)
             }
         }
-
-        observeForgotPasswordResult()
     }
 
     private fun setupForm() {

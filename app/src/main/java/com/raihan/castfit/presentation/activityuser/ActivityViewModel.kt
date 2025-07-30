@@ -29,27 +29,21 @@ class ActivityViewModel(
     private val firebaseAuth: FirebaseAuth
 ) : ViewModel() {
 
-    // Track delete operation result
     private val _deleteOperationResult = MutableLiveData<Boolean?>()
     val deleteOperationResult: LiveData<Boolean?> = _deleteOperationResult
 
-    // Track finish operation result
     private val _finishOperationResult = MutableLiveData<Boolean?>()
     val finishOperationResult: LiveData<Boolean?> = _finishOperationResult
 
-    // Track delete history operation result
     private val _deleteHistoryResult = MutableLiveData<Boolean?>()
     val deleteHistoryResult: LiveData<Boolean?> = _deleteHistoryResult
 
-    // Track delete schedule operation result
     private val _deleteScheduleResult = MutableLiveData<Boolean?>()
     val deleteScheduleResult: LiveData<Boolean?> = _deleteScheduleResult
 
-    // Track weather check result for scheduled activities
     private val _weatherCheckResult = MutableLiveData<WeatherCheckResult?>()
     val weatherCheckResult: LiveData<WeatherCheckResult?> = _weatherCheckResult
 
-    // Track start scheduled activity result
     private val _startScheduledActivityResult = MutableLiveData<Boolean?>()
     val startScheduledActivityResult: LiveData<Boolean?> = _startScheduledActivityResult
 
@@ -61,7 +55,7 @@ class ActivityViewModel(
 
     fun removeProgress(item: ProgressActivity) {
         viewModelScope.launch(Dispatchers.IO) {
-            // Check if user is logged in
+            // Cek apakah suer login
             val currentUserId = firebaseAuth.currentUser?.uid
             if (currentUserId == null) {
                 Log.e("ActivityViewModel", "Cannot delete: User not logged in")
@@ -69,7 +63,7 @@ class ActivityViewModel(
                 return@launch
             }
 
-            // Check if the progress belongs to current user
+            // Cek apakah progress milik pengguna saat ini
             if (item.userId != currentUserId) {
                 Log.e("ActivityViewModel", "Cannot delete: Progress doesn't belong to current user")
                 _deleteOperationResult.postValue(false)
@@ -109,7 +103,7 @@ class ActivityViewModel(
 
     fun removeSchedule(item: ScheduleActivity) {
         viewModelScope.launch(Dispatchers.IO) {
-            // Check if user is logged in
+            // Cek apakah user login
             val currentUserId = firebaseAuth.currentUser?.uid
             if (currentUserId == null) {
                 Log.e("ActivityViewModel", "Cannot delete schedule: User not logged in")
@@ -117,7 +111,7 @@ class ActivityViewModel(
                 return@launch
             }
 
-            // Check if the schedule belongs to current user
+            // Cek apakah progress milik pengguna saat ini
             if (item.userId != currentUserId) {
                 Log.e("ActivityViewModel", "Cannot delete schedule: Schedule doesn't belong to current user")
                 _deleteScheduleResult.postValue(false)
@@ -155,6 +149,7 @@ class ActivityViewModel(
         }
     }
 
+    // Periksa apakah cuaca cocok untuk memulai aktivitas berdasarkan jenis aktivitas dan kondisi cuaca
     fun checkWeatherForScheduledActivity(schedule: ScheduleActivity, currentWeatherCondition: String?) {
         viewModelScope.launch {
             try {
@@ -162,11 +157,11 @@ class ActivityViewModel(
                 Log.d("ActivityViewModel", "Activity type: ${schedule.physicalActivityType}")
                 Log.d("ActivityViewModel", "Current weather: $currentWeatherCondition")
 
-                // Check if activity type is outdoor
+                // Cek apakah aktivitas outdoor
                 val isOutdoorActivity = schedule.physicalActivityType?.equals("Outdoor", ignoreCase = true) == true
 
                 if (!isOutdoorActivity) {
-                    // Indoor activity - always allowed
+                    // Aktivitas indoor selalu diizinkan
                     Log.d("ActivityViewModel", "Indoor activity - weather check passed")
                     _weatherCheckResult.postValue(
                         WeatherCheckResult(
@@ -179,7 +174,7 @@ class ActivityViewModel(
                     return@launch
                 }
 
-                // Check if weather condition is suitable for outdoor activities
+                // Cek apakah kondisi cuaca cocok untuk aktivitas outdoor
                 val isWeatherSuitable = isWeatherSuitableForOutdoor(currentWeatherCondition)
 
                 if (isWeatherSuitable) {
@@ -217,6 +212,7 @@ class ActivityViewModel(
         }
     }
 
+    // Mengecek apakah cuaca cocok untuk aktivitas outdoor
     private fun isWeatherSuitableForOutdoor(weatherCondition: String?): Boolean {
         if (weatherCondition.isNullOrEmpty()) {
             Log.w("ActivityViewModel", "Weather condition is null or empty")
@@ -263,11 +259,11 @@ class ActivityViewModel(
 
                 Log.d("ActivityViewModel", "Starting scheduled activity: ${schedule.physicalActivityName}")
 
-                // Create current date and time
+                // Membuat current time
                 val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
                 val currentTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
 
-                // Create progress activity from schedule
+                // Membuat progress activity dari jadwal
                 val progressActivity = ProgressActivity(
                     userId = currentUserId,
                     physicalActivityId = schedule.physicalActivityId,
@@ -276,12 +272,11 @@ class ActivityViewModel(
                     startedAt = currentTime
                 )
 
-                // Add to progress
                 progressRepository.createProgressByEntity(progressActivity).collect { createResult ->
                     when (createResult) {
                         is ResultWrapper.Success -> {
                             Log.d("ActivityViewModel", "Successfully created progress activity")
-                            // After successfully creating progress, delete from schedule
+                            // Jika sukses membuat progress, hapus jadwal
                             scheduleRepository.deleteSchedule(schedule).collect { deleteResult ->
                                 when (deleteResult) {
                                     is ResultWrapper.Success -> {
@@ -324,7 +319,7 @@ class ActivityViewModel(
 
     fun finishActivity(item: ProgressActivity) {
         viewModelScope.launch(Dispatchers.IO) {
-            // Check if user is logged in
+            // Cek apakah user login
             val currentUserId = firebaseAuth.currentUser?.uid
             if (currentUserId == null) {
                 Log.e("ActivityViewModel", "Cannot finish: User not logged in")
@@ -332,7 +327,7 @@ class ActivityViewModel(
                 return@launch
             }
 
-            // Check if the progress belongs to current user
+            // Cek apakah progress milik pengguna saat ini
             if (item.userId != currentUserId) {
                 Log.e("ActivityViewModel", "Cannot finish: Progress doesn't belong to current user")
                 _finishOperationResult.postValue(false)
@@ -353,10 +348,7 @@ class ActivityViewModel(
                 val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
                 val currentTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
 
-                // Hitung durasi (contoh: dari dateStarted sampai sekarang)
-                /*val duration = item.dateStarted?.let { item.startedAt?.let { it1 ->
-                    calculateDuration(it, it1)
-                } }*/
+                // Hitung durasi
                 val date = item.dateStarted
                 val time = item.startedAt
                 val duration = if (date != null && time != null) {
@@ -370,9 +362,8 @@ class ActivityViewModel(
 
                 Log.d("ActivityViewModel", "Creating history with duration: $duration minutes")
 
-                // FIXED: Implementasi sequential untuk menghindari race condition
                 if (duration != null) {
-                    // Step 1: Buat history terlebih dahulu
+                    // Buat history
                     historyRepository.createHistory(
                         progress = item,
                         dateEnded = currentDate,
@@ -383,7 +374,7 @@ class ActivityViewModel(
                             is ResultWrapper.Success -> {
                                 Log.d("ActivityViewModel", "Successfully created history for: ${item.physicalActivityName}")
 
-                                // Step 2: Setelah history berhasil dibuat, baru hapus dari progress
+                                // Setelah history berhasil dibuat, baru hapus dari progress
                                 viewModelScope.launch(Dispatchers.IO) {
                                     progressRepository.deleteProgress(item).collect { deleteResult ->
                                         when (deleteResult) {
@@ -432,7 +423,7 @@ class ActivityViewModel(
 
     fun removeHistory(item: HistoryActivity) {
         viewModelScope.launch(Dispatchers.IO) {
-            // Check if user is logged in
+            // Cek apakah user login
             val currentUserId = firebaseAuth.currentUser?.uid
             if (currentUserId == null) {
                 Log.e("ActivityViewModel", "Cannot delete history: User not logged in")
@@ -440,7 +431,7 @@ class ActivityViewModel(
                 return@launch
             }
 
-            // FIXED: Check if the history belongs to current user
+            // Cek apakah history milik pengguna saat ini
             if (item.userId != currentUserId) {
                 Log.e("ActivityViewModel", "Cannot delete history: History doesn't belong to current user")
                 _deleteHistoryResult.postValue(false)
@@ -482,7 +473,6 @@ class ActivityViewModel(
         return try {
             Log.d("ActivityViewModel", "Input - dateStarted: '$dateStarted', startedAt: '$startedAt'")
 
-            // Coba beberapa format yang mungkin
             val possibleFormats = listOf(
                 "yyyy-MM-dd HH:mm:ss",
                 "yyyy-MM-dd HH:mm",
@@ -538,8 +528,6 @@ class ActivityViewModel(
             Log.d("ActivityViewModel", "Difference in millis: $diffInMillis")
             Log.d("ActivityViewModel", "Difference in seconds: ${diffInMillis / 1000}")
 
-            // Pastikan minimal 1 menit jika ada selisih waktu
-            //return if (diffInMinutes == 0 && diffInMillis > 0) 1 else diffInMinutes
             return diffInMinutes
 
         } catch (e: Exception) {
@@ -549,6 +537,7 @@ class ActivityViewModel(
         }
     }
 
+    // Cek apakah user memiliki progress aktif (suspend function)
     suspend fun checkIfUserHasProgressSuspend(): Boolean {
         val result = progressRepository.getUserProgressData().first {
             it !is ResultWrapper.Loading // tunggu sampai bukan loading

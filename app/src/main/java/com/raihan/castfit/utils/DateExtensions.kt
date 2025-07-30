@@ -10,6 +10,6 @@ fun String.toReadableDate(): String {
         val date = inputFormat.parse(this)
         outputFormat.format(date ?: return this)
     } catch (e: Exception) {
-        this // fallback ke string asli kalau parsing gagal
+        this
     }
 }

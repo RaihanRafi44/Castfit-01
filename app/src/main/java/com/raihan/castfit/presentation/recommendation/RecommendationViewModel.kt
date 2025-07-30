@@ -32,17 +32,25 @@ class RecommendationViewModel (
     private val _outdoorActivities = MutableLiveData<List<PhysicalActivity>>()
     val outdoorActivities: LiveData<List<PhysicalActivity>> = _outdoorActivities
 
-    // Tambahkan LiveData untuk tracking progress creation
     private val _progressCreationResult = MutableLiveData<Boolean>()
-    val progressCreationResult: LiveData<Boolean> = _progressCreationResult
 
+    private val _userAge = MutableLiveData<Int?>()
+    val userAge: LiveData<Int?> = _userAge
+
+    private val _allActivities = MutableLiveData<List<PhysicalActivity>>()
+    val allActivities: LiveData<List<PhysicalActivity>> = _allActivities
+
+    // Memuat dan menyaring aktivitas berdasarkan cuaca dan usia pengguna
     fun loadActivitiesBasedOnWeather(condition: String) {
         viewModelScope.launch {
             val result = userRepository.getUserDateOfBirthAndAge()
                 .firstOrNull { it is ResultWrapper.Success }
 
             val age = (result as? ResultWrapper.Success)?.payload?.second
+            _userAge.postValue(age)
+
             val allActivities = dataSource.getPhysicalActivitiesData()
+            _allActivities.postValue(allActivities)
             Log.d("RecommendationVM", "Filtered age: $age")
 
             val filteredActivities = if (age != null) {
@@ -71,6 +79,7 @@ class RecommendationViewModel (
         }
     }
 
+    // Menambahkan aktivitas ke daftar progress milik pengguna saat ini
     fun addToProgress(activity: PhysicalActivity) {
         viewModelScope.launch {
             val currentUser = userRepository.getCurrentUser()
@@ -122,6 +131,8 @@ class RecommendationViewModel (
         val sdf = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault())
         return sdf.format(java.util.Date())
     }
+
+    // Mengecek apakah pengguna sudah memiliki aktivitas yang sedang berlangsung
     suspend fun checkIfUserHasProgressSuspend(): Boolean {
         val result = progressRepository.getUserProgressData().first {
             it !is ResultWrapper.Loading // tunggu sampai bukan loading

@@ -34,12 +34,13 @@ class ScheduleViewModel(
     private var currentUser: User? = null
     private var allActivities: List<PhysicalActivity> = emptyList()
 
-    // Panggil ini dari Fragment atau Activity
+    // Memuat data awal: user saat ini dan aktivitas berdasarkan usia
     fun loadInitialData() {
         loadCurrentUser()
         loadActivitiesBasedOnUserAge()
     }
 
+    // Mengambil data user dari repository atau fallback ke Firebase Auth jika gagal
     private fun loadCurrentUser() {
         viewModelScope.launch {
             try {
@@ -51,7 +52,7 @@ class ScheduleViewModel(
                         }
                         is ResultWrapper.Error -> {
                             Log.e("ScheduleViewModel", "Failed to load current user: ${result.exception}")
-                            // Fallback: gunakan data dari Firebase Auth
+
                             val firebaseUser = FirebaseAuth.getInstance().currentUser
                             if (firebaseUser != null) {
                                 currentUser = firebaseUser.toUser()
@@ -63,7 +64,7 @@ class ScheduleViewModel(
                 }
             } catch (e: Exception) {
                 Log.e("ScheduleViewModel", "Error loading user data", e)
-                // Fallback: gunakan data dari Firebase Auth
+
                 val firebaseUser = FirebaseAuth.getInstance().currentUser
                 if (firebaseUser != null) {
                     currentUser = firebaseUser.toUser()
@@ -73,6 +74,7 @@ class ScheduleViewModel(
         }
     }
 
+    // Mengambil seluruh aktivitas lalu menyaring berdasarkan usia user
     private fun loadActivitiesBasedOnUserAge() {
         viewModelScope.launch {
             try {
@@ -96,11 +98,13 @@ class ScheduleViewModel(
         }
     }
 
+    // Mengecek apakah aktivitas cocok dengan usia user
     private fun isActivitySuitableForAge(activity: PhysicalActivity, age: Int?): Boolean {
         if (age == null) return true
-        return age in (activity.minAge ?: 0)..(activity.maxAge ?: 100)
+        return age in (activity.minAge)..(activity.maxAge)
     }
 
+    // Menyimpan jadwal aktivitas fisik
     fun saveSchedule(selectedActivityName: String, selectedDate: String, weatherStatus: String = "Cerah") {
         Log.d("ScheduleViewModel", "saveSchedule called with: activity='$selectedActivityName', date='$selectedDate'")
 
@@ -110,7 +114,7 @@ class ScheduleViewModel(
             return
         }
 
-        // Pastikan currentUser tidak null
+
         if (currentUser == null) {
             Log.e("ScheduleViewModel", "Current user is null, trying to get from Firebase Auth")
             val firebaseUser = FirebaseAuth.getInstance().currentUser
@@ -172,6 +176,7 @@ class ScheduleViewModel(
         }
     }
 
+    // Mereset status hasil penyimpanan agar bisa digunakan ulang
     fun resetSaveResult() {
         _saveScheduleResult.value = null
     }

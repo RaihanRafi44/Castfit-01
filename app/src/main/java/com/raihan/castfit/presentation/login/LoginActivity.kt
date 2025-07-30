@@ -34,6 +34,7 @@ class LoginActivity : AppCompatActivity() {
         observeResult()
     }
 
+    // Menampilkan field email dan password
     private fun setupForm() {
         with(binding.layoutLogin) {
             tilEmail.isVisible = true
@@ -41,6 +42,7 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
+    // Mengamati hasil login dan menampilkan UI sesuai status
     private fun observeResult() {
         loginViewModel.loginResult.observe(this) {
             it.proceedWhen(
@@ -49,6 +51,8 @@ class LoginActivity : AppCompatActivity() {
                     binding.btnLogin.isVisible = true
                     // Simpan tanggal login pertama jika belum ada
                     val sharedPref = getSharedPreferences("user_prefs", MODE_PRIVATE)
+                    // Untuk mengecek apakah sudah ada first_login_date di shared preferences
+                    // Jika belum, maka jalankan kode dibawah, jika sudah ada maka kode dilewati
                     if (!sharedPref.contains("first_login_date")) {
                         val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
                         sharedPref.edit().putString("first_login_date", today).apply()
@@ -72,6 +76,7 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
+    // Pindah ke halaman utama
     private fun navigateToMain() {
         startActivity(
             Intent(this, MainActivity::class.java).apply {
@@ -101,22 +106,26 @@ class LoginActivity : AppCompatActivity() {
         )
     }
 
+    // Menjalankan proses login jika form valid
     private fun doLogin() {
-        if (isFormValid()) {
-            val email = binding.layoutLogin.etEmail.text.toString().trim()
-            val password = binding.layoutLogin.etPassword.text.toString().trim()
+        val email = binding.layoutLogin.etEmail.text.toString().trim()
+        val password = binding.layoutLogin.etPassword.text.toString().trim()
+
+        if (isFormValid(email, password)) {
             loginViewModel.doLogin(email, password)
         }
     }
 
-    private fun isFormValid(): Boolean {
-        val email = binding.layoutLogin.etEmail.text.toString().trim()
-        val password = binding.layoutLogin.etPassword.text.toString().trim()
-
+    // Validasi email dan password
+    private fun isFormValid(
+        email: String,
+        password: String
+    ): Boolean {
         return checkEmailValidation(email) &&
                 checkPasswordValidation(password, binding.layoutLogin.tilPassword)
     }
 
+    // Validasi input email
     private fun checkEmailValidation(email: String): Boolean {
         return if (email.isEmpty()) {
             binding.layoutLogin.tilEmail.isErrorEnabled = true
@@ -132,6 +141,7 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
+    // Validasi input password
     private fun checkPasswordValidation(
         confirmPassword: String,
         textInputLayout: TextInputLayout,

@@ -101,7 +101,7 @@ class ProgressActivityRepositoryImpl(
             }
 
             val entity = ProgressActivityEntity(
-                id = null, // PENTING: Set null agar Room auto-generate ID
+                id = null,
                 userId = user.id,
                 physicalActivityId = activity.id,
                 physicalActivityName = activity.name,
@@ -113,7 +113,7 @@ class ProgressActivityRepositoryImpl(
             val insertedId = dataSource.insertProgress(entity)
             Log.d("CreateProgress", "Progress inserted with ID = $insertedId")
 
-            insertedId > 0L // Return true if the insertion was successful
+            insertedId > 0L // Return true jika penyisipan berhasil
         }
     }
 
@@ -125,7 +125,7 @@ class ProgressActivityRepositoryImpl(
                 throw IllegalArgumentException("Invalid progress ID")
             }
 
-            // Validasi user ownership
+            // Validasi user
             val currentUserId = firebaseAuth.currentUser?.uid
             if (currentUserId != progress.userId) {
                 Log.e("DeleteProgress", "Cannot delete: User mismatch (current: $currentUserId, progress: ${progress.userId})")
@@ -159,14 +159,14 @@ class ProgressActivityRepositoryImpl(
 
     override fun createProgressByEntity(progress: ProgressActivity): Flow<ResultWrapper<Boolean>> {
         return proceedFlow {
-            // Get current user ID from Firebase Auth
+
             val currentUserId = firebaseAuth.currentUser?.uid
             if (currentUserId.isNullOrEmpty()) {
                 Log.e("CreateProgress", "Cannot create progress: User not logged in")
                 throw IllegalStateException("User not logged in")
             }
 
-            // Validate input
+            // Validasi input
             if (progress.physicalActivityName.isNullOrBlank()) {
                 Log.e("CreateProgress", "Cannot create progress: Activity name is blank")
                 throw IllegalArgumentException("Activity name cannot be blank")
@@ -183,7 +183,7 @@ class ProgressActivityRepositoryImpl(
             }
 
             val entity = ProgressActivityEntity(
-                id = null, // Set null agar Room auto-generate ID
+                id = null,
                 userId = currentUserId,
                 physicalActivityId = progress.physicalActivityId,
                 physicalActivityName = progress.physicalActivityName,
@@ -195,7 +195,7 @@ class ProgressActivityRepositoryImpl(
             val insertedId = dataSource.insertProgress(entity)
             Log.d("CreateProgress", "Progress inserted with ID = $insertedId")
 
-            insertedId > 0L // Return true if the insertion was successful
+            insertedId > 0L // Return true jika penyisipan berhasil
         }
     }
 }

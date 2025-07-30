@@ -47,6 +47,7 @@ class FirebaseServiceImpl(
     private val firebaseAuth: FirebaseAuth,
     private val firestore: FirebaseFirestore
     ) : FirebaseService {
+    // Login dengan email dan password
     override suspend fun doLogin(
         email: String,
         password: String,
@@ -55,6 +56,7 @@ class FirebaseServiceImpl(
         return loginResult.user != null
     }
 
+    // Registrasi akun baru dan simpan data ke Firestore
     override suspend fun doRegister(email: String, fullName: String, password: String): Boolean {
         val registerResult = firebaseAuth.createUserWithEmailAndPassword(email, password).await()
         val firebaseUser = registerResult.user ?: return false
@@ -68,10 +70,8 @@ class FirebaseServiceImpl(
 
         // Simpan data user ke Firestore
         val userMap = hashMapOf(
-            //"uid" to firebaseUser.uid,
             "fullName" to fullName,
             "email" to email,
-            // Tambah field lain jika perlu, misal age, dateOfBirth
             "age" to 0,
             "dateOfBirth" to ""
         )
@@ -80,6 +80,7 @@ class FirebaseServiceImpl(
         return true
     }
 
+    // Update nama di FirebaseAuth dan Firestore
     override suspend fun updateProfile(fullName: String?): Boolean {
         val user = getCurrentUser() ?: return false
         if (fullName != null) {
@@ -103,11 +104,13 @@ class FirebaseServiceImpl(
         return true
     }
 
+    // Ganti password user saat ini
     override suspend fun updateEmail(newEmail: String): Boolean {
         getCurrentUser()?.verifyBeforeUpdateEmail(newEmail)?.await()
         return true
     }
 
+    // Kirim email reset password
     override fun requestChangePasswordByEmail(): Boolean {
         getCurrentUser()?.email?.let {
             firebaseAuth.sendPasswordResetEmail(it)
@@ -124,10 +127,12 @@ class FirebaseServiceImpl(
         return firebaseAuth.currentUser != null
     }
 
+    // Ambil user yang sedang login
     override fun getCurrentUser(): FirebaseUser? {
         return firebaseAuth.currentUser
     }
 
+    // Ambil data user dari Firestore berdasarkan UID
     override suspend fun getUserDataFromFirestore(uid: String): User? {
         val doc = Firebase.firestore.collection("users").document(uid).get().await()
         return if (doc.exists()) {
