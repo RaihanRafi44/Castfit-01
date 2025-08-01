@@ -78,5 +78,15 @@
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
     </style>
 
+    <!-- Tambahkan ke tema agar MaterialDatePicker tampil sebagai dialog -->
+    <style name="CustomDatePickerDialog" parent="ThemeOverlay.Material3.MaterialCalendar">
+        <item name="materialCalendarStyle">@style/CustomCalendar</item>
+    </style>
+
+    <style name="CustomCalendar" parent="Widget.Material3.MaterialCalendar">
+        <item name="android:windowFullscreen">false</item>
+    </style>
+
+
 
 </resources>
