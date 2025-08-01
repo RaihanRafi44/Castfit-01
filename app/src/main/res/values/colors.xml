@@ -215,4 +215,6 @@
     <color name="purple_01">#DDAEFF</color>
     <color name="saveButton">#43D330</color>
     <color name="editButtonProfile">#F1E7D9</color>
+    <color name="filter_button">#F48FB1</color>
+    <color name="filter_chips">#FCE4EC</color>
 </resources>

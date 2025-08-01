@@ -203,11 +203,67 @@
 
         </com.google.android.material.card.MaterialCardView>
 
+        <LinearLayout
+            android:id="@+id/filter_row"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginStart="32dp"
+            android:layout_marginEnd="32dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:gravity="center_vertical"
+            app:layout_constraintTop_toBottomOf="@id/mcw_history_title"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_filter_history"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Filter Tanggal"
+                android:textSize="14sp"
+                android:textColor="@color/md_theme_scrim"
+                android:paddingHorizontal="16dp"
+                app:cornerRadius="20dp"
+                app:backgroundTint="@color/filter_button"
+                app:strokeWidth="0dp"
+                android:minHeight="0dp"
+                android:insetTop="8dp"
+                android:insetBottom="8dp"
+                android:insetLeft="0dp"
+                android:insetRight="0dp"
+                android:visibility="gone"
+                 />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_selected_date_range"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="01/07/2025 - 31/07/2025"
+                android:textSize="14sp"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="6dp"
+                android:clickable="true"
+                android:checkable="false"
+                android:visibility="gone"
+                app:chipBackgroundColor="@color/filter_chips"
+                app:closeIconEnabled="true"
+                app:closeIconVisible="true"
+                app:closeIconTint="@color/md_theme_scrim"
+                style="@style/Widget.MaterialComponents.Chip.Choice" />
+        </LinearLayout>
+
         <FrameLayout
             android:id="@+id/fl_history"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:layout_constraintTop_toBottomOf="@id/mcw_history_title">
+            app:layout_constraintTop_toBottomOf="@id/filter_row">
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rv_history_list"

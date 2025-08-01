@@ -124,12 +124,14 @@ class ChartsHistoryActivity : AppCompatActivity() {
                 AASeriesElement()
                     .name("Indoor")
                     .data(chartData.indoorData.toTypedArray())
-                    .color("#4CAF50"), // Hijau
+                    //.color("#4CAF50"), // Hijau
+                    .color("#FFA500"),
 
                 AASeriesElement()
                     .name("Outdoor")
                     .data(chartData.outdoorData.toTypedArray())
-                    .color("#2196F3") // Biru
+                    //.color("#2196F3") // Biru
+                    .color("#724B24")
             ))
 
         val aaOptions = aaChartModel.aa_toAAOptions()
@@ -174,12 +176,14 @@ class ChartsHistoryActivity : AppCompatActivity() {
                 AASeriesElement()
                     .name("Indoor")
                     .data(emptyData.indoorData.toTypedArray())
-                    .color("#4CAF50"),
+                    //.color("#4CAF50"),
+                    .color("#FFA500"),
 
                 AASeriesElement()
                     .name("Outdoor")
                     .data(emptyData.outdoorData.toTypedArray())
-                    .color("#2196F3")
+                    //.color("#2196F3")
+                    .color("#724B24")
             ))
 
         val aaOptions = aaChartModel.aa_toAAOptions()

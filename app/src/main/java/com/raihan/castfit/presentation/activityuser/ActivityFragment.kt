@@ -3,6 +3,7 @@ package com.raihan.castfit.presentation.activityuser
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.AlarmManager
+import android.app.DatePickerDialog
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -25,12 +26,16 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.datepicker.CalendarConstraints
+import com.google.android.material.datepicker.DateValidatorPointBackward
+import com.google.android.material.datepicker.MaterialDatePicker
 import com.raihan.castfit.R
 import com.raihan.castfit.data.model.HistoryActivity
 import com.raihan.castfit.data.model.PhysicalActivity
 import com.raihan.castfit.data.model.ProgressActivity
 import com.raihan.castfit.data.model.ScheduleActivity
 import com.raihan.castfit.databinding.FragmentActivityBinding
+import com.raihan.castfit.presentation.filterhistory.FilterBottomSheetFragment
 import com.raihan.castfit.presentation.home.HomeViewModel
 import com.raihan.castfit.utils.NotificationReceiver
 import com.raihan.castfit.utils.proceedWhen
@@ -63,6 +68,9 @@ class ActivityFragment : Fragment() {
     private var isScheduledExpanded = false
     private var isOnProgressExpanded = false
     private var isHistoryExpanded = false
+
+    private var startDateFilter: Long? = null
+    private var endDateFilter: Long? = null
 
     private val scheduleGroupieAdapter = ScheduleGroupieAdapter(
         onCancelClick = { schedule, position ->
@@ -107,6 +115,21 @@ class ActivityFragment : Fragment() {
         observeDeleteScheduleResult()
         observeStartScheduledActivityResult()
         loadWeatherData()
+        binding.btnFilterHistory.setOnClickListener {
+            showDateRangePicker()
+        }
+        binding.chipSelectedDateRange.setOnCloseIconClickListener {
+            /*binding.chipSelectedDateRange.visibility = View.GONE
+            binding.chipSelectedDateRange.text = ""*/
+            startDateFilter = null
+            endDateFilter = null
+            binding.chipSelectedDateRange.visibility = View.GONE
+            binding.chipSelectedDateRange.text = ""
+
+            // Reload semua history tanpa filter
+            observeData()
+
+        }
     }
 
     private fun setupExpandableSections() {
@@ -125,15 +148,18 @@ class ActivityFragment : Fragment() {
         setupExpandable(
             titleView = binding.mcwHistoryTitle,
             recyclerView = binding.rvHistoryList,
-            arrowIcon = binding.ivArrowDropHistory
+            arrowIcon = binding.ivArrowDropHistory,
+            optionalButton = binding.btnFilterHistory,
+            optionalExtraView = binding.chipSelectedDateRange
         ) { isExpanded -> isHistoryExpanded = isExpanded }
     }
 
 
-    private fun setupExpandable(
+    /*private fun setupExpandable(
         titleView: View,
         recyclerView: View,
         arrowIcon: View,
+        optionalButton: View? = null,
         onToggle: (Boolean) -> Unit
     ) {
         var isExpanded = recyclerView.visibility == View.VISIBLE
@@ -142,6 +168,28 @@ class ActivityFragment : Fragment() {
             isExpanded = !isExpanded
             recyclerView.visibility = if (isExpanded) View.VISIBLE else View.GONE
             arrowIcon.rotation = if (isExpanded) 180f else 0f
+            optionalButton?.visibility = if (isExpanded) View.VISIBLE else View.GONE
+            onToggle(isExpanded)
+        }
+    }*/
+    private fun setupExpandable(
+        titleView: View,
+        recyclerView: View,
+        arrowIcon: View,
+        optionalButton: View? = null,
+        optionalExtraView: View? = null, // tambahkan ini
+        onToggle: (Boolean) -> Unit
+    ) {
+        var isExpanded = recyclerView.visibility == View.VISIBLE
+
+        titleView.setOnClickListener {
+            isExpanded = !isExpanded
+            recyclerView.visibility = if (isExpanded) View.VISIBLE else View.GONE
+            arrowIcon.rotation = if (isExpanded) 180f else 0f
+            optionalButton?.visibility = if (isExpanded) View.VISIBLE else View.GONE
+            optionalExtraView?.visibility = if (isExpanded && binding.chipSelectedDateRange.text.isNotEmpty())
+                View.VISIBLE else View.GONE
+
             onToggle(isExpanded)
         }
     }
@@ -906,4 +954,107 @@ class ActivityFragment : Fragment() {
             null
         }
     }
+
+    private fun showDateRangePicker() {
+
+        val calendar = Calendar.getInstance()
+
+        val constraintsBuilder = CalendarConstraints.Builder()
+            .setEnd(calendar.timeInMillis)
+            .setValidator(DateValidatorPointBackward.before(calendar.timeInMillis)) // ⛔️ Blokir tanggal setelah hari ini
+
+        val datePicker = MaterialDatePicker.Builder.dateRangePicker()
+            .setTitleText("Pilih Rentang Tanggal")
+            .setCalendarConstraints(constraintsBuilder.build())
+            .setTheme(R.style.CustomDatePickerDialog) // agar bukan bottom sheet
+            .build()
+
+        datePicker.show(parentFragmentManager, "RANGE_DATE_PICKER")
+
+        datePicker.addOnPositiveButtonClickListener { selection ->
+            val startDate = Calendar.getInstance().apply {
+                timeInMillis = selection.first
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }
+
+            val endDate = Calendar.getInstance().apply {
+                timeInMillis = selection.second
+                set(Calendar.HOUR_OF_DAY, 23)
+                set(Calendar.MINUTE, 59)
+                set(Calendar.SECOND, 59)
+                set(Calendar.MILLISECOND, 999)
+            }
+
+            val startMillis = startDate.timeInMillis
+            val endMillis = endDate.timeInMillis
+
+            val formattedStart = "%02d/%02d/%04d".format(
+                startDate.get(Calendar.DAY_OF_MONTH),
+                startDate.get(Calendar.MONTH) + 1,
+                startDate.get(Calendar.YEAR)
+            )
+
+            val formattedEnd = "%02d/%02d/%04d".format(
+                endDate.get(Calendar.DAY_OF_MONTH),
+                endDate.get(Calendar.MONTH) + 1,
+                endDate.get(Calendar.YEAR)
+            )
+
+            val rangeText = "$formattedStart - $formattedEnd"
+            binding.chipSelectedDateRange.text = rangeText
+            binding.chipSelectedDateRange.visibility = View.VISIBLE
+
+            Log.d("RANGE_PICKED", rangeText)
+
+            filterHistoryBetween(startMillis, endMillis)
+        }
+
+    }
+
+    private fun filterHistoryBetween(startMillis: Long, endMillis: Long) {
+        startDateFilter = startMillis
+        endDateFilter = endMillis
+
+        activityPhysicalViewModel.getAllHistory().observe(viewLifecycleOwner) { result ->
+            result.proceedWhen(
+                doOnSuccess = {
+                    it.payload?.let { list ->
+                        val filtered = list.filter { history ->
+                            val dateEnded = history.dateEnded
+                            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                            val dateInMillis = try {
+                                sdf.parse(dateEnded ?: "")?.time ?: 0L
+                            } catch (e: Exception) {
+                                0L
+                            }
+                            dateInMillis in startMillis..endMillis
+                        }
+
+                        val grouped = filtered.groupBy { history -> history.dateEnded }
+                        val items = mutableListOf<Item<*>>()
+                        grouped.forEach { (date, activities) ->
+                            if (date != null) {
+                                items.add(DateHeaderHistoryAdapter(date.toReadableDate()))
+                            }
+                            activities.forEach { activity ->
+                                val historyItem = HistoryItem(activity) { item, selected ->
+                                    showDeleteHistoryDialog(item, selected)
+                                }
+                                items.add(historyItem)
+                            }
+                        }
+                        groupAdapter.update(items)
+                    }
+                },
+                doOnError = {
+                    Log.e("ActivityFragment", "Filter error: ${it.exception}")
+                }
+            )
+        }
+    }
+
+
 }
