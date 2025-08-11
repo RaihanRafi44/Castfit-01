@@ -2,10 +2,12 @@ package com.raihan.castfit.presentation.activityuser
 
 import android.util.Log
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
+import com.google.api.ResourceDescriptor
 import com.google.firebase.auth.FirebaseAuth
 import com.raihan.castfit.data.model.HistoryActivity
 import com.raihan.castfit.data.model.ProgressActivity
@@ -14,6 +16,7 @@ import com.raihan.castfit.data.repository.HistoryActivityRepository
 import com.raihan.castfit.data.repository.ProgressActivityRepository
 import com.raihan.castfit.data.repository.ScheduleActivityRepository
 import com.raihan.castfit.utils.ResultWrapper
+import com.raihan.castfit.utils.proceedWhen
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
@@ -46,6 +49,48 @@ class ActivityViewModel(
 
     private val _startScheduledActivityResult = MutableLiveData<Boolean?>()
     val startScheduledActivityResult: LiveData<Boolean?> = _startScheduledActivityResult
+
+    // Properti untuk menampung hasil akhir filter yang akan dikirim ke Fragment
+    private val _filteredHistory = MediatorLiveData<List<HistoryActivity>>()
+    val filteredHistory: LiveData<List<HistoryActivity>> = _filteredHistory
+
+    // Properti untuk menyimpan aturan filter yang sedang aktif
+    private var currentStartDate: Long? = null
+    private var currentEndDate: Long? = null
+
+    //private var currentSource: LiveData<ResultWrapper<List<HistoryActivity>>>? = null
+
+    // Sumber data sebelum di filter
+    private val allHistorySource: LiveData<ResultWrapper<List<HistoryActivity>>> = getAllHistory()
+
+    init {
+        // MediatorLiveData mengamati sumber data mentah
+        _filteredHistory.addSource(allHistorySource) { resultWrapper ->
+            // Ekstrak daftar riwayat mentah
+            resultWrapper.proceedWhen(
+                doOnSuccess = { result ->
+                    val list = result.payload ?: emptyList()
+
+                    val filtered = if (currentStartDate != null && currentEndDate != null) {
+                        applyFilter(list) // Menggunakan filter yang telah disimpan
+                    } else {
+                        list // Menampilkan list mentah
+                    }
+
+                    // Mengirim hasil yang sudah difilter atau belum ke _filteredHistory
+                    _filteredHistory.value = filtered
+                },
+                doOnError = {
+                    _filteredHistory.value = emptyList()
+                },
+                doOnEmpty = {
+                    _filteredHistory.value = emptyList()
+                }
+            )
+        }
+    }
+
+
 
     fun getAllProgress() = progressRepository.getUserProgressData().asLiveData(Dispatchers.IO)
 
@@ -193,7 +238,7 @@ class ActivityViewModel(
                         WeatherCheckResult(
                             isWeatherSuitable = false,
                             schedule = schedule,
-                            message = "Cuaca saat ini tidak mendukung untuk aktivitas yang anda pilih. Anda bisa melakukan aktivitas ini nanti saat cuaca mendukung atau membatalkan aktivitas ini.",
+                            message = "Cuaca saat ini tidak mendukung untuk aktivitas yang anda pilih. Apakah anda tetap ingin menjalankan jadwal atau menunggu hingga cuaca mendukung?",
                             confirmationTitle = "Cuaca Tidak Mendukung"
                         )
                     )
@@ -585,6 +630,50 @@ class ActivityViewModel(
     fun resetStartScheduledActivityResult() {
         _startScheduledActivityResult.value = null
     }
+
+    fun setFilterRange(start: Long, end: Long) {
+        // Menyimpan state tanggal yang baru untuk aturan filter saat ini
+        currentStartDate = start
+        currentEndDate = end
+
+        // Menerapkan filter pada data yang mungkin sudah ada
+        allHistorySource.value?.payload?.let {
+            _filteredHistory.value = applyFilter(it)
+        }
+    }
+
+    // Fungsi filter
+    private fun applyFilter(list: List<HistoryActivity>): List<HistoryActivity> {
+        // Mengambil aturan filter yang tersimpan
+        val start = currentStartDate
+        val end = currentEndDate
+        if (start == null || end == null) return list // Jika tidak ada aturan, kembalikan daftar asli
+
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+
+        // Menggunakan fungsi filter dari Kotlin
+        return list.filter {
+            // Mengubah string tanggal menjadi milidetik
+            val millis = try {
+                sdf.parse(it.dateEnded ?: "")?.time
+            } catch (e: Exception) {
+                null
+            }
+
+            // Mengembalikan true jika tanggal item berada di dalam rentang filter
+            millis != null && millis in start..end
+        }
+    }
+
+    fun clearFilter() {
+        currentStartDate = null
+        currentEndDate = null
+        // Menambil kembali data mentah/lengkap dari allHistorySource ke Fragment
+        allHistorySource.value?.payload?.let {
+            _filteredHistory.value = it
+        }
+    }
+
 
     // Data class untuk weather check result
     data class WeatherCheckResult(
