@@ -118,17 +118,34 @@ class ActivityFragment : Fragment() {
         binding.btnFilterHistory.setOnClickListener {
             showDateRangePicker()
         }
+
         binding.chipSelectedDateRange.setOnCloseIconClickListener {
-            /*binding.chipSelectedDateRange.visibility = View.GONE
-            binding.chipSelectedDateRange.text = ""*/
-            startDateFilter = null
-            endDateFilter = null
+            activityPhysicalViewModel.clearFilter()
             binding.chipSelectedDateRange.visibility = View.GONE
             binding.chipSelectedDateRange.text = ""
+        }
 
-            // Reload semua history tanpa filter
-            observeData()
+        activityPhysicalViewModel.filteredHistory.observe(viewLifecycleOwner) { list ->
 
+            // Mengelompokkan daftar berdasarkan tanggalnya
+            val grouped = list.groupBy { history -> history.dateEnded }
+            val items = mutableListOf<Item<*>>()
+
+            grouped.forEach { (date, activities) ->
+                if (date != null) {
+                    items.add(DateHeaderHistoryAdapter(date.toReadableDate()))
+                }
+                // Iterasi setiap aktivitas di dalam grup tanggal
+                activities.forEach { activity ->
+                    // Menambahkan item riwayat aktivitas
+                    val historyItem = HistoryItem(activity) { item, selected ->
+                        showDeleteHistoryDialog(item, selected)
+                    }
+                    items.add(historyItem)
+                }
+            }
+            // Memperbarui RecyclerView dengan daftar item yang sudah siap ditampilkan
+            groupAdapter.update(items)
         }
     }
 
@@ -154,30 +171,12 @@ class ActivityFragment : Fragment() {
         ) { isExpanded -> isHistoryExpanded = isExpanded }
     }
 
-
-    /*private fun setupExpandable(
-        titleView: View,
-        recyclerView: View,
-        arrowIcon: View,
-        optionalButton: View? = null,
-        onToggle: (Boolean) -> Unit
-    ) {
-        var isExpanded = recyclerView.visibility == View.VISIBLE
-
-        titleView.setOnClickListener {
-            isExpanded = !isExpanded
-            recyclerView.visibility = if (isExpanded) View.VISIBLE else View.GONE
-            arrowIcon.rotation = if (isExpanded) 180f else 0f
-            optionalButton?.visibility = if (isExpanded) View.VISIBLE else View.GONE
-            onToggle(isExpanded)
-        }
-    }*/
     private fun setupExpandable(
         titleView: View,
         recyclerView: View,
         arrowIcon: View,
         optionalButton: View? = null,
-        optionalExtraView: View? = null, // tambahkan ini
+        optionalExtraView: View? = null,
         onToggle: (Boolean) -> Unit
     ) {
         var isExpanded = recyclerView.visibility == View.VISIBLE
@@ -318,7 +317,7 @@ class ActivityFragment : Fragment() {
             )
         }
 
-        activityPhysicalViewModel.getAllHistory().observe(viewLifecycleOwner) { result ->
+        /*activityPhysicalViewModel.getAllHistory().observe(viewLifecycleOwner) { result ->
             result.proceedWhen(
                 doOnSuccess = {
                     if (isHistoryExpanded) binding.rvHistoryList.visibility = View.VISIBLE
@@ -347,7 +346,7 @@ class ActivityFragment : Fragment() {
                     Log.d("ActivityFragment", "Loading history data...")
                 }
             )
-        }
+        }*/
 
     }
 
@@ -445,7 +444,7 @@ class ActivityFragment : Fragment() {
                     handleActivitySelection(weatherCheck.schedule)
 
                 } else {
-                    // CUACA TIDAK SESUAI: Tampilkan peringatan
+                    /*// CUACA TIDAK SESUAI: Tampilkan peringatan
                     AlertDialog.Builder(requireContext())
                         .setTitle(weatherCheck.confirmationTitle)
                         .setMessage(weatherCheck.message)
@@ -456,6 +455,23 @@ class ActivityFragment : Fragment() {
                                 scheduleGroupieAdapter.removeSchedule(weatherCheck.schedule)
                                 Toast.makeText(requireContext(), "Jadwal aktivitas berhasil dihapus", Toast.LENGTH_SHORT).show()
                             }
+                        }
+                        .setNegativeButton("Nanti Saja", null)
+                        .show()*/
+                    // CUACA TIDAK SESUAI: Tampilkan peringatan
+                    AlertDialog.Builder(requireContext())
+                        .setTitle(weatherCheck.confirmationTitle)
+                        .setMessage(weatherCheck.message)
+                        .setPositiveButton("Tetap Jalankan") { _, _ ->
+                            AlertDialog.Builder(requireContext())
+                                .setTitle("Peringatan Risiko")
+                                .setMessage("Menjalankan aktivitas \"${weatherCheck.schedule.physicalActivityName}\" saat cuaca tidak mendukung dapat meningkatkan risiko seperti tergelincir, cedera, atau ketidaknyamanan lainnya. Apakah Anda yakin ingin melanjutkan?")
+                                .setPositiveButton("Lanjutkan") { _, _ ->
+                                    selectedSchedulePosition = scheduleGroupieAdapter.getItemPosition(weatherCheck.schedule)
+                                    handleActivitySelection(weatherCheck.schedule, skipConfirmation = true)
+                                }
+                                .setNegativeButton("Batal", null)
+                                .show()
                         }
                         .setNegativeButton("Nanti Saja", null)
                         .show()
@@ -760,7 +776,7 @@ class ActivityFragment : Fragment() {
         }
     }
 
-    private fun handleActivitySelection(activity: ScheduleActivity) {
+    /*private fun handleActivitySelection(activity: ScheduleActivity) {
         if (isCheckingProgress) return
         isCheckingProgress = true
 
@@ -780,7 +796,38 @@ class ActivityFragment : Fragment() {
                 showConfirmationDialogAfterCheckingProgress(activity)
             }
         }
+    }*/
+
+    private fun handleActivitySelection(activity: ScheduleActivity, skipConfirmation: Boolean = false) {
+        if (isCheckingProgress) return
+        isCheckingProgress = true
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            val hasProgress = activityPhysicalViewModel.checkIfUserHasProgressSuspend()
+            Log.d("ActivityFragmentDebug", "Has Progress? $hasProgress")
+            if (hasProgress) {
+                AlertDialog.Builder(requireContext()).apply {
+                    setTitle("Aktivitas Sedang Berjalan")
+                    setMessage("Hanya satu aktivitas yang bisa berlangsung dalam satu waktu. Selesaikan atau batalkan aktivitas sebelumnya terlebih dahulu.")
+                    setPositiveButton("OK", null)
+                    setOnDismissListener { isCheckingProgress = false }
+                    create()
+                    show()
+                }
+            } else {
+                if (skipConfirmation) {
+                    // Langsung mulai tanpa konfirmasi
+                    activityPhysicalViewModel.startScheduledActivity(activity)
+                    Toast.makeText(requireContext(), "Aktivitas tetap dijalankan meskipun cuaca tidak mendukung", Toast.LENGTH_SHORT).show()
+                    cancelScheduledNotification(activity)
+                    isCheckingProgress = false
+                } else {
+                    showConfirmationDialogAfterCheckingProgress(activity)
+                }
+            }
+        }
     }
+
 
     private fun showConfirmationDialogAfterCheckingProgress(activity: ScheduleActivity) {
         AlertDialog.Builder(requireContext()).apply {
@@ -956,21 +1003,30 @@ class ActivityFragment : Fragment() {
     }
 
     private fun showDateRangePicker() {
+        val calendar = Calendar.getInstance().apply {
+            // Batas maksimal hari ini jam 23:59:59.999
+            set(Calendar.HOUR_OF_DAY, 23)
+            set(Calendar.MINUTE, 59)
+            set(Calendar.SECOND, 59)
+            set(Calendar.MILLISECOND, 999)
+        }
 
-        val calendar = Calendar.getInstance()
-
+        // Batasan untuk kalender, agar pengguna tidak bisa memilih tanggal di masa depan.
         val constraintsBuilder = CalendarConstraints.Builder()
             .setEnd(calendar.timeInMillis)
-            .setValidator(DateValidatorPointBackward.before(calendar.timeInMillis)) // ⛔️ Blokir tanggal setelah hari ini
+            .setValidator(DateValidatorPointBackward.before(calendar.timeInMillis))
 
+        // Dialog pemilih rentang tanggal
         val datePicker = MaterialDatePicker.Builder.dateRangePicker()
             .setTitleText("Pilih Rentang Tanggal")
             .setCalendarConstraints(constraintsBuilder.build())
-            .setTheme(R.style.CustomDatePickerDialog) // agar bukan bottom sheet
+            .setTheme(R.style.CustomDatePickerDialog)
             .build()
 
+        // Menampilkan dialog ke layar
         datePicker.show(parentFragmentManager, "RANGE_DATE_PICKER")
 
+        // Listener yang akan dieksekusi saat pengguna menekan tombol "OK"
         datePicker.addOnPositiveButtonClickListener { selection ->
             val startDate = Calendar.getInstance().apply {
                 timeInMillis = selection.first
@@ -988,6 +1044,7 @@ class ActivityFragment : Fragment() {
                 set(Calendar.MILLISECOND, 999)
             }
 
+            // Mengambil tanggal awal dan akhir dalam format milidetik
             val startMillis = startDate.timeInMillis
             val endMillis = endDate.timeInMillis
 
@@ -1003,58 +1060,15 @@ class ActivityFragment : Fragment() {
                 endDate.get(Calendar.YEAR)
             )
 
+            // Menampilkan rentang tanggal yang dipilih pada komponen UI
             val rangeText = "$formattedStart - $formattedEnd"
             binding.chipSelectedDateRange.text = rangeText
             binding.chipSelectedDateRange.visibility = View.VISIBLE
 
-            Log.d("RANGE_PICKED", rangeText)
+            // Mengirim rentang tanggal ke ViewModel
+            activityPhysicalViewModel.setFilterRange(startMillis, endMillis)
 
-            filterHistoryBetween(startMillis, endMillis)
-        }
-
-    }
-
-    private fun filterHistoryBetween(startMillis: Long, endMillis: Long) {
-        startDateFilter = startMillis
-        endDateFilter = endMillis
-
-        activityPhysicalViewModel.getAllHistory().observe(viewLifecycleOwner) { result ->
-            result.proceedWhen(
-                doOnSuccess = {
-                    it.payload?.let { list ->
-                        val filtered = list.filter { history ->
-                            val dateEnded = history.dateEnded
-                            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                            val dateInMillis = try {
-                                sdf.parse(dateEnded ?: "")?.time ?: 0L
-                            } catch (e: Exception) {
-                                0L
-                            }
-                            dateInMillis in startMillis..endMillis
-                        }
-
-                        val grouped = filtered.groupBy { history -> history.dateEnded }
-                        val items = mutableListOf<Item<*>>()
-                        grouped.forEach { (date, activities) ->
-                            if (date != null) {
-                                items.add(DateHeaderHistoryAdapter(date.toReadableDate()))
-                            }
-                            activities.forEach { activity ->
-                                val historyItem = HistoryItem(activity) { item, selected ->
-                                    showDeleteHistoryDialog(item, selected)
-                                }
-                                items.add(historyItem)
-                            }
-                        }
-                        groupAdapter.update(items)
-                    }
-                },
-                doOnError = {
-                    Log.e("ActivityFragment", "Filter error: ${it.exception}")
-                }
-            )
         }
     }
-
 
 }
