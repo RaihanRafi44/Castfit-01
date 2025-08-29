@@ -69,9 +69,6 @@ class ActivityFragment : Fragment() {
     private var isOnProgressExpanded = false
     private var isHistoryExpanded = false
 
-    private var startDateFilter: Long? = null
-    private var endDateFilter: Long? = null
-
     private val scheduleGroupieAdapter = ScheduleGroupieAdapter(
         onCancelClick = { schedule, position ->
             showDeleteScheduledDialog(schedule)
