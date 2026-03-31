@@ -33,7 +33,7 @@ To get started with Castfit, follow these steps:
 
 1. Clone the repository:
     ```bash
-    git clone https://github.com/your_username/Castfit-01.git
+    git clone https://github.com/RaihanRafi44/Castfit-01.git
     ```
 2. Open the project in Android Studio.
 3. Build and run the application on your Android device or emulator.
