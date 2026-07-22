@@ -9,6 +9,8 @@ import androidx.lifecycle.lifecycleScope
 import com.github.aachartmodel.aainfographics.aachartcreator.*
 import com.github.aachartmodel.aainfographics.aaoptionsmodel.AADataLabels
 import com.github.aachartmodel.aainfographics.aaoptionsmodel.AAScrollablePlotArea
+import com.github.aachartmodel.aainfographics.aaoptionsmodel.AAStyle
+import com.github.aachartmodel.aainfographics.aaoptionsmodel.AATitle
 import com.raihan.castfit.R
 import com.raihan.castfit.data.model.HistoryActivity
 import com.raihan.castfit.data.repository.HistoryActivityRepository
@@ -80,7 +82,7 @@ class ChartsHistoryActivity : AppCompatActivity() {
 
     private fun showLoading() {
         binding.progressBar.visibility = View.VISIBLE
-        binding.horizontalScrollCharts.visibility = View.GONE
+        binding.cvChartContainer.visibility = View.GONE
         binding.llEmptyState.visibility = View.GONE
     }
 
@@ -89,12 +91,12 @@ class ChartsHistoryActivity : AppCompatActivity() {
     }
 
     private fun showChart() {
-        binding.horizontalScrollCharts.visibility = View.VISIBLE
+        binding.cvChartContainer.visibility = View.VISIBLE
         binding.llEmptyState.visibility = View.GONE
     }
 
     private fun showEmptyState() {
-        binding.horizontalScrollCharts.visibility = View.GONE
+        binding.cvChartContainer.visibility = View.GONE
         binding.llEmptyState.visibility = View.VISIBLE
     }
 
@@ -112,43 +114,70 @@ class ChartsHistoryActivity : AppCompatActivity() {
 
         val aaChartModel = AAChartModel()
             .chartType(AAChartType.Column)
-            .title("Riwayat Aktivitas Fisik Pengguna Per 7 Hari")
-            .subtitle("Data Aktivitas Fisik")
+            .title("") 
+            .subtitle("")
+            .backgroundColor("#FAFAFA") // Menyesuaikan dengan latar belakang container
             .categories(chartData.categories.toTypedArray())
             .dataLabelsEnabled(true)
-            .yAxisTitle("Durasi (Menit)")
+            .legendEnabled(false) // Menghilangkan tanda titik keterangan (legenda) di dalam grafik
+            .yAxisTitle("Durasi (menit)")
+            .yAxisGridLineWidth(0f) 
+            .xAxisGridLineWidth(0f) 
             .xAxisVisible(true)
+            .xAxisLabelsEnabled(true)
+            .yAxisLabelsEnabled(true)
+            .yAxisAllowDecimals(false) 
+            .yAxisMin(0f)
             .stacking(AAChartStackingType.Normal)
-            .tooltipValueSuffix(" menit")
+            .tooltipEnabled(true)
+            .borderRadius(0f) 
             .series(arrayOf(
                 AASeriesElement()
                     .name("Indoor")
                     .data(chartData.indoorData.toTypedArray())
-                    //.color("#4CAF50"), // Hijau
-                    .color("#FFA500"),
+                    .color("#BB86FC"), // Purple Pastel
 
                 AASeriesElement()
                     .name("Outdoor")
                     .data(chartData.outdoorData.toTypedArray())
-                    //.color("#2196F3") // Biru
-                    .color("#724B24")
+                    .color("#03DAC5") // Teal Pastel
             ))
 
         val aaOptions = aaChartModel.aa_toAAOptions()
+        
+        // Menambahkan keterangan sumbu X melalui AAOptions
+        aaOptions.xAxis?.title = AATitle()
+            .text("Tanggal Aktivitas")
+            .style(AAStyle().color("#757575").fontSize(12f))
 
         aaOptions.plotOptions?.column?.dataLabels = AADataLabels()
             .enabled(true)
+            .style(AAStyle().color("#757575").fontSize(11f).fontWeight(AAChartFontWeightType.Bold))
             .formatter("""
             function () {
-                return this.y + ' menit';
+                return this.y > 0 ? this.y : ''; 
             }
         """.trimIndent())
 
+        // Membuat batang lebih tebal dan jarak antar tanggal sangat rapat
+        aaOptions.plotOptions?.column?.pointPadding = 0.02f // Batang sangat tebal
+        aaOptions.plotOptions?.column?.groupPadding = 0.1f  // Jarak antar grup sangat rapat
+
         aaOptions.chart?.scrollablePlotArea(
             AAScrollablePlotArea()
-                .minWidth(800)
+                .minWidth(400) // Ukuran pas agar padat dan tebal
                 .scrollPositionX(1f)
         )
+
+        aaOptions.yAxis?.lineWidth = 1f
+        aaOptions.yAxis?.lineColor = "#E0E0E0"
+        aaOptions.xAxis?.lineColor = "#E0E0E0"
+
+        // Menambah margin kiri sedikit agar teks "Durasi (menit)" tidak terpotong (tenggelam)
+        // Nilai 50f - 60f biasanya cukup untuk menampung teks vertikal dan angka
+        aaOptions.chart?.marginLeft = 55f
+
+        aaChartView.aa_drawChartWithChartOptions(aaOptions)
 
         aaChartView.aa_drawChartWithChartOptions(aaOptions)
     }
@@ -156,7 +185,6 @@ class ChartsHistoryActivity : AppCompatActivity() {
 
     // Menyiapkan grafik kosong jika data riwayat tidak tersedia
     private fun setupEmptyChart(aaChartView: AAChartView) {
-        //val emptyData = getEmptyWeekData()
         val firstLoginDate = getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
             .getString("first_login_date", fullDateFormat.format(Date())) ?: fullDateFormat.format(Date())
 
@@ -165,33 +193,36 @@ class ChartsHistoryActivity : AppCompatActivity() {
 
         val aaChartModel = AAChartModel()
             .chartType(AAChartType.Column)
-            .title("Riwayat Aktivitas Fisik Pengguna Per 7 Hari")
-            .subtitle("Data Aktivitas Fisik")
+            .title("")
+            .subtitle("")
             .categories(emptyData.categories.toTypedArray())
-            .dataLabelsEnabled(true)
-            .yAxisTitle("Durasi (Menit)")
+            .dataLabelsEnabled(false)
+            .yAxisTitle("")
+            .yAxisGridLineWidth(0f)
+            .xAxisGridLineWidth(0f)
             .xAxisVisible(true)
+            .yAxisLabelsEnabled(false)
             .stacking(AAChartStackingType.Normal)
+            .borderRadius(12f)
             .series(arrayOf(
                 AASeriesElement()
                     .name("Indoor")
                     .data(emptyData.indoorData.toTypedArray())
-                    //.color("#4CAF50"),
-                    .color("#FFA500"),
+                    .color("#F0F0F0"), 
 
                 AASeriesElement()
                     .name("Outdoor")
                     .data(emptyData.outdoorData.toTypedArray())
-                    //.color("#2196F3")
-                    .color("#724B24")
+                    .color("#F9F9F9")
             ))
 
         val aaOptions = aaChartModel.aa_toAAOptions()
         aaOptions.chart?.scrollablePlotArea(
             AAScrollablePlotArea()
-                .minWidth(600)
-                .scrollPositionX(1f)
+                .minWidth(0)
         )
+        aaOptions.yAxis?.lineWidth = 0f
+        aaOptions.xAxis?.lineColor = "#F0F0F0"
 
         aaChartView.aa_drawChartWithChartOptions(aaOptions)
     }
