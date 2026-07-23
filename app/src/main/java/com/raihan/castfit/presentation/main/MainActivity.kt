@@ -10,6 +10,7 @@ import android.view.View
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.navigation.findNavController
@@ -28,7 +29,27 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+        
+        // Memastikan status bar dan navigation bar sistem berwarna putih dengan ikon gelap
+        window.statusBarColor = ContextCompat.getColor(this, android.R.color.white)
+        window.navigationBarColor = ContextCompat.getColor(this, android.R.color.white)
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+        }
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            window.decorView.systemUiVisibility = window.decorView.systemUiVisibility or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+        }
+
+        // Memastikan tidak ada padding sistem otomatis di bagian bawah navigasi
         setContentView(binding.root)
+        
+        ViewCompat.setOnApplyWindowInsetsListener(binding.navView) { v, insets ->
+            v.setPadding(0, 0, 0, 0)
+            insets
+        }
+
         setupBottomNav()
     }
 

@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
     <style name="AppTheme" parent="Theme.Material3.Light.NoActionBar">
         <item name="colorPrimary">@color/md_theme_primary</item>
@@ -71,6 +71,12 @@
         <item name="colorOnCustomColor5">@color/colorOnCustomColor5</item>
         <item name="colorCustomColor5Container">@color/colorCustomColor5Container</item>
         <item name="colorOnCustomColor5Container">@color/colorOnCustomColor5Container</item>
+
+        <!-- Tambahkan pengaturan status bar dan navigation bar sistem -->
+        <item name="android:statusBarColor">@android:color/white</item>
+        <item name="android:navigationBarColor">@android:color/white</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="27">true</item>
     </style>
     <!-- Base application theme. -->
     <style name="Base.AppTheme" parent="Theme.Material3.DayNight.NoActionBar">

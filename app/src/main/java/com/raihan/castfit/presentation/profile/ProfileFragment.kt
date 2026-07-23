@@ -12,6 +12,7 @@ import android.view.ViewGroup
 import android.widget.DatePicker
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
 import com.google.firebase.Firebase
@@ -82,12 +83,25 @@ class ProfileFragment : Fragment() {
     private fun observeEditMode() {
         profileViewModel.isEditMode.observe(viewLifecycleOwner) { isEdit ->
             binding.layoutProfile.etName.isEnabled = isEdit
-            binding.layoutProfile.etEmail.isEnabled = isEdit
+            // Mengubah warna teks nama: hitam saat edit, abu-abu saat baca
+            binding.layoutProfile.etName.setTextColor(
+                if (isEdit) ContextCompat.getColor(requireContext(), android.R.color.black)
+                else ContextCompat.getColor(requireContext(), android.R.color.darker_gray)
+            )
+            
+            // Email tetap tidak bisa diubah dan berwarna abu-abu
+            binding.layoutProfile.etEmail.isEnabled = false 
+            binding.layoutProfile.etEmail.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.darker_gray))
 
             binding.layoutProfile.btnEditProfile.isVisible = !isEdit
             binding.layoutProfile.btnCancelEdit.isVisible = isEdit
-            binding.layoutProfile.clChangePassSave.isVisible = isEdit
-            binding.layoutProfile.flBtnLogout.isVisible = !isEdit
+            
+            // Tombol simpan dan ubah pass hanya muncul saat mode edit
+            binding.layoutProfile.btnSave.isVisible = isEdit
+            binding.layoutProfile.btnChangePass.isVisible = isEdit
+            
+            // Tombol logout hanya muncul saat TIDAK dalam mode edit agar rapi
+            binding.layoutProfile.btnLogout.isVisible = !isEdit
 
             checkDateOfBirthStatus()
         }
@@ -103,11 +117,6 @@ class ProfileFragment : Fragment() {
 
     private fun enterEditMode() {
         profileViewModel.changeEditMode()
-        binding.layoutProfile.btnEditProfile.visibility = View.GONE
-        binding.layoutProfile.btnCancelEdit.visibility = View.VISIBLE
-        binding.layoutProfile.clChangePassSave.visibility = View.VISIBLE
-        binding.layoutProfile.flBtnLogout.visibility = View.GONE
-
         checkDateOfBirthStatus()
     }
 
@@ -126,11 +135,6 @@ class ProfileFragment : Fragment() {
             tempDateOfBirth = null
             tempAge = null
         }
-
-        binding.layoutProfile.btnEditProfile.visibility = View.VISIBLE
-        binding.layoutProfile.btnCancelEdit.visibility = View.GONE
-        binding.layoutProfile.clChangePassSave.visibility = View.GONE
-        binding.layoutProfile.flBtnLogout.visibility = View.VISIBLE
 
         isSaveProfileButtonEnabled = false
         updateSaveButtonState()

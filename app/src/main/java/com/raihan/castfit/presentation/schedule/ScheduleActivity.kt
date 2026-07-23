@@ -19,6 +19,9 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.google.android.material.datepicker.CalendarConstraints
+import com.google.android.material.datepicker.DateValidatorPointForward
+import com.google.android.material.datepicker.MaterialDatePicker
 import com.raihan.castfit.databinding.ActivityScheduleBinding
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.text.SimpleDateFormat
@@ -65,29 +68,38 @@ class ScheduleActivity : AppCompatActivity() {
         }
     }
 
-    // Menampilkan date picker dan menyimpan tanggal yang dipilih
+    // Menampilkan Material Date Picker yang modern dan menyimpan tanggal yang dipilih
     private fun setupDatePicker() {
-        val calendar = Calendar.getInstance()
         binding.etDateOfSchedule.setOnClickListener {
-            val datePickerDialog = DatePickerDialog(
-                this,
-                { _, year, month, day ->
-                    // Simpan dalam format database (yyyy-MM-dd)
-                    selectedDate = String.format("%04d-%02d-%02d", year, month + 1, day)
-                    // Tampilkan dalam format display (dd/MM/yyyy)
-                    val displayDate = String.format("%02d/%02d/%04d", day, month + 1, year)
-                    binding.etDateOfSchedule.setText(displayDate)
-                    Log.d("ScheduleActivity", "Date selected - Display: $displayDate, Database: $selectedDate")
-                },
-                calendar.get(Calendar.YEAR),
-                calendar.get(Calendar.MONTH),
-                calendar.get(Calendar.DAY_OF_MONTH)
-            )
+            // Batasi pemilihan tanggal mulai dari hari ini ke depan
+            val constraintsBuilder = CalendarConstraints.Builder()
+                .setValidator(DateValidatorPointForward.now())
 
-            // Set minimal tanggal ke hari ini
-            datePickerDialog.datePicker.minDate = System.currentTimeMillis()
+            val datePicker = MaterialDatePicker.Builder.datePicker()
+                .setTitleText("Pilih Tanggal Jadwal")
+                .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
+                .setCalendarConstraints(constraintsBuilder.build())
+                .setTheme(com.google.android.material.R.style.ThemeOverlay_Material3_MaterialCalendar) // Menggunakan tema Material3 jika tersedia
+                .build()
 
-            datePickerDialog.show()
+            datePicker.addOnPositiveButtonClickListener { selection ->
+                val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+                calendar.timeInMillis = selection
+                
+                val year = calendar.get(Calendar.YEAR)
+                val month = calendar.get(Calendar.MONTH)
+                val day = calendar.get(Calendar.DAY_OF_MONTH)
+
+                // Simpan dalam format database (yyyy-MM-dd)
+                selectedDate = String.format("%04d-%02d-%02d", year, month + 1, day)
+                // Tampilkan dalam format display (dd/MM/yyyy)
+                val displayDate = String.format("%02d/%02d/%04d", day, month + 1, year)
+                
+                binding.etDateOfSchedule.setText(displayDate)
+                Log.d("ScheduleActivity", "Material Date selected - Display: $displayDate, Database: $selectedDate")
+            }
+
+            datePicker.show(supportFragmentManager, "MATERIAL_DATE_PICKER")
         }
     }
 

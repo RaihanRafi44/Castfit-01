@@ -33,7 +33,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/btn_back_recommendation"
             app:layout_constraintEnd_toEndOf="parent"
-            android:text="Rekomendasi Olahraga Untuk Anda"
+            android:text="Rekomendasi Aktivitas Untuk Anda"
             android:textAlignment="center"
             android:textSize="26sp"
             android:textStyle="bold"
