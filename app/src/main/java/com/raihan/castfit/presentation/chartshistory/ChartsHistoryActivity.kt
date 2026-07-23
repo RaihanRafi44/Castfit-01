@@ -152,7 +152,10 @@ class ChartsHistoryActivity : AppCompatActivity() {
 
         aaOptions.plotOptions?.column?.dataLabels = AADataLabels()
             .enabled(true)
-            .style(AAStyle().color("#757575").fontSize(11f).fontWeight(AAChartFontWeightType.Bold))
+            .style(AAStyle()
+                .color("#424242") // Warna lebih gelap agar kontras
+                .fontSize(14f)    // Ukuran diperbesar dari 11f ke 14f
+                .fontWeight(AAChartFontWeightType.Bold))
             .formatter("""
             function () {
                 return this.y > 0 ? this.y : ''; 

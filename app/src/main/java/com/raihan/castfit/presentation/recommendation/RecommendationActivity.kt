@@ -2,13 +2,20 @@ package com.raihan.castfit.presentation.recommendation
 
 import android.os.Bundle
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
+import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import coil.load
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.raihan.castfit.R
 import com.raihan.castfit.data.model.PhysicalActivity
 import com.raihan.castfit.databinding.ActivityRecommendationBinding
 import kotlinx.coroutines.launch
@@ -136,26 +143,49 @@ class RecommendationActivity : AppCompatActivity() {
         }
     }
 
-    // Menampilkan dialog konfirmasi sebelum memulai aktivitas
+    // Menampilkan dialog konfirmasi modern sebelum memulai aktivitas
     private fun showConfirmationDialog(activity: PhysicalActivity) {
-        AlertDialog.Builder(this).apply {
-            setTitle("Konfirmasi")
-            setMessage("Apakah Anda ingin memulai aktivitas \"${activity.name}\"?")
-            setPositiveButton("OK") { _, _ ->
-                recommendationViewModel.addToProgress(activity)
-                Toast.makeText(this@RecommendationActivity, "Aktivitas ditambahkan ke progress", Toast.LENGTH_SHORT).show()
-                isCheckingProgress = false
-                finish()
-            }
-            setNegativeButton("Batal") { _, _ ->
-                isCheckingProgress = false
-            }
-            setOnDismissListener {
-                isCheckingProgress = false
-            }
-            create()
-            show()
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.layout_dialog_confirmation, null)
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setView(dialogView)
+            .setCancelable(true)
+            .create()
+
+        // Bind view dari custom layout
+        val ivIcon = dialogView.findViewById<ImageView>(R.id.iv_dialog_icon)
+        val tvTitle = dialogView.findViewById<TextView>(R.id.tv_dialog_title)
+        val tvMessage = dialogView.findViewById<TextView>(R.id.tv_dialog_message)
+        val btnPositive = dialogView.findViewById<MaterialButton>(R.id.btn_dialog_positive)
+        val btnNegative = dialogView.findViewById<MaterialButton>(R.id.btn_dialog_negative)
+
+        // Load ikon aktivitas secara dinamis menggunakan physicalImg
+        ivIcon.load(activity.physicalImg) {
+            crossfade(true)
+            placeholder(R.drawable.ic_activity)
+            error(R.drawable.ic_activity)
         }
+
+        tvTitle.text = "Mulai Aktivitas?"
+        tvMessage.text = "Apakah Anda ingin memulai aktivitas \"${activity.name}\" sekarang?"
+
+        btnPositive.setOnClickListener {
+            recommendationViewModel.addToProgress(activity)
+            Toast.makeText(this, "Aktivitas ditambahkan ke progress", Toast.LENGTH_SHORT).show()
+            isCheckingProgress = false
+            dialog.dismiss()
+            finish()
+        }
+
+        btnNegative.setOnClickListener {
+            isCheckingProgress = false
+            dialog.dismiss()
+        }
+
+        dialog.setOnDismissListener {
+            isCheckingProgress = false
+        }
+
+        dialog.show()
     }
 
 
@@ -168,14 +198,12 @@ class RecommendationActivity : AppCompatActivity() {
             val hasProgress = recommendationViewModel.checkIfUserHasProgressSuspend()
             Log.d("RecommendationDebug", "Has Progress? $hasProgress")
             if (hasProgress) {
-                AlertDialog.Builder(this@RecommendationActivity).apply {
-                    setTitle("Aktivitas Sedang Berjalan")
-                    setMessage("Hanya satu aktivitas yang bisa berlangsung dalam satu waktu. Selesaikan atau batalkan aktivitas sebelumnya terlebih dahulu.")
-                    setPositiveButton("OK", null)
-                    setOnDismissListener { isCheckingProgress = false }
-                    create()
-                    show()
-                }
+                MaterialAlertDialogBuilder(this@RecommendationActivity)
+                    .setTitle("Aktivitas Sedang Berjalan")
+                    .setMessage("Hanya satu aktivitas yang bisa berlangsung dalam satu waktu. Selesaikan atau batalkan aktivitas sebelumnya terlebih dahulu.")
+                    .setPositiveButton("OK") { _, _ -> isCheckingProgress = false }
+                    .setOnDismissListener { isCheckingProgress = false }
+                    .show()
             } else {
                 showConfirmationDialog(activity)
             }
