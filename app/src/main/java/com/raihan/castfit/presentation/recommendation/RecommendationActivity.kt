@@ -18,6 +18,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.raihan.castfit.R
 import com.raihan.castfit.data.model.PhysicalActivity
 import com.raihan.castfit.databinding.ActivityRecommendationBinding
+import com.raihan.castfit.databinding.LayoutDialogConfirmationBinding
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -145,30 +146,23 @@ class RecommendationActivity : AppCompatActivity() {
 
     // Menampilkan dialog konfirmasi modern sebelum memulai aktivitas
     private fun showConfirmationDialog(activity: PhysicalActivity) {
-        val dialogView = LayoutInflater.from(this).inflate(R.layout.layout_dialog_confirmation, null)
+        val dialogBinding = LayoutDialogConfirmationBinding.inflate(layoutInflater)
         val dialog = MaterialAlertDialogBuilder(this)
-            .setView(dialogView)
+            .setView(dialogBinding.root)
             .setCancelable(true)
             .create()
 
-        // Bind view dari custom layout
-        val ivIcon = dialogView.findViewById<ImageView>(R.id.iv_dialog_icon)
-        val tvTitle = dialogView.findViewById<TextView>(R.id.tv_dialog_title)
-        val tvMessage = dialogView.findViewById<TextView>(R.id.tv_dialog_message)
-        val btnPositive = dialogView.findViewById<MaterialButton>(R.id.btn_dialog_positive)
-        val btnNegative = dialogView.findViewById<MaterialButton>(R.id.btn_dialog_negative)
-
         // Load ikon aktivitas secara dinamis menggunakan physicalImg
-        ivIcon.load(activity.physicalImg) {
+        dialogBinding.ivDialogIcon.load(activity.physicalImg) {
             crossfade(true)
             placeholder(R.drawable.ic_activity)
             error(R.drawable.ic_activity)
         }
+        
+        dialogBinding.tvDialogTitle.text = "Mulai Aktivitas?"
+        dialogBinding.tvDialogMessage.text = "Apakah Anda ingin memulai aktivitas \"${activity.name}\" sekarang?"
 
-        tvTitle.text = "Mulai Aktivitas?"
-        tvMessage.text = "Apakah Anda ingin memulai aktivitas \"${activity.name}\" sekarang?"
-
-        btnPositive.setOnClickListener {
+        dialogBinding.btnDialogPositive.setOnClickListener {
             recommendationViewModel.addToProgress(activity)
             Toast.makeText(this, "Aktivitas ditambahkan ke progress", Toast.LENGTH_SHORT).show()
             isCheckingProgress = false
@@ -176,7 +170,7 @@ class RecommendationActivity : AppCompatActivity() {
             finish()
         }
 
-        btnNegative.setOnClickListener {
+        dialogBinding.btnDialogNegative.setOnClickListener {
             isCheckingProgress = false
             dialog.dismiss()
         }

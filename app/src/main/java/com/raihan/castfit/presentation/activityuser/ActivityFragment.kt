@@ -26,15 +26,18 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import coil.load
 import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.DateValidatorPointBackward
 import com.google.android.material.datepicker.MaterialDatePicker
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.raihan.castfit.R
 import com.raihan.castfit.data.model.HistoryActivity
 import com.raihan.castfit.data.model.PhysicalActivity
 import com.raihan.castfit.data.model.ProgressActivity
 import com.raihan.castfit.data.model.ScheduleActivity
 import com.raihan.castfit.databinding.FragmentActivityBinding
+import com.raihan.castfit.databinding.LayoutDialogWeatherBinding
 import com.raihan.castfit.presentation.filterhistory.FilterBottomSheetFragment
 import com.raihan.castfit.presentation.home.HomeViewModel
 import com.raihan.castfit.utils.NotificationReceiver
@@ -436,46 +439,102 @@ class ActivityFragment : Fragment() {
         activityPhysicalViewModel.weatherCheckResult.observe(viewLifecycleOwner) { result ->
             result?.let { weatherCheck ->
                 if (weatherCheck.isWeatherSuitable) {
-                    // CUACA SESUAI: Lanjut ke handleActivitySelection()
-                    selectedSchedulePosition = scheduleGroupieAdapter.getItemPosition(weatherCheck.schedule)
-                    handleActivitySelection(weatherCheck.schedule)
-
+                    // CUACA SESUAI: Tampilkan konfirmasi modern sebelum memulai
+                    showWeatherConfirmationDialog(weatherCheck, isWarning = false)
                 } else {
-                    /*// CUACA TIDAK SESUAI: Tampilkan peringatan
-                    AlertDialog.Builder(requireContext())
-                        .setTitle(weatherCheck.confirmationTitle)
-                        .setMessage(weatherCheck.message)
-                        .setPositiveButton("Hapus Jadwal") { _, _ ->
-                            cancelScheduledNotification(weatherCheck.schedule)
-                            activityPhysicalViewModel.removeSchedule(weatherCheck.schedule)
-                            selectedSchedulePosition?.let {
-                                scheduleGroupieAdapter.removeSchedule(weatherCheck.schedule)
-                                Toast.makeText(requireContext(), "Jadwal aktivitas berhasil dihapus", Toast.LENGTH_SHORT).show()
-                            }
-                        }
-                        .setNegativeButton("Nanti Saja", null)
-                        .show()*/
-                    // CUACA TIDAK SESUAI: Tampilkan peringatan
-                    AlertDialog.Builder(requireContext())
-                        .setTitle(weatherCheck.confirmationTitle)
-                        .setMessage(weatherCheck.message)
-                        .setPositiveButton("Tetap Jalankan") { _, _ ->
-                            AlertDialog.Builder(requireContext())
-                                .setTitle("Peringatan Risiko")
-                                .setMessage("Menjalankan aktivitas \"${weatherCheck.schedule.physicalActivityName}\" saat cuaca tidak mendukung dapat meningkatkan risiko seperti tergelincir, cedera, atau ketidaknyamanan lainnya. Apakah Anda yakin ingin melanjutkan?")
-                                .setPositiveButton("Lanjutkan") { _, _ ->
-                                    selectedSchedulePosition = scheduleGroupieAdapter.getItemPosition(weatherCheck.schedule)
-                                    handleActivitySelection(weatherCheck.schedule, skipConfirmation = true)
-                                }
-                                .setNegativeButton("Batal", null)
-                                .show()
-                        }
-                        .setNegativeButton("Nanti Saja", null)
-                        .show()
+                    // CUACA TIDAK SESUAI: Tampilkan peringatan modern
+                    showWeatherConfirmationDialog(weatherCheck, isWarning = true)
                 }
                 activityPhysicalViewModel.resetWeatherCheckResult()
             }
         }
+    }
+
+    private fun showWeatherConfirmationDialog(weatherCheck: ActivityViewModel.WeatherCheckResult, isWarning: Boolean) {
+        val dialogBinding = LayoutDialogWeatherBinding.inflate(layoutInflater)
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setView(dialogBinding.root)
+            .setCancelable(true)
+            .create()
+
+        dialogBinding.tvWeatherDialogTitle.text = weatherCheck.confirmationTitle
+        dialogBinding.tvWeatherDialogMessage.text = weatherCheck.message
+
+        if (isWarning) {
+            // Kondisi Cuaca Buruk
+            dialogBinding.ivWeatherIcon.setImageResource(R.drawable.ic_activity) // Tetap pakai ikon default untuk peringatan cuaca
+            dialogBinding.btnWeatherPositive.text = "Tetap Jalankan"
+            dialogBinding.btnWeatherPositive.backgroundTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#FFA500")) // Oranye
+            
+            dialogBinding.btnWeatherPositive.setOnClickListener {
+                dialog.dismiss()
+                showWeatherRiskWarningDialog(weatherCheck)
+            }
+        } else {
+            // Kondisi Cuaca Baik: Tampilkan ikon aktivitas secara dinamis
+            dialogBinding.ivWeatherIcon.load(activityPhysicalViewModel.getActivityImage(weatherCheck.schedule.physicalActivityName)) {
+                crossfade(true)
+                placeholder(R.drawable.ic_activity)
+                error(R.drawable.ic_activity)
+            }
+            
+            dialogBinding.btnWeatherPositive.text = "Mulai"
+            dialogBinding.btnWeatherPositive.backgroundTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#4CAF50")) // Hijau
+            
+            dialogBinding.btnWeatherPositive.setOnClickListener {
+                selectedSchedulePosition = scheduleGroupieAdapter.getItemPosition(weatherCheck.schedule)
+                
+                // Pengecekan apakah ada aktivitas lain yang sedang berjalan
+                viewLifecycleOwner.lifecycleScope.launch {
+                    val hasProgress = activityPhysicalViewModel.checkIfUserHasProgressSuspend()
+                    if (hasProgress) {
+                        MaterialAlertDialogBuilder(requireContext())
+                            .setTitle("Aktivitas Sedang Berjalan")
+                            .setMessage("Hanya satu aktivitas yang bisa berlangsung dalam satu waktu. Selesaikan atau batalkan aktivitas sebelumnya terlebih dahulu.")
+                            .setPositiveButton("OK", null)
+                            .show()
+                    } else {
+                        // Jika tidak ada progress, langsung mulai aktivitas (Tanpa dialog konfirmasi kedua)
+                        activityPhysicalViewModel.startScheduledActivity(weatherCheck.schedule)
+                        cancelScheduledNotification(weatherCheck.schedule)
+                    }
+                    dialog.dismiss()
+                }
+            }
+        }
+
+        dialogBinding.btnWeatherNegative.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
+    private fun showWeatherRiskWarningDialog(weatherCheck: ActivityViewModel.WeatherCheckResult) {
+        val dialogBinding = LayoutDialogWeatherBinding.inflate(layoutInflater)
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setView(dialogBinding.root)
+            .setCancelable(true)
+            .create()
+
+        dialogBinding.tvWeatherDialogTitle.text = "Peringatan Risiko"
+        dialogBinding.tvWeatherDialogMessage.text = "Menjalankan aktivitas \"${weatherCheck.schedule.physicalActivityName}\" saat cuaca tidak mendukung dapat meningkatkan risiko cedera atau ketidaknyamanan. Yakin ingin melanjutkan?"
+        
+        dialogBinding.ivWeatherIcon.setImageResource(R.drawable.ic_activity) // Ikon peringatan
+        dialogBinding.btnWeatherPositive.text = "Lanjutkan"
+        dialogBinding.btnWeatherPositive.backgroundTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#F44336")) // Merah
+        
+        dialogBinding.btnWeatherPositive.setOnClickListener {
+            selectedSchedulePosition = scheduleGroupieAdapter.getItemPosition(weatherCheck.schedule)
+            handleActivitySelection(weatherCheck.schedule, skipConfirmation = true)
+            dialog.dismiss()
+        }
+
+        dialogBinding.btnWeatherNegative.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
 
     // Observasi hasil memulai aktivitas terjadwal
@@ -827,24 +886,42 @@ class ActivityFragment : Fragment() {
 
 
     private fun showConfirmationDialogAfterCheckingProgress(activity: ScheduleActivity) {
-        AlertDialog.Builder(requireContext()).apply {
-            setTitle("Konfirmasi")
-            setMessage("Cuaca saat ini mendukung untuk aktivitas \"${activity.physicalActivityName}\". Apakah Anda ingin memulai aktivitas ini?")
-            setPositiveButton("OK") { _, _ ->
-                activityPhysicalViewModel.startScheduledActivity(activity)
-                Toast.makeText(requireContext(), "Aktivitas ditambahkan ke progress", Toast.LENGTH_SHORT).show()
-                cancelScheduledNotification(activity)
-                isCheckingProgress = false
-            }
-            setNegativeButton("Batal") { _, _ ->
-                isCheckingProgress = false
-            }
-            setOnDismissListener {
-                isCheckingProgress = false
-            }
-            create()
-            show()
+        val dialogBinding = LayoutDialogWeatherBinding.inflate(layoutInflater)
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setView(dialogBinding.root)
+            .setCancelable(true)
+            .create()
+
+        dialogBinding.tvWeatherDialogTitle.text = "Konfirmasi"
+        dialogBinding.tvWeatherDialogMessage.text = "Cuaca saat ini mendukung untuk aktivitas \"${activity.physicalActivityName}\". Apakah Anda ingin memulai aktivitas ini?"
+        
+        // Tampilkan ikon aktivitas secara dinamis
+        dialogBinding.ivWeatherIcon.load(activityPhysicalViewModel.getActivityImage(activity.physicalActivityName)) {
+            crossfade(true)
+            placeholder(R.drawable.ic_activity)
+            error(R.drawable.ic_activity)
         }
+        
+        dialogBinding.btnWeatherPositive.backgroundTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#4CAF50"))
+
+        dialogBinding.btnWeatherPositive.setOnClickListener {
+            activityPhysicalViewModel.startScheduledActivity(activity)
+            Toast.makeText(requireContext(), "Aktivitas ditambahkan ke progress", Toast.LENGTH_SHORT).show()
+            cancelScheduledNotification(activity)
+            isCheckingProgress = false
+            dialog.dismiss()
+        }
+
+        dialogBinding.btnWeatherNegative.setOnClickListener {
+            isCheckingProgress = false
+            dialog.dismiss()
+        }
+
+        dialog.setOnDismissListener {
+            isCheckingProgress = false
+        }
+
+        dialog.show()
     }
 
     private fun startTimeCounter(progressActivity: ProgressActivity) {
@@ -1013,9 +1090,9 @@ class ActivityFragment : Fragment() {
             .setEnd(calendar.timeInMillis)
             .setValidator(DateValidatorPointBackward.before(calendar.timeInMillis))
 
-        // Dialog pemilih rentang tanggal
+        // Dialog pemilih rentang tanggal yang lebih modern
         val datePicker = MaterialDatePicker.Builder.dateRangePicker()
-            .setTitleText("Pilih Rentang Tanggal")
+            .setTitleText("Pilih Rentang Riwayat")
             .setCalendarConstraints(constraintsBuilder.build())
             .setTheme(R.style.CustomDatePickerDialog)
             .build()

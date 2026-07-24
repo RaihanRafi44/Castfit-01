@@ -9,6 +9,7 @@ import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.google.api.ResourceDescriptor
 import com.google.firebase.auth.FirebaseAuth
+import com.raihan.castfit.data.datasource.physicalactivity.PhysicalDataSource
 import com.raihan.castfit.data.model.HistoryActivity
 import com.raihan.castfit.data.model.ProgressActivity
 import com.raihan.castfit.data.model.ScheduleActivity
@@ -29,6 +30,7 @@ class ActivityViewModel(
     private val progressRepository: ProgressActivityRepository,
     private val historyRepository: HistoryActivityRepository,
     private val scheduleRepository: ScheduleActivityRepository,
+    private val physicalDataSource: PhysicalDataSource,
     private val firebaseAuth: FirebaseAuth
 ) : ViewModel() {
 
@@ -97,6 +99,12 @@ class ActivityViewModel(
     fun getAllHistory() = historyRepository.getUserHistoryData().asLiveData(Dispatchers.IO)
 
     fun getAllSchedule() = scheduleRepository.getUserScheduleActivity().asLiveData(Dispatchers.IO)
+
+    // Mengambil resource image aktivitas berdasarkan nama
+    fun getActivityImage(activityName: String?): Int {
+        return physicalDataSource.getPhysicalActivitiesData()
+            .find { it.name.equals(activityName, ignoreCase = true) }?.physicalImg ?: com.raihan.castfit.R.drawable.ic_activity
+    }
 
     fun removeProgress(item: ProgressActivity) {
         viewModelScope.launch(Dispatchers.IO) {
