@@ -202,7 +202,7 @@
                         android:text="-"
                         android:textSize="20sp"
                         android:textStyle="bold"
-                        android:textColor="#BB86FC" />
+                        android:textColor="#000000" />
                 </LinearLayout>
 
             </LinearLayout>

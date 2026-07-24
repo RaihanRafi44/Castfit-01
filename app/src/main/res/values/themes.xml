@@ -84,9 +84,10 @@
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
     </style>
 
-    <!-- Tambahkan ke tema agar MaterialDatePicker tampil sebagai dialog -->
+    <!-- Tambahkan ke tema agar MaterialDatePicker tampil sebagai dialog modern -->
     <style name="CustomDatePickerDialog" parent="ThemeOverlay.Material3.MaterialCalendar">
         <item name="materialCalendarStyle">@style/CustomCalendar</item>
+        <item name="colorPrimary">#212121</item> <!-- Warna Hitam Modern untuk aksen -->
     </style>
 
     <style name="CustomCalendar" parent="Widget.Material3.MaterialCalendar">
