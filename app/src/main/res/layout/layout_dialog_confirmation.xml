@@ -41,7 +41,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:weightSum="2">
+        android:weightSum="2"
+        android:gravity="center_vertical">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_dialog_negative"
@@ -52,6 +53,9 @@
             android:layout_marginEnd="8dp"
             android:text="Batal"
             android:textColor="#757575"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:minHeight="48dp"
             app:strokeColor="#E0E0E0" />
 
         <com.google.android.material.button.MaterialButton
@@ -62,6 +66,9 @@
             android:layout_weight="1"
             android:layout_marginStart="8dp"
             android:text="Mulai"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:minHeight="48dp"
             android:backgroundTint="#4CAF50" />
     </LinearLayout>
 

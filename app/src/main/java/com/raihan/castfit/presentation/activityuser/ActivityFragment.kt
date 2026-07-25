@@ -37,6 +37,9 @@ import com.raihan.castfit.data.model.PhysicalActivity
 import com.raihan.castfit.data.model.ProgressActivity
 import com.raihan.castfit.data.model.ScheduleActivity
 import com.raihan.castfit.databinding.FragmentActivityBinding
+import com.raihan.castfit.databinding.LayoutDialogCancelBinding
+import com.raihan.castfit.databinding.LayoutDialogConfirmationBinding
+import com.raihan.castfit.databinding.LayoutDialogInfoBinding
 import com.raihan.castfit.databinding.LayoutDialogWeatherBinding
 import com.raihan.castfit.presentation.filterhistory.FilterBottomSheetFragment
 import com.raihan.castfit.presentation.home.HomeViewModel
@@ -365,17 +368,29 @@ class ActivityFragment : Fragment() {
     }
 
     private fun showDeleteScheduledDialog(schedule: ScheduleActivity) {
-        AlertDialog.Builder(requireContext())
-            .setTitle("Hapus Jadwal?")
-            .setMessage("Apakah kamu yakin ingin menghapus jadwal aktivitas '${schedule.physicalActivityName}' pada tanggal ${schedule.dateScheduled}?")
-            .setPositiveButton("Ya") { _, _ ->
-                cancelScheduledNotification(schedule)
-                scheduleGroupieAdapter.removeSchedule(schedule)
-                activityPhysicalViewModel.removeSchedule(schedule)
-                Log.d("ActivityLog", "Jadwal '${schedule.physicalActivityName}' akan dihapus dari scheduled list.")
-            }
-            .setNegativeButton("Tidak", null)
-            .show()
+        val dialogBinding = LayoutDialogCancelBinding.inflate(layoutInflater)
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setView(dialogBinding.root)
+            .setCancelable(true)
+            .create()
+
+        dialogBinding.tvCancelDialogTitle.text = "Hapus Jadwal?"
+        dialogBinding.tvCancelDialogMessage.text = "Apakah kamu yakin ingin menghapus jadwal aktivitas '${schedule.physicalActivityName}' pada tanggal ${schedule.dateScheduled}?"
+        dialogBinding.btnCancelPositive.text = "Ya, Hapus"
+
+        dialogBinding.btnCancelPositive.setOnClickListener {
+            cancelScheduledNotification(schedule)
+            scheduleGroupieAdapter.removeSchedule(schedule)
+            activityPhysicalViewModel.removeSchedule(schedule)
+            Log.d("ActivityLog", "Jadwal '${schedule.physicalActivityName}' akan dihapus dari scheduled list.")
+            dialog.dismiss()
+        }
+
+        dialogBinding.btnCancelNegative.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
 
     private fun showStartScheduledActivityDialog(schedule: ScheduleActivity, position: Int) {
@@ -462,7 +477,6 @@ class ActivityFragment : Fragment() {
 
         if (isWarning) {
             // Kondisi Cuaca Buruk
-            dialogBinding.ivWeatherIcon.setImageResource(R.drawable.ic_activity) // Tetap pakai ikon default untuk peringatan cuaca
             dialogBinding.btnWeatherPositive.text = "Tetap Jalankan"
             dialogBinding.btnWeatherPositive.backgroundTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#FFA500")) // Oranye
             
@@ -471,13 +485,7 @@ class ActivityFragment : Fragment() {
                 showWeatherRiskWarningDialog(weatherCheck)
             }
         } else {
-            // Kondisi Cuaca Baik: Tampilkan ikon aktivitas secara dinamis
-            dialogBinding.ivWeatherIcon.load(activityPhysicalViewModel.getActivityImage(weatherCheck.schedule.physicalActivityName)) {
-                crossfade(true)
-                placeholder(R.drawable.ic_activity)
-                error(R.drawable.ic_activity)
-            }
-            
+            // Kondisi Cuaca Baik
             dialogBinding.btnWeatherPositive.text = "Mulai"
             dialogBinding.btnWeatherPositive.backgroundTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#4CAF50")) // Hijau
             
@@ -520,7 +528,6 @@ class ActivityFragment : Fragment() {
         dialogBinding.tvWeatherDialogTitle.text = "Peringatan Risiko"
         dialogBinding.tvWeatherDialogMessage.text = "Menjalankan aktivitas \"${weatherCheck.schedule.physicalActivityName}\" saat cuaca tidak mendukung dapat meningkatkan risiko cedera atau ketidaknyamanan. Yakin ingin melanjutkan?"
         
-        dialogBinding.ivWeatherIcon.setImageResource(R.drawable.ic_activity) // Ikon peringatan
         dialogBinding.btnWeatherPositive.text = "Lanjutkan"
         dialogBinding.btnWeatherPositive.backgroundTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#F44336")) // Merah
         
@@ -569,17 +576,29 @@ class ActivityFragment : Fragment() {
     }
 
     private fun showCancelDialog(activity: ProgressActivity, position: Int) {
-        AlertDialog.Builder(requireContext())
-            .setTitle("Batalkan Aktivitas?")
-            .setMessage("Apakah kamu yakin ingin membatalkan aktivitas ini?")
-            .setPositiveButton("Ya") { _, _ ->
-                stopTimeCounter()
-                activityPhysicalViewModel.removeProgress(activity)
-                progressAdapter.removeItem(position)
-                Log.d("ActivityLog", "Aktivitas '${activity.physicalActivityName}' akan dihapus dari halaman Activity.")
-            }
-            .setNegativeButton("Tidak", null)
-            .show()
+        val dialogBinding = LayoutDialogCancelBinding.inflate(layoutInflater)
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setView(dialogBinding.root)
+            .setCancelable(true)
+            .create()
+
+        dialogBinding.tvCancelDialogTitle.text = "Batalkan Aktivitas?"
+        dialogBinding.tvCancelDialogMessage.text = "Apakah kamu yakin ingin membatalkan aktivitas '${activity.physicalActivityName}'? Progress aktivitas saat ini akan hilang."
+        dialogBinding.btnCancelPositive.text = "Ya, Batalkan"
+
+        dialogBinding.btnCancelPositive.setOnClickListener {
+            stopTimeCounter()
+            activityPhysicalViewModel.removeProgress(activity)
+            progressAdapter.removeItem(position)
+            Log.d("ActivityLog", "Aktivitas '${activity.physicalActivityName}' akan dihapus dari halaman Activity.")
+            dialog.dismiss()
+        }
+
+        dialogBinding.btnCancelNegative.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
 
     private fun showFinishDialog(activity: ProgressActivity, position: Int) {
@@ -589,40 +608,71 @@ class ActivityFragment : Fragment() {
             val durationInSeconds = durationInMillis / 1000
 
             if (durationInSeconds < 60) {
-                AlertDialog.Builder(requireContext())
-                    .setTitle("Aktivitas Terlalu Singkat")
-                    .setMessage("Aktivitas harus dijalankan minimal 1 menit agar dapat tercatat dalam grafik perkembangan.")
-                    .setPositiveButton("OK", null)
-                    .show()
+                val infoBinding = LayoutDialogInfoBinding.inflate(layoutInflater)
+                val infoDialog = MaterialAlertDialogBuilder(requireContext())
+                    .setView(infoBinding.root)
+                    .setCancelable(true)
+                    .create()
+
+                infoBinding.tvInfoDialogTitle.text = "Aktivitas Terlalu Singkat"
+                infoBinding.tvInfoDialogMessage.text = "Aktivitas harus dijalankan minimal 1 menit agar dapat tercatat dalam grafik perkembangan."
+                infoBinding.btnInfoPositive.setOnClickListener { infoDialog.dismiss() }
+                
+                infoDialog.show()
                 return
             }
         }
 
-        // Jika durasi valid (>= 1 menit), lanjutkan konfirmasi penyelesaian
-        AlertDialog.Builder(requireContext())
-            .setTitle("Selesaikan Aktivitas?")
-            .setMessage("Apakah kamu yakin ingin menyelesaikan aktivitas '${activity.physicalActivityName}'? Aktivitas akan dipindahkan ke riwayat.")
-            .setPositiveButton("Ya") { _, _ ->
-                stopTimeCounter()
-                activityPhysicalViewModel.finishActivity(activity)
-                progressAdapter.removeItem(position)
-                Log.d("ActivityLog", "Aktivitas '${activity.physicalActivityName}' akan dipindahkan ke history.")
-            }
-            .setNegativeButton("Tidak", null)
-            .show()
+        // Jika durasi valid (>= 1 menit), lanjutkan konfirmasi penyelesaian dengan dialog modern
+        val dialogBinding = LayoutDialogConfirmationBinding.inflate(layoutInflater)
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setView(dialogBinding.root)
+            .setCancelable(true)
+            .create()
+
+        dialogBinding.tvDialogTitle.text = "Selesaikan Aktivitas?"
+        dialogBinding.tvDialogMessage.text = "Apakah kamu yakin ingin menyelesaikan aktivitas '${activity.physicalActivityName}'? Aktivitas akan dipindahkan ke riwayat."
+        dialogBinding.btnDialogPositive.text = "Selesaikan"
+        dialogBinding.btnDialogPositive.backgroundTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#4CAF50"))
+
+        dialogBinding.btnDialogPositive.setOnClickListener {
+            stopTimeCounter()
+            activityPhysicalViewModel.finishActivity(activity)
+            progressAdapter.removeItem(position)
+            Log.d("ActivityLog", "Aktivitas '${activity.physicalActivityName}' akan dipindahkan ke history.")
+            dialog.dismiss()
+        }
+
+        dialogBinding.btnDialogNegative.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
 
     private fun showDeleteHistoryDialog(item: HistoryItem, history: HistoryActivity) {
-        AlertDialog.Builder(requireContext())
-            .setTitle("Hapus Riwayat?")
-            .setMessage("Apakah kamu yakin ingin menghapus riwayat aktivitas ini?")
-            .setPositiveButton("Ya") { _, _ ->
-                activityPhysicalViewModel.removeHistory(history)
-                groupAdapter.remove(item) // hapus item dari GroupAdapter
-                Log.d("ActivityLog", "Riwayat aktivitas dengan ID '${history.id}' akan dihapus.")
-            }
-            .setNegativeButton("Tidak", null)
-            .show()
+        val dialogBinding = LayoutDialogCancelBinding.inflate(layoutInflater)
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setView(dialogBinding.root)
+            .setCancelable(true)
+            .create()
+
+        dialogBinding.tvCancelDialogTitle.text = "Hapus Riwayat?"
+        dialogBinding.tvCancelDialogMessage.text = "Apakah kamu yakin ingin menghapus riwayat aktivitas ini? Data riwayat yang dihapus tidak dapat dikembalikan."
+        dialogBinding.btnCancelPositive.text = "Ya, Hapus"
+
+        dialogBinding.btnCancelPositive.setOnClickListener {
+            activityPhysicalViewModel.removeHistory(history)
+            groupAdapter.remove(item) // hapus item dari GroupAdapter
+            Log.d("ActivityLog", "Riwayat aktivitas dengan ID '${history.id}' akan dihapus.")
+            dialog.dismiss()
+        }
+
+        dialogBinding.btnCancelNegative.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
 
 
@@ -894,13 +944,6 @@ class ActivityFragment : Fragment() {
 
         dialogBinding.tvWeatherDialogTitle.text = "Konfirmasi"
         dialogBinding.tvWeatherDialogMessage.text = "Cuaca saat ini mendukung untuk aktivitas \"${activity.physicalActivityName}\". Apakah Anda ingin memulai aktivitas ini?"
-        
-        // Tampilkan ikon aktivitas secara dinamis
-        dialogBinding.ivWeatherIcon.load(activityPhysicalViewModel.getActivityImage(activity.physicalActivityName)) {
-            crossfade(true)
-            placeholder(R.drawable.ic_activity)
-            error(R.drawable.ic_activity)
-        }
         
         dialogBinding.btnWeatherPositive.backgroundTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#4CAF50"))
 
