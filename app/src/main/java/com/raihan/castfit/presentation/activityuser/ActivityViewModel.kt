@@ -106,6 +106,11 @@ class ActivityViewModel(
             .find { it.name.equals(activityName, ignoreCase = true) }?.physicalImg ?: com.raihan.castfit.R.drawable.ic_activity
     }
 
+    fun getActivityType(activityName: String?): String {
+        return physicalDataSource.getPhysicalActivitiesData()
+            .find { it.name.equals(activityName, ignoreCase = true) }?.type ?: "Indoor"
+    }
+
     fun removeProgress(item: ProgressActivity) {
         viewModelScope.launch(Dispatchers.IO) {
             // Cek apakah suer login

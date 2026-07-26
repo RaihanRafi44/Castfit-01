@@ -141,7 +141,8 @@ class ActivityFragment : Fragment() {
                 // Iterasi setiap aktivitas di dalam grup tanggal
                 activities.forEach { activity ->
                     // Menambahkan item riwayat aktivitas
-                    val historyItem = HistoryItem(activity) { item, selected ->
+                    val activityType = activityPhysicalViewModel.getActivityType(activity.physicalActivityName)
+                    val historyItem = HistoryItem(activity, activityType) { item, selected ->
                         showDeleteHistoryDialog(item, selected)
                     }
                     items.add(historyItem)
@@ -170,7 +171,8 @@ class ActivityFragment : Fragment() {
             recyclerView = binding.rvHistoryList,
             arrowIcon = binding.ivArrowDropHistory,
             optionalButton = binding.btnFilterHistory,
-            optionalExtraView = binding.chipSelectedDateRange
+            optionalExtraView = binding.chipSelectedDateRange,
+            optionalLegendView = binding.llHistoryLegend
         ) { isExpanded -> isHistoryExpanded = isExpanded }
     }
 
@@ -180,6 +182,7 @@ class ActivityFragment : Fragment() {
         arrowIcon: View,
         optionalButton: View? = null,
         optionalExtraView: View? = null,
+        optionalLegendView: View? = null,
         onToggle: (Boolean) -> Unit
     ) {
         var isExpanded = recyclerView.visibility == View.VISIBLE
@@ -191,6 +194,7 @@ class ActivityFragment : Fragment() {
             optionalButton?.visibility = if (isExpanded) View.VISIBLE else View.GONE
             optionalExtraView?.visibility = if (isExpanded && binding.chipSelectedDateRange.text.isNotEmpty())
                 View.VISIBLE else View.GONE
+            optionalLegendView?.visibility = if (isExpanded) View.VISIBLE else View.GONE
 
             onToggle(isExpanded)
         }

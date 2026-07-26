@@ -206,36 +206,37 @@
 
         <LinearLayout
             android:id="@+id/filter_row"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginStart="32dp"
-            android:layout_marginEnd="32dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"
-            android:gravity="center_vertical"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="0dp"
+            android:gravity="start|center_vertical"
             app:layout_constraintTop_toBottomOf="@id/mcw_history_title"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_filter_history"
+                style="@style/Widget.Material3.Button.TonalButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Filter Tanggal"
-                android:textSize="14sp"
-                android:textColor="@color/md_theme_scrim"
-                android:paddingHorizontal="16dp"
-                app:cornerRadius="20dp"
-                app:backgroundTint="@color/filter_button"
-                app:strokeWidth="0dp"
-                android:minHeight="0dp"
-                android:insetTop="8dp"
-                android:insetBottom="8dp"
-                android:insetLeft="0dp"
-                android:insetRight="0dp"
+                app:icon="@drawable/calendar"
+                app:iconSize="20dp"
+                android:textSize="13sp"
+                android:textStyle="bold"
                 android:visibility="gone"
-                 />
+                app:cornerRadius="12dp"
+                android:minHeight="0dp"
+                android:paddingVertical="8dp"
+                android:paddingHorizontal="16dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                app:backgroundTint="@color/md_theme_secondaryContainer"
+                android:textColor="@color/md_theme_onSecondaryContainer"
+                app:iconTint="@color/md_theme_onSecondaryContainer" />
 
             <View
                 android:layout_width="0dp"
@@ -244,33 +245,91 @@
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chip_selected_date_range"
+                style="@style/Widget.Material3.Chip.Suggestion"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                tools:text="01/07/2025 - 31/07/2025"
-                android:textSize="14sp"
-                android:paddingHorizontal="12dp"
-                android:paddingVertical="6dp"
-                android:clickable="true"
-                android:checkable="false"
                 android:visibility="gone"
-                app:chipBackgroundColor="@color/filter_chips"
-                app:closeIconEnabled="true"
+                android:textSize="12sp"
+                app:chipBackgroundColor="@color/md_theme_surfaceContainerHighest"
+                app:chipStrokeWidth="0dp"
                 app:closeIconVisible="true"
-                app:closeIconTint="@color/md_theme_scrim"
-                style="@style/Widget.MaterialComponents.Chip.Choice" />
+                tools:text="01/07/2025 - 31/07/2025" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/ll_history_legend"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="16dp"
+            android:gravity="center"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/filter_row"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <!-- Indoor Legend -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <View
+                    android:layout_width="12dp"
+                    android:layout_height="12dp"
+                    android:background="@drawable/bg_circle_outline"
+                    android:backgroundTint="#E1BEE7" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="Indoor"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="#757575" />
+            </LinearLayout>
+
+            <!-- Spacer -->
+            <View
+                android:layout_width="32dp"
+                android:layout_height="0dp" />
+
+            <!-- Outdoor Legend -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <View
+                    android:layout_width="12dp"
+                    android:layout_height="12dp"
+                    android:background="@drawable/bg_circle_outline"
+                    android:backgroundTint="#B2DFDB" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="Outdoor"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="#757575" />
+            </LinearLayout>
+
         </LinearLayout>
 
         <FrameLayout
             android:id="@+id/fl_history"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:layout_constraintTop_toBottomOf="@id/filter_row">
+            app:layout_constraintTop_toBottomOf="@id/ll_history_legend">
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rv_history_list"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="12dp"
+                android:layout_marginHorizontal="0dp"
                 app:layout_constraintVertical_bias="0.0"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 tools:listitem="@layout/layout_activity_history"
