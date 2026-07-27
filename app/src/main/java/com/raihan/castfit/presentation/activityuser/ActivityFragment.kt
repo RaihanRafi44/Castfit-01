@@ -379,7 +379,7 @@ class ActivityFragment : Fragment() {
             .create()
 
         dialogBinding.tvCancelDialogTitle.text = "Hapus Jadwal?"
-        dialogBinding.tvCancelDialogMessage.text = "Apakah kamu yakin ingin menghapus jadwal aktivitas '${schedule.physicalActivityName}' pada tanggal ${schedule.dateScheduled}?"
+        dialogBinding.tvCancelDialogMessage.text = "Apakah kamu yakin ingin menghapus jadwal aktivitas '${schedule.physicalActivityName}' pada tanggal ${schedule.dateScheduled?.toReadableDate()}?"
         dialogBinding.btnCancelPositive.text = "Ya, Hapus"
 
         dialogBinding.btnCancelPositive.setOnClickListener {

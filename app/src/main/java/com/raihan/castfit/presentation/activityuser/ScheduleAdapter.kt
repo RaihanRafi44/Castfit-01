@@ -11,6 +11,7 @@ import com.raihan.castfit.R
 import com.raihan.castfit.data.model.ScheduleActivity
 import com.raihan.castfit.databinding.LayoutDateHeaderScheduledBinding
 import com.raihan.castfit.databinding.LayoutScheduledActivityBinding
+import com.raihan.castfit.utils.toReadableDate
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
@@ -52,11 +53,15 @@ class ScheduleItem(
     override fun bind(viewBinding: LayoutScheduledActivityBinding, position: Int) {
         with(schedule) {
             viewBinding.tvScheduledList.text = physicalActivityName
-            viewBinding.tvDateScheduled.text = formatDateToDisplay(dateScheduled)
+            viewBinding.tvDateScheduled.text = dateScheduled?.toReadableDate()
 
             viewBinding.btnCancelScheduled.setOnClickListener {
                 onCancelClick(this, position)
             }
+
+            // Set icon based on activity name
+            val iconRes = getActivityIcon(physicalActivityName)
+            viewBinding.ivActivityIcon.setImageResource(iconRes)
 
             val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
 
@@ -68,6 +73,30 @@ class ScheduleItem(
             } else {
                 viewBinding.btnContinueScheduled.visibility = View.GONE
             }
+        }
+    }
+
+    private fun getActivityIcon(name: String?): Int {
+        return when (name) {
+            "Jogging" -> R.drawable.img_jogging
+            "Walking" -> R.drawable.img_walking
+            "Cycling" -> R.drawable.img_cycling
+            "Senam Otak" -> R.drawable.img_brain
+            "Senam Poco-Poco" -> R.drawable.img_exercise
+            "Senam Lansia" -> R.drawable.img_elderly
+            "Yoga" -> R.drawable.img_yoga
+            "Jumping Jack" -> R.drawable.img_jumping_jack
+            "Push Up" -> R.drawable.img_push_up
+            "Sit up" -> R.drawable.img_sit_up
+            "Crunch" -> R.drawable.img_crunch_man
+            "Rusian Twist" -> R.drawable.img_russian_twist
+            "Back Up" -> R.drawable.img_back_up
+            "Squat" -> R.drawable.img_squat
+            "Step Up Down" -> R.drawable.img_step_up_down
+            "Front Lunges" -> R.drawable.img_front_lunges
+            "Wall Seat" -> R.drawable.img_wall_sit
+            "Plank" -> R.drawable.img_plank
+            else -> R.drawable.ic_activity // Fallback
         }
     }
 
@@ -149,7 +178,7 @@ class ScheduleGroupieAdapter(
         }
 
         fun buildGroupedItems(data: List<ScheduleActivity>) {
-            val grouped = data.sortedBy { it.dateScheduled }.groupBy { it.dateScheduled }
+            val grouped = data.groupBy { it.dateScheduled }.toSortedMap(compareByDescending { it })
 
             grouped.forEach { (date, schedules) ->
                 val formattedDate = formatDateHeader(date)
