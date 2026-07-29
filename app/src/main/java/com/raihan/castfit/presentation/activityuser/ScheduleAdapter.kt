@@ -9,8 +9,8 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.raihan.castfit.R
 import com.raihan.castfit.data.model.ScheduleActivity
-import com.raihan.castfit.databinding.LayoutDateHeaderScheduledBinding
-import com.raihan.castfit.databinding.LayoutScheduledActivityBinding
+import com.raihan.castfit.databinding.ItemScheduleRowBinding
+import com.raihan.castfit.databinding.LayoutGroupedScheduleBinding
 import com.raihan.castfit.utils.toReadableDate
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
@@ -22,57 +22,43 @@ import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
-class DateHeaderItem(private val date: String) : BindableItem<LayoutDateHeaderScheduledBinding>() {
-    override fun getLayout() = R.layout.layout_date_header_scheduled
-
-    override fun bind(viewBinding: LayoutDateHeaderScheduledBinding, position: Int) {
-        viewBinding.tvDateScheduled.text = date
-    }
-
-    override fun initializeViewBinding(view: View): LayoutDateHeaderScheduledBinding {
-        return LayoutDateHeaderScheduledBinding.bind(view)
-    }
-
-    override fun isSameAs(other: Item<*>): Boolean {
-        return other is DateHeaderItem && other.date == date
-    }
-
-    override fun hasSameContentAs(other: Item<*>): Boolean {
-        return other is DateHeaderItem && other.date == date
-    }
-}
-
-class ScheduleItem(
-    private val schedule: ScheduleActivity,
+class GroupedScheduleItem(
+    private val formattedDate: String,
+    private val schedules: List<ScheduleActivity>,
     private val onCancelClick: (ScheduleActivity, Int) -> Unit,
     private val onFinishClick: (ScheduleActivity, Int) -> Unit
-) : BindableItem<LayoutScheduledActivityBinding>() {
+) : BindableItem<LayoutGroupedScheduleBinding>() {
 
-    override fun getLayout() = R.layout.layout_scheduled_activity
+    override fun getLayout() = R.layout.layout_grouped_schedule
 
-    override fun bind(viewBinding: LayoutScheduledActivityBinding, position: Int) {
-        with(schedule) {
-            viewBinding.tvScheduledList.text = physicalActivityName
-            viewBinding.tvDateScheduled.text = dateScheduled?.toReadableDate()
+    override fun bind(viewBinding: LayoutGroupedScheduleBinding, position: Int) {
+        viewBinding.tvGroupedDateTitle.text = formattedDate
+        
+        viewBinding.llScheduleItems.removeAllViews()
+        val inflater = LayoutInflater.from(viewBinding.root.context)
+        
+        val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
 
-            viewBinding.btnCancelScheduled.setOnClickListener {
-                onCancelClick(this, position)
+        schedules.forEachIndexed { index, schedule ->
+            val rowBinding = ItemScheduleRowBinding.inflate(inflater, viewBinding.llScheduleItems, false)
+            
+            rowBinding.tvActivityName.text = schedule.physicalActivityName
+            rowBinding.ivActivityIcon.setImageResource(getActivityIcon(schedule.physicalActivityName))
+            
+            rowBinding.btnCancelScheduled.setOnClickListener {
+                onCancelClick(schedule, index)
             }
-
-            // Set icon based on activity name
-            val iconRes = getActivityIcon(physicalActivityName)
-            viewBinding.ivActivityIcon.setImageResource(iconRes)
-
-            val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-
-            if (dateScheduled == today) {
-                viewBinding.btnContinueScheduled.visibility = View.VISIBLE
-                viewBinding.btnContinueScheduled.setOnClickListener {
-                    onFinishClick(this, position)
+            
+            if (schedule.dateScheduled == today) {
+                rowBinding.btnContinueScheduled.visibility = View.VISIBLE
+                rowBinding.btnContinueScheduled.setOnClickListener {
+                    onFinishClick(schedule, index)
                 }
             } else {
-                viewBinding.btnContinueScheduled.visibility = View.GONE
+                rowBinding.btnContinueScheduled.visibility = View.GONE
             }
+            
+            viewBinding.llScheduleItems.addView(rowBinding.root)
         }
     }
 
@@ -96,37 +82,20 @@ class ScheduleItem(
             "Front Lunges" -> R.drawable.img_front_lunges
             "Wall Seat" -> R.drawable.img_wall_sit
             "Plank" -> R.drawable.img_plank
-            else -> R.drawable.ic_activity // Fallback
+            else -> R.drawable.ic_activity
         }
     }
 
-    override fun initializeViewBinding(view: View): LayoutScheduledActivityBinding {
-        return LayoutScheduledActivityBinding.bind(view)
+    override fun initializeViewBinding(view: View): LayoutGroupedScheduleBinding {
+        return LayoutGroupedScheduleBinding.bind(view)
     }
 
     override fun isSameAs(other: Item<*>): Boolean {
-        return other is ScheduleItem && other.schedule.id == schedule.id
+        return other is GroupedScheduleItem && other.formattedDate == formattedDate
     }
 
     override fun hasSameContentAs(other: Item<*>): Boolean {
-        return other is ScheduleItem && other.schedule.hashCode() == schedule.hashCode()
-    }
-
-    fun getSchedule(): ScheduleActivity = schedule
-
-    private fun formatDateToDisplay(dateString: String?): String {
-        return try {
-            if (dateString.isNullOrEmpty()) return ""
-
-            val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            val outputFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
-
-            val date = inputFormat.parse(dateString)
-            date?.let { outputFormat.format(it) } ?: dateString
-        } catch (e: Exception) {
-            Log.e("ScheduleItem", "Error formatting date: $dateString", e)
-            dateString ?: ""
-        }
+        return other is GroupedScheduleItem && other.schedules.size == schedules.size
     }
 }
 
@@ -182,16 +151,13 @@ class ScheduleGroupieAdapter(
 
             grouped.forEach { (date, schedules) ->
                 val formattedDate = formatDateHeader(date)
-                groupedItems.add(DateHeaderItem(formattedDate))
-
-                schedules.forEach { schedule ->
-                    val scheduleItem = ScheduleItem(
-                        schedule = schedule,
-                        onCancelClick = onCancelClick,
-                        onFinishClick = onFinishClick
-                    )
-                    groupedItems.add(scheduleItem)
-                }
+                val groupedItem = GroupedScheduleItem(
+                    formattedDate = formattedDate,
+                    schedules = schedules,
+                    onCancelClick = onCancelClick,
+                    onFinishClick = onFinishClick
+                )
+                groupedItems.add(groupedItem)
             }
         }
 

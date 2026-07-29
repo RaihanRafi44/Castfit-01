@@ -72,7 +72,6 @@ class ActivityFragment : Fragment() {
     private var timerStartTime: Long = 0L
 
     private var isScheduledExpanded = false
-    private var isOnProgressExpanded = false
     private var isHistoryExpanded = false
 
     private val scheduleGroupieAdapter = ScheduleGroupieAdapter(
@@ -161,17 +160,10 @@ class ActivityFragment : Fragment() {
         ) { isExpanded -> isScheduledExpanded = isExpanded }
 
         setupExpandable(
-            titleView = binding.mcwOnProgressTitle,
-            recyclerView = binding.rvOnProgressList,
-            arrowIcon = binding.ivArrowDropProgress
-        ) { isExpanded -> isOnProgressExpanded = isExpanded }
-
-        setupExpandable(
             titleView = binding.mcwHistoryTitle,
             recyclerView = binding.rvHistoryList,
             arrowIcon = binding.ivArrowDropHistory,
-            optionalButton = binding.btnFilterHistory,
-            optionalExtraView = binding.chipSelectedDateRange,
+            optionalButton = binding.filterRow,
             optionalLegendView = binding.llHistoryLegend
         ) { isExpanded -> isHistoryExpanded = isExpanded }
     }
@@ -199,6 +191,7 @@ class ActivityFragment : Fragment() {
             onToggle(isExpanded)
         }
     }
+
 
 
     override fun onDestroyView() {
@@ -265,7 +258,6 @@ class ActivityFragment : Fragment() {
         activityPhysicalViewModel.getAllSchedule().observe(viewLifecycleOwner) { result ->
             result.proceedWhen(
                 doOnSuccess = {
-                    if (isScheduledExpanded) binding.rvScheduledList.visibility = View.VISIBLE
                     it.payload?.let { list ->
                         Log.d("ActivityFragment", "Data schedule size: ${list.size}")
                         scheduleGroupieAdapter.setData(list)
@@ -280,7 +272,6 @@ class ActivityFragment : Fragment() {
                 },
                 doOnError = {
                     Log.e("ActivityFragment", "Error loading schedule: ${it.exception}")
-                    binding.rvScheduledList.isVisible = false
                 },
                 doOnLoading = {
                     Log.d("ActivityFragment", "Loading schedule data...")
@@ -291,12 +282,15 @@ class ActivityFragment : Fragment() {
         activityPhysicalViewModel.getAllProgress().observe(viewLifecycleOwner) { result ->
             result.proceedWhen(
                 doOnSuccess = {
-                    //binding.rvOnProgressList.isVisible = true
-                    if (isOnProgressExpanded) binding.rvOnProgressList.visibility = View.VISIBLE
                     it.payload?.let { list ->
                         Log.d("ActivityFragment", "Data on progress size: ${list.size}")
                         progressAdapter.setData(list)
-                        if (list.isNotEmpty()){
+                        
+                        val hasProgress = list.isNotEmpty()
+                        binding.mcwEmptyOnProgress.visibility = if (hasProgress) View.GONE else View.VISIBLE
+                        binding.rvOnProgressList.visibility = if (hasProgress) View.VISIBLE else View.GONE
+
+                        if (hasProgress){
                             val latestActivity = list.firstOrNull()
                             if (latestActivity != null) {
                                 // Periksa apakah ini merupakan aktivitas yang berbeda dari aktivitas saat ini
@@ -310,12 +304,15 @@ class ActivityFragment : Fragment() {
                         }
                     } ?: run {
                         Log.d("ActivityFragment", "Progress payload null")
+                        binding.mcwEmptyOnProgress.visibility = View.VISIBLE
+                        binding.rvOnProgressList.visibility = View.GONE
                         stopTimeCounter()
                     }
                 },
                 doOnError = {
                     Log.e("ActivityFragment", "Error loading progress: ${it.exception}")
-                    binding.rvOnProgressList.isVisible = false
+                    binding.mcwEmptyOnProgress.visibility = View.VISIBLE
+                    binding.rvOnProgressList.visibility = View.GONE
                     stopTimeCounter()
                 },
                 doOnLoading = {
@@ -323,38 +320,6 @@ class ActivityFragment : Fragment() {
                 }
             )
         }
-
-        /*activityPhysicalViewModel.getAllHistory().observe(viewLifecycleOwner) { result ->
-            result.proceedWhen(
-                doOnSuccess = {
-                    if (isHistoryExpanded) binding.rvHistoryList.visibility = View.VISIBLE
-                    it.payload?.let { list ->
-                        val grouped = list.groupBy { history -> history.dateEnded }
-                        val items = mutableListOf<Item<*>>()
-                        grouped.forEach { (date, activities) ->
-                            if (date != null) {
-                                items.add(DateHeaderHistoryAdapter(date.toReadableDate()))
-                            }
-                            activities.forEach { activity ->
-                                val historyItem = HistoryItem(activity) { item, selected ->
-                                    showDeleteHistoryDialog(item, selected)
-                                }
-                                items.add(historyItem)
-                            }
-                        }
-                        groupAdapter.update(items)
-                    }
-                },
-                doOnError = {
-                    Log.e("ActivityFragment", "Error loading history: ${it.exception}")
-                    binding.rvHistoryList.isVisible = false
-                },
-                doOnLoading = {
-                    Log.d("ActivityFragment", "Loading history data...")
-                }
-            )
-        }*/
-
     }
 
     private fun setupRecyclerViews() {
@@ -592,6 +557,10 @@ class ActivityFragment : Fragment() {
 
         dialogBinding.btnCancelPositive.setOnClickListener {
             stopTimeCounter()
+            // Instant UI feedback
+            binding.mcwEmptyOnProgress.visibility = View.VISIBLE
+            binding.rvOnProgressList.visibility = View.GONE
+            
             activityPhysicalViewModel.removeProgress(activity)
             progressAdapter.removeItem(position)
             Log.d("ActivityLog", "Aktivitas '${activity.physicalActivityName}' akan dihapus dari halaman Activity.")
@@ -641,6 +610,10 @@ class ActivityFragment : Fragment() {
 
         dialogBinding.btnDialogPositive.setOnClickListener {
             stopTimeCounter()
+            // Instant UI feedback
+            binding.mcwEmptyOnProgress.visibility = View.VISIBLE
+            binding.rvOnProgressList.visibility = View.GONE
+            
             activityPhysicalViewModel.finishActivity(activity)
             progressAdapter.removeItem(position)
             Log.d("ActivityLog", "Aktivitas '${activity.physicalActivityName}' akan dipindahkan ke history.")
@@ -991,8 +964,6 @@ class ActivityFragment : Fragment() {
                 Log.w("ActivityFragment", "Failed to parse database time, using current time")
             }
 
-            binding.llTimeCount.visibility = View.VISIBLE
-
             // Start timer yang diperbarui setiap detik
             countDownTimer = object : CountDownTimer(Long.MAX_VALUE, 1000) {
                 override fun onTick(millisUntilFinished: Long) {
@@ -1022,17 +993,12 @@ class ActivityFragment : Fragment() {
         currentProgressActivity = null
         timerStartTime = 0L
 
-        // Menyembunyikan timer count
-        binding.llTimeCount.visibility = View.GONE
-        binding.tvTimeCountValue.text = "00:00:00"
-
-        Log.d("ActivityFragment", "Timer stopped and UI hidden")
+        Log.d("ActivityFragment", "Timer stopped")
     }
 
     private fun updateTimeDisplay() {
         try {
             if (timerStartTime == 0L) {
-                binding.tvTimeCountValue.text = "00:00:00"
                 return
             }
 
@@ -1040,7 +1006,6 @@ class ActivityFragment : Fragment() {
             val diffInMillis = currentTime - timerStartTime
 
             if (diffInMillis < 0) {
-                binding.tvTimeCountValue.text = "00:00:00"
                 return
             }
 
@@ -1053,13 +1018,14 @@ class ActivityFragment : Fragment() {
             val seconds = totalSeconds % 60
 
             val timeString = String.format("%02d:%02d:%02d", hours, minutes, seconds)
-            binding.tvTimeCountValue.text = timeString
+            
+            // Update the adapter directly
+            progressAdapter.updateTimer(timeString)
 
             Log.d("ActivityFragment", "Time display updated: $timeString (total seconds: $totalSeconds, diff: ${diffInMillis}ms)")
 
         } catch (e: Exception) {
             Log.e("ActivityFragment", "Error updating time display", e)
-            binding.tvTimeCountValue.text = "00:00:00"
         }
     }
 

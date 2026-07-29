@@ -59,7 +59,27 @@ class ActivityAdapter(
         holder: ItemProgressViewHolder,
         position: Int
     ) {
-        holder.bind(differ.currentList[position], position)
+        holder.bind(differ.currentList[position], position, timerValue)
+    }
+
+    override fun onBindViewHolder(
+        holder: ItemProgressViewHolder,
+        position: Int,
+        payloads: MutableList<Any>
+    ) {
+        if (payloads.isNotEmpty()) {
+            val newTime = payloads[0] as String
+            holder.updateTimerOnly(newTime)
+        } else {
+            super.onBindViewHolder(holder, position, payloads)
+        }
+    }
+
+    private var timerValue: String = "00:00:00"
+
+    fun updateTimer(time: String) {
+        this.timerValue = time
+        notifyItemChanged(0, time)
     }
 
     class ItemProgressViewHolder(
@@ -68,10 +88,11 @@ class ActivityAdapter(
         private val onFinishClick: (ProgressActivity, Int) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(item: ProgressActivity, position: Int) {
+        fun bind(item: ProgressActivity, position: Int, timer: String) {
             with(item) {
                 binding.tvActivityProgress.text = physicalActivityName
                 binding.tvStartTime.text = "Dimulai pukul $startedAt"
+                binding.tvTimeCountValue.text = timer
 
                 binding.btnCancelActivity.setOnClickListener {
                     onCancelClick(this, position)
@@ -84,6 +105,10 @@ class ActivityAdapter(
                 val iconRes = getActivityIcon(physicalActivityName)
                 binding.ivActivityIcon.setImageResource(iconRes)
             }
+        }
+
+        fun updateTimerOnly(timer: String) {
+            binding.tvTimeCountValue.text = timer
         }
 
         private fun getActivityIcon(name: String?): Int {
