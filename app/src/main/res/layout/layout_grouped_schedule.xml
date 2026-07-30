@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginVertical="8dp"
+    app:cardCornerRadius="20dp"
+    app:cardElevation="1dp"
+    app:strokeWidth="0dp"
+    app:cardBackgroundColor="#EDEDF6">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingTop="20dp"
+        android:paddingBottom="8dp"
+        android:paddingHorizontal="20dp">
+
+        <TextView
+            android:id="@+id/tv_grouped_date_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:textAllCaps="true"
+            android:letterSpacing="0.1"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="#3F51B5"
+            tools:text="HARI INI" />
+
+        <LinearLayout
+            android:id="@+id/ll_schedule_items"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:divider="?android:attr/dividerHorizontal"
+            android:showDividers="middle" />
+
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>
