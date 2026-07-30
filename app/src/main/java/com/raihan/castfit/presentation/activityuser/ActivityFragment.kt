@@ -49,6 +49,7 @@ import com.raihan.castfit.utils.toReadableDate
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.activityViewModel
 import org.koin.androidx.viewmodel.ext.android.sharedViewModel
@@ -73,6 +74,10 @@ class ActivityFragment : Fragment() {
 
     private var isScheduledExpanded = false
     private var isHistoryExpanded = false
+
+    private var isScheduleLoaded = false
+    private var isProgressLoaded = false
+    private var isHistoryLoaded = false
 
     private val scheduleGroupieAdapter = ScheduleGroupieAdapter(
         onCancelClick = { schedule, position ->
@@ -105,6 +110,7 @@ class ActivityFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        showLoading(true)
         setupExpandableSections()
         refreshWeatherData()
         observeCurrentWeather()
@@ -149,6 +155,29 @@ class ActivityFragment : Fragment() {
             }
             // Memperbarui RecyclerView dengan daftar item yang sudah siap ditampilkan
             groupAdapter.update(items)
+            isHistoryLoaded = true
+            checkLoadingState()
+        }
+    }
+
+    private fun showLoading(isLoading: Boolean) {
+        binding.layoutShimmer.root.isVisible = isLoading
+        binding.nsvContent.isVisible = !isLoading
+        if (isLoading) {
+            binding.layoutShimmer.shimmerViewContainer.startShimmer()
+        } else {
+            binding.layoutShimmer.shimmerViewContainer.stopShimmer()
+        }
+    }
+
+    private fun checkLoadingState() {
+        Log.d("ActivityFragment", "checkLoadingState: Schedule=$isScheduleLoaded, Progress=$isProgressLoaded, History=$isHistoryLoaded")
+        if (isScheduleLoaded && isProgressLoaded && isHistoryLoaded) {
+            // Force a minimum shimmer time of 1 second for visual feedback
+            viewLifecycleOwner.lifecycleScope.launch {
+                delay(1000)
+                showLoading(false)
+            }
         }
     }
 
@@ -269,12 +298,20 @@ class ActivityFragment : Fragment() {
                         Log.d("ActivityFragment", "Schedule payload null")
                         scheduleGroupieAdapter.setData(emptyList()) // Penting jika list kosong
                     }
+                    isScheduleLoaded = true
+                    checkLoadingState()
                 },
                 doOnError = {
                     Log.e("ActivityFragment", "Error loading schedule: ${it.exception}")
+                    isScheduleLoaded = true
+                    checkLoadingState()
                 },
                 doOnLoading = {
                     Log.d("ActivityFragment", "Loading schedule data...")
+                },
+                doOnEmpty = {
+                    isScheduleLoaded = true
+                    checkLoadingState()
                 }
             )
         }
@@ -308,15 +345,23 @@ class ActivityFragment : Fragment() {
                         binding.rvOnProgressList.visibility = View.GONE
                         stopTimeCounter()
                     }
+                    isProgressLoaded = true
+                    checkLoadingState()
                 },
                 doOnError = {
                     Log.e("ActivityFragment", "Error loading progress: ${it.exception}")
                     binding.mcwEmptyOnProgress.visibility = View.VISIBLE
                     binding.rvOnProgressList.visibility = View.GONE
                     stopTimeCounter()
+                    isProgressLoaded = true
+                    checkLoadingState()
                 },
                 doOnLoading = {
                     Log.d("ActivityFragment", "Loading on progress data...")
+                },
+                doOnEmpty = {
+                    isProgressLoaded = true
+                    checkLoadingState()
                 }
             )
         }

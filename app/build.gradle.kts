@@ -126,6 +126,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.http.logging)
     implementation(libs.paging.runtime)
+    implementation(libs.shimmer)
     implementation(libs.circleImageView)
     implementation(libs.groupie)
     implementation(libs.groupie.viewbinding)
