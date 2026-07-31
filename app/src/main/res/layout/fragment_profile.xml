@@ -7,9 +7,25 @@
     tools:context=".presentation.profile.ProfileFragment">
 
     <include
+        android:id="@+id/layout_shimmer"
+        layout="@layout/layout_shimmer_profile"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="visible" />
+
+    <include
+        android:id="@+id/layout_error"
+        layout="@layout/layout_error_profile"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
+
+    <include
         android:id="@+id/layout_profile"
         layout="@layout/layout_profile"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        tools:visibility="visible" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

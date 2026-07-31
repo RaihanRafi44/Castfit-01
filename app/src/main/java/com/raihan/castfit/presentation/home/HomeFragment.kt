@@ -13,6 +13,7 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import coil.load
 import com.google.android.gms.location.LocationServices
 import com.raihan.castfit.R
@@ -50,6 +51,9 @@ class HomeFragment : Fragment() {
 
     private var lastClickedButton: String? = null
 
+    private var isLocationLoaded = false
+    private var isWeatherLoaded = false
+
     override fun onResume() {
         super.onResume()
         showUserData() // Tampilkan data pengguna saat fragment kembali aktif
@@ -68,6 +72,7 @@ class HomeFragment : Fragment() {
         savedInstanceState: Bundle?
     ) {
         super.onViewCreated(view, savedInstanceState)
+        showLoading(true)
         if (isLocationPermissionGranted()) {
             getCurrentLocation()
         } else {
@@ -78,6 +83,10 @@ class HomeFragment : Fragment() {
         homeViewModel.loadSavedLocation()
         observeWeather()
         binding.swipeRefreshLayout.isEnabled = false
+        binding.layoutError.btnRetry.setOnClickListener {
+            showLoading(true)
+            getCurrentLocation()
+        }
         homeViewModel.isProfileComplete.observe(viewLifecycleOwner) { isComplete ->
 
             // Jika tidak dalam pengecekan profil, langsung keluar dari observer.
@@ -155,11 +164,46 @@ class HomeFragment : Fragment() {
         }
     }
 
+    private fun showLoading(isLoading: Boolean) {
+        binding.layoutShimmer.root.isVisible = isLoading
+        binding.layoutError.root.isVisible = false
+        binding.nsvContent.isVisible = !isLoading
+        if (isLoading) {
+            binding.layoutShimmer.shimmerViewContainer.startShimmer()
+        } else {
+            binding.layoutShimmer.shimmerViewContainer.stopShimmer()
+        }
+    }
+
+    private fun showError(isError: Boolean) {
+        binding.layoutError.root.isVisible = isError
+        binding.layoutShimmer.root.isVisible = false
+        binding.nsvContent.isVisible = !isError
+        if (isError) {
+            binding.layoutShimmer.shimmerViewContainer.stopShimmer()
+        }
+    }
+
+    private fun checkLoadingState() {
+        if (isLocationLoaded && isWeatherLoaded) {
+            showLoading(false)
+        }
+    }
+
     // Observe lokasi dari ViewModel dan tampilkan ke UI
     private fun observeCurrentLocation() {
         homeViewModel.currentLocation.observe(viewLifecycleOwner) { uiState ->
+            if (!uiState.isLoading) {
+                isLocationLoaded = true
+                // Jika lokasi null, berarti cuaca tidak akan di-fetch
+                if (uiState.currentLocation == null) {
+                    isWeatherLoaded = true
+                }
+                checkLoadingState()
+            }
             when {
                 uiState.error != null -> {
+                    showError(true)
                     Toast.makeText(requireContext(), uiState.error, Toast.LENGTH_SHORT).show()
                 }
                 uiState.currentLocation != null -> {
@@ -171,13 +215,15 @@ class HomeFragment : Fragment() {
         }
 
         binding.btnCurrentLocation.setOnClickListener {
-            binding.swipeRefreshLayout.isRefreshing = true
+            showLoading(true)
             proceedWithCurrentLocation()
         }
     }
 
     // Meminta lokasi saat ini dari ViewModel menggunakan fused location
     private fun getCurrentLocation() {
+        isLocationLoaded = false
+        isWeatherLoaded = false
         homeViewModel.fetchLocation(fusedLocationProviderClient, geocoder)
     }
 
@@ -205,6 +251,15 @@ class HomeFragment : Fragment() {
     // Observe data cuaca dan tampilkan info cuaca ke UI
     private fun observeWeather() {
         homeViewModel.weather.observe(viewLifecycleOwner) { weather ->
+            if (weather != null && !weather.isLoading) {
+                isWeatherLoaded = true
+                checkLoadingState()
+            }
+            
+            if (weather?.error != null) {
+                showError(true)
+            }
+
             weather?.data?.current?.let { currentWeather ->
                 binding.homeWeather.textTemperatureHome.text = "${currentWeather.temperature}°C"
                 binding.homeWeather.textWeatherStatusHome.text = currentWeather.condition.text

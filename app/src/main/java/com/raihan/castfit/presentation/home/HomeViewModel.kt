@@ -91,6 +91,7 @@ class HomeViewModel(
     // Ambil data cuaca dari repository menggunakan lat dan lon
     private fun fetchWeather(lat: Double?, lon: Double?) {
         if (lat == null || lon == null) return
+        _weather.postValue(WeatherUiState(isLoading = true))
         viewModelScope.launch {
             weatherRepository.getWeathers("$lat,$lon")
                 .collect { result ->
