@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import com.github.aachartmodel.aainfographics.aachartcreator.*
 import com.github.aachartmodel.aainfographics.aaoptionsmodel.AADataLabels
@@ -81,23 +82,35 @@ class ChartsHistoryActivity : AppCompatActivity() {
     }
 
     private fun showLoading() {
-        binding.progressBar.visibility = View.VISIBLE
-        binding.cvChartContainer.visibility = View.GONE
-        binding.llEmptyState.visibility = View.GONE
+        binding.layoutShimmer.root.isVisible = true
+        binding.layoutShimmer.shimmerViewContainer.startShimmer()
+        binding.cvChartContainer.isVisible = false
+        binding.llEmptyState.isVisible = false
+        binding.llSummary.isVisible = false
+        binding.tvTitleCharts.isVisible = false
+        binding.tvSubtitleCharts.isVisible = false
+        binding.btnBackChartsActivity.isVisible = true // Ensure back button stays visible
     }
 
     private fun hideLoading() {
-        binding.progressBar.visibility = View.GONE
+        binding.layoutShimmer.shimmerViewContainer.stopShimmer()
+        binding.layoutShimmer.root.isVisible = false
     }
 
     private fun showChart() {
-        binding.cvChartContainer.visibility = View.VISIBLE
-        binding.llEmptyState.visibility = View.GONE
+        binding.cvChartContainer.isVisible = true
+        binding.llEmptyState.isVisible = false
+        binding.llSummary.isVisible = true
+        binding.tvTitleCharts.isVisible = true
+        binding.tvSubtitleCharts.isVisible = true
     }
 
     private fun showEmptyState() {
-        binding.cvChartContainer.visibility = View.GONE
-        binding.llEmptyState.visibility = View.VISIBLE
+        binding.cvChartContainer.isVisible = false
+        binding.llEmptyState.isVisible = true
+        binding.llSummary.isVisible = false
+        binding.tvTitleCharts.isVisible = true
+        binding.tvSubtitleCharts.isVisible = true
     }
 
     // Menggambar grafik berdasarkan data riwayat yang tersedia
