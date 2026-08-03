@@ -37,6 +37,7 @@ import com.raihan.castfit.data.model.PhysicalActivity
 import com.raihan.castfit.data.model.ProgressActivity
 import com.raihan.castfit.data.model.ScheduleActivity
 import com.raihan.castfit.databinding.FragmentActivityBinding
+import com.raihan.castfit.databinding.LayoutDialogAlertBinding
 import com.raihan.castfit.databinding.LayoutDialogCancelBinding
 import com.raihan.castfit.databinding.LayoutDialogConfirmationBinding
 import com.raihan.castfit.databinding.LayoutDialogInfoBinding
@@ -510,11 +511,20 @@ class ActivityFragment : Fragment() {
                 viewLifecycleOwner.lifecycleScope.launch {
                     val hasProgress = activityPhysicalViewModel.checkIfUserHasProgressSuspend()
                     if (hasProgress) {
-                        MaterialAlertDialogBuilder(requireContext())
-                            .setTitle("Aktivitas Sedang Berjalan")
-                            .setMessage("Hanya satu aktivitas yang bisa berlangsung dalam satu waktu. Selesaikan atau batalkan aktivitas sebelumnya terlebih dahulu.")
-                            .setPositiveButton("OK", null)
-                            .show()
+                        val alertBinding = LayoutDialogAlertBinding.inflate(layoutInflater)
+                        val alertDialog = MaterialAlertDialogBuilder(requireContext())
+                            .setView(alertBinding.root)
+                            .setCancelable(true)
+                            .create()
+
+                        alertBinding.tvAlertTitle.text = "Aktivitas Sedang Berjalan"
+                        alertBinding.tvAlertMessage.text = "Hanya satu aktivitas yang bisa berlangsung dalam satu waktu. Selesaikan atau batalkan aktivitas sebelumnya terlebih dahulu."
+                        
+                        alertBinding.btnAlertOk.setOnClickListener {
+                            alertDialog.dismiss()
+                        }
+                        
+                        alertDialog.show()
                     } else {
                         // Jika tidak ada progress, langsung mulai aktivitas (Tanpa dialog konfirmasi kedua)
                         activityPhysicalViewModel.startScheduledActivity(weatherCheck.schedule)
@@ -912,14 +922,22 @@ class ActivityFragment : Fragment() {
             val hasProgress = activityPhysicalViewModel.checkIfUserHasProgressSuspend()
             Log.d("ActivityFragmentDebug", "Has Progress? $hasProgress")
             if (hasProgress) {
-                AlertDialog.Builder(requireContext()).apply {
-                    setTitle("Aktivitas Sedang Berjalan")
-                    setMessage("Hanya satu aktivitas yang bisa berlangsung dalam satu waktu. Selesaikan atau batalkan aktivitas sebelumnya terlebih dahulu.")
-                    setPositiveButton("OK", null)
-                    setOnDismissListener { isCheckingProgress = false }
-                    create()
-                    show()
+                val dialogBinding = LayoutDialogAlertBinding.inflate(layoutInflater)
+                val dialog = MaterialAlertDialogBuilder(requireContext())
+                    .setView(dialogBinding.root)
+                    .setCancelable(true)
+                    .create()
+
+                dialogBinding.tvAlertTitle.text = "Aktivitas Sedang Berjalan"
+                dialogBinding.tvAlertMessage.text = "Hanya satu aktivitas yang bisa berlangsung dalam satu waktu. Selesaikan atau batalkan aktivitas sebelumnya terlebih dahulu."
+                
+                dialogBinding.btnAlertOk.setOnClickListener {
+                    isCheckingProgress = false
+                    dialog.dismiss()
                 }
+
+                dialog.setOnDismissListener { isCheckingProgress = false }
+                dialog.show()
             } else {
                 showConfirmationDialogAfterCheckingProgress(activity)
             }
@@ -934,14 +952,22 @@ class ActivityFragment : Fragment() {
             val hasProgress = activityPhysicalViewModel.checkIfUserHasProgressSuspend()
             Log.d("ActivityFragmentDebug", "Has Progress? $hasProgress")
             if (hasProgress) {
-                AlertDialog.Builder(requireContext()).apply {
-                    setTitle("Aktivitas Sedang Berjalan")
-                    setMessage("Hanya satu aktivitas yang bisa berlangsung dalam satu waktu. Selesaikan atau batalkan aktivitas sebelumnya terlebih dahulu.")
-                    setPositiveButton("OK", null)
-                    setOnDismissListener { isCheckingProgress = false }
-                    create()
-                    show()
+                val dialogBinding = LayoutDialogAlertBinding.inflate(layoutInflater)
+                val dialog = MaterialAlertDialogBuilder(requireContext())
+                    .setView(dialogBinding.root)
+                    .setCancelable(true)
+                    .create()
+
+                dialogBinding.tvAlertTitle.text = "Aktivitas Sedang Berjalan"
+                dialogBinding.tvAlertMessage.text = "Hanya satu aktivitas yang bisa berlangsung dalam satu waktu. Selesaikan atau batalkan aktivitas sebelumnya terlebih dahulu."
+                
+                dialogBinding.btnAlertOk.setOnClickListener {
+                    isCheckingProgress = false
+                    dialog.dismiss()
                 }
+
+                dialog.setOnDismissListener { isCheckingProgress = false }
+                dialog.show()
             } else {
                 if (skipConfirmation) {
                     // Langsung mulai tanpa konfirmasi

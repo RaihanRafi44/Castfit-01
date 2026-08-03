@@ -18,6 +18,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.raihan.castfit.R
 import com.raihan.castfit.data.model.PhysicalActivity
 import com.raihan.castfit.databinding.ActivityRecommendationBinding
+import com.raihan.castfit.databinding.LayoutDialogAlertBinding
 import com.raihan.castfit.databinding.LayoutDialogConfirmationBinding
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -235,12 +236,22 @@ class RecommendationActivity : AppCompatActivity() {
             val hasProgress = recommendationViewModel.checkIfUserHasProgressSuspend()
             Log.d("RecommendationDebug", "Has Progress? $hasProgress")
             if (hasProgress) {
-                MaterialAlertDialogBuilder(this@RecommendationActivity)
-                    .setTitle("Aktivitas Sedang Berjalan")
-                    .setMessage("Hanya satu aktivitas yang bisa berlangsung dalam satu waktu. Selesaikan atau batalkan aktivitas sebelumnya terlebih dahulu.")
-                    .setPositiveButton("OK") { _, _ -> isCheckingProgress = false }
-                    .setOnDismissListener { isCheckingProgress = false }
-                    .show()
+                val dialogBinding = LayoutDialogAlertBinding.inflate(layoutInflater)
+                val dialog = MaterialAlertDialogBuilder(this@RecommendationActivity)
+                    .setView(dialogBinding.root)
+                    .setCancelable(true)
+                    .create()
+
+                dialogBinding.tvAlertTitle.text = "Aktivitas Sedang Berjalan"
+                dialogBinding.tvAlertMessage.text = "Hanya satu aktivitas yang bisa berlangsung dalam satu waktu. Selesaikan atau batalkan aktivitas sebelumnya terlebih dahulu."
+                
+                dialogBinding.btnAlertOk.setOnClickListener {
+                    isCheckingProgress = false
+                    dialog.dismiss()
+                }
+
+                dialog.setOnDismissListener { isCheckingProgress = false }
+                dialog.show()
             } else {
                 showConfirmationDialog(activity)
             }
