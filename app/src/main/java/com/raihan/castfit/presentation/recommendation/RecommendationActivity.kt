@@ -18,6 +18,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.raihan.castfit.R
 import com.raihan.castfit.data.model.PhysicalActivity
 import com.raihan.castfit.databinding.ActivityRecommendationBinding
+import com.raihan.castfit.databinding.LayoutDialogAlertBinding
 import com.raihan.castfit.databinding.LayoutDialogConfirmationBinding
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -81,15 +82,31 @@ class RecommendationActivity : AppCompatActivity() {
         }
     }
 
+    private fun showLoading(isLoading: Boolean) {
+        binding.layoutShimmer.root.isVisible = isLoading
+        binding.nsvContent.isVisible = !isLoading
+        if (isLoading) {
+            binding.layoutShimmer.shimmerViewContainer.startShimmer()
+        } else {
+            binding.layoutShimmer.shimmerViewContainer.stopShimmer()
+        }
+    }
+
     // Mengamati perubahan data dari ViewModel dan menyesuaikan UI
     private fun observeViewModel() {
+        recommendationViewModel.isLoading.observe(this) { isLoading ->
+            showLoading(isLoading)
+        }
+
         recommendationViewModel.indoorActivities.observe(this) {
             indoorAdapter.setData(it)
+            checkEmptyState()
         }
 
         // Observe outdoor list dan data lengkap sekaligus
         recommendationViewModel.outdoorActivities.observe(this) { outdoorList ->
             outdoorAdapter.setData(outdoorList)
+            checkEmptyState()
 
             val userAge = recommendationViewModel.userAge.value
             val allActivities = recommendationViewModel.allActivities.value
@@ -131,7 +148,34 @@ class RecommendationActivity : AppCompatActivity() {
 
             binding.tvIndoorAgeNotCapable.visibility = if (!isIndoorCapable) View.VISIBLE else View.GONE
             binding.rvIndoorList.visibility = if (!isIndoorCapable) View.GONE else View.VISIBLE
+            checkEmptyState()
+        }
+    }
 
+    private fun checkEmptyState() {
+        val indoorList = recommendationViewModel.indoorActivities.value ?: emptyList()
+        val outdoorList = recommendationViewModel.outdoorActivities.value ?: emptyList()
+        val isLoading = recommendationViewModel.isLoading.value ?: false
+
+        if (isLoading) return
+
+        val isEmpty = indoorList.isEmpty() && outdoorList.isEmpty()
+
+        binding.llRecommendationEmptyState.isVisible = isEmpty
+        
+        // Jika benar-benar kosong total (baik indoor maupun outdoor)
+        if (isEmpty) {
+            binding.incOutdoorTitle.root.isVisible = false
+            binding.flOutdoor.isVisible = false
+            binding.incIndoorTitle.root.isVisible = false
+            binding.flIndoor.isVisible = false
+        } else {
+            // Jika ada salah satu yang isi, pastikan section-section tetap terlihat
+            // agar logika masing-masing di observeViewModel bisa berjalan
+            binding.incOutdoorTitle.root.isVisible = true
+            binding.flOutdoor.isVisible = true
+            binding.incIndoorTitle.root.isVisible = true
+            binding.flIndoor.isVisible = true
         }
     }
 
@@ -192,12 +236,22 @@ class RecommendationActivity : AppCompatActivity() {
             val hasProgress = recommendationViewModel.checkIfUserHasProgressSuspend()
             Log.d("RecommendationDebug", "Has Progress? $hasProgress")
             if (hasProgress) {
-                MaterialAlertDialogBuilder(this@RecommendationActivity)
-                    .setTitle("Aktivitas Sedang Berjalan")
-                    .setMessage("Hanya satu aktivitas yang bisa berlangsung dalam satu waktu. Selesaikan atau batalkan aktivitas sebelumnya terlebih dahulu.")
-                    .setPositiveButton("OK") { _, _ -> isCheckingProgress = false }
-                    .setOnDismissListener { isCheckingProgress = false }
-                    .show()
+                val dialogBinding = LayoutDialogAlertBinding.inflate(layoutInflater)
+                val dialog = MaterialAlertDialogBuilder(this@RecommendationActivity)
+                    .setView(dialogBinding.root)
+                    .setCancelable(true)
+                    .create()
+
+                dialogBinding.tvAlertTitle.text = "Aktivitas Sedang Berjalan"
+                dialogBinding.tvAlertMessage.text = "Hanya satu aktivitas yang bisa berlangsung dalam satu waktu. Selesaikan atau batalkan aktivitas sebelumnya terlebih dahulu."
+                
+                dialogBinding.btnAlertOk.setOnClickListener {
+                    isCheckingProgress = false
+                    dialog.dismiss()
+                }
+
+                dialog.setOnDismissListener { isCheckingProgress = false }
+                dialog.show()
             } else {
                 showConfirmationDialog(activity)
             }

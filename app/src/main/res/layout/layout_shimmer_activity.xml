@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.facebook.shimmer.ShimmerFrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/shimmer_view_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:shimmer_auto_start="true"
+    app:shimmer_duration="1200"
+    app:shimmer_base_alpha="1.0"
+    app:shimmer_highlight_alpha="0.5"
+    app:shimmer_colored="true"
+    app:shimmer_base_color="#E0E0E0"
+    app:shimmer_highlight_color="#FFFFFF">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingBottom="16dp">
+
+        <!-- Placeholder for On Progress Section -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="180dp"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="24dp"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="0dp"
+            app:cardBackgroundColor="#F5F5F5">
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_shimmer_placeholder" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Placeholder for Scheduled Title -->
+        <View
+            android:layout_width="200dp"
+            android:layout_height="32dp"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="24dp"
+            android:background="@drawable/bg_shimmer_placeholder" />
+
+        <!-- Placeholder for Scheduled Items -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="12dp">
+
+            <include layout="@layout/item_shimmer_activity" />
+            <include layout="@layout/item_shimmer_activity" />
+        </LinearLayout>
+
+        <!-- Placeholder for History Title -->
+        <View
+            android:layout_width="180dp"
+            android:layout_height="32dp"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="24dp"
+            android:background="@drawable/bg_shimmer_placeholder" />
+
+        <!-- Placeholder for History Items -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="12dp">
+
+            <include layout="@layout/item_shimmer_activity" />
+            <include layout="@layout/item_shimmer_activity" />
+            <include layout="@layout/item_shimmer_activity" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</com.facebook.shimmer.ShimmerFrameLayout>

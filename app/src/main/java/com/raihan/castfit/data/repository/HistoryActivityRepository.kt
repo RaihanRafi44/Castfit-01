@@ -16,6 +16,7 @@ import com.raihan.castfit.data.source.local.database.entity.ProgressActivityEnti
 import com.raihan.castfit.utils.ResultWrapper
 import com.raihan.castfit.utils.proceed
 import com.raihan.castfit.utils.proceedFlow
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
@@ -84,6 +85,7 @@ class HistoryActivityRepositoryImpl(
             .onStart {
                 Log.d("GetHistory", "Starting to get history data for user: $currentUserId")
                 emit(ResultWrapper.Loading())
+                delay(1000) // Artificial delay for shimmer
             }
     }
 

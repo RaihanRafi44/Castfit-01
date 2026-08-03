@@ -37,6 +37,7 @@ import com.raihan.castfit.data.model.PhysicalActivity
 import com.raihan.castfit.data.model.ProgressActivity
 import com.raihan.castfit.data.model.ScheduleActivity
 import com.raihan.castfit.databinding.FragmentActivityBinding
+import com.raihan.castfit.databinding.LayoutDialogAlertBinding
 import com.raihan.castfit.databinding.LayoutDialogCancelBinding
 import com.raihan.castfit.databinding.LayoutDialogConfirmationBinding
 import com.raihan.castfit.databinding.LayoutDialogInfoBinding
@@ -49,6 +50,7 @@ import com.raihan.castfit.utils.toReadableDate
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import com.xwray.groupie.Item
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.activityViewModel
 import org.koin.androidx.viewmodel.ext.android.sharedViewModel
@@ -73,6 +75,10 @@ class ActivityFragment : Fragment() {
 
     private var isScheduledExpanded = false
     private var isHistoryExpanded = false
+
+    private var isScheduleLoaded = false
+    private var isProgressLoaded = false
+    private var isHistoryLoaded = false
 
     private val scheduleGroupieAdapter = ScheduleGroupieAdapter(
         onCancelClick = { schedule, position ->
@@ -105,6 +111,7 @@ class ActivityFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        showLoading(true)
         setupExpandableSections()
         refreshWeatherData()
         observeCurrentWeather()
@@ -149,6 +156,29 @@ class ActivityFragment : Fragment() {
             }
             // Memperbarui RecyclerView dengan daftar item yang sudah siap ditampilkan
             groupAdapter.update(items)
+            isHistoryLoaded = true
+            checkLoadingState()
+        }
+    }
+
+    private fun showLoading(isLoading: Boolean) {
+        binding.layoutShimmer.root.isVisible = isLoading
+        binding.nsvContent.isVisible = !isLoading
+        if (isLoading) {
+            binding.layoutShimmer.shimmerViewContainer.startShimmer()
+        } else {
+            binding.layoutShimmer.shimmerViewContainer.stopShimmer()
+        }
+    }
+
+    private fun checkLoadingState() {
+        Log.d("ActivityFragment", "checkLoadingState: Schedule=$isScheduleLoaded, Progress=$isProgressLoaded, History=$isHistoryLoaded")
+        if (isScheduleLoaded && isProgressLoaded && isHistoryLoaded) {
+            // Force a minimum shimmer time of 1 second for visual feedback
+            viewLifecycleOwner.lifecycleScope.launch {
+                delay(1000)
+                showLoading(false)
+            }
         }
     }
 
@@ -269,12 +299,20 @@ class ActivityFragment : Fragment() {
                         Log.d("ActivityFragment", "Schedule payload null")
                         scheduleGroupieAdapter.setData(emptyList()) // Penting jika list kosong
                     }
+                    isScheduleLoaded = true
+                    checkLoadingState()
                 },
                 doOnError = {
                     Log.e("ActivityFragment", "Error loading schedule: ${it.exception}")
+                    isScheduleLoaded = true
+                    checkLoadingState()
                 },
                 doOnLoading = {
                     Log.d("ActivityFragment", "Loading schedule data...")
+                },
+                doOnEmpty = {
+                    isScheduleLoaded = true
+                    checkLoadingState()
                 }
             )
         }
@@ -308,15 +346,23 @@ class ActivityFragment : Fragment() {
                         binding.rvOnProgressList.visibility = View.GONE
                         stopTimeCounter()
                     }
+                    isProgressLoaded = true
+                    checkLoadingState()
                 },
                 doOnError = {
                     Log.e("ActivityFragment", "Error loading progress: ${it.exception}")
                     binding.mcwEmptyOnProgress.visibility = View.VISIBLE
                     binding.rvOnProgressList.visibility = View.GONE
                     stopTimeCounter()
+                    isProgressLoaded = true
+                    checkLoadingState()
                 },
                 doOnLoading = {
                     Log.d("ActivityFragment", "Loading on progress data...")
+                },
+                doOnEmpty = {
+                    isProgressLoaded = true
+                    checkLoadingState()
                 }
             )
         }
@@ -465,11 +511,20 @@ class ActivityFragment : Fragment() {
                 viewLifecycleOwner.lifecycleScope.launch {
                     val hasProgress = activityPhysicalViewModel.checkIfUserHasProgressSuspend()
                     if (hasProgress) {
-                        MaterialAlertDialogBuilder(requireContext())
-                            .setTitle("Aktivitas Sedang Berjalan")
-                            .setMessage("Hanya satu aktivitas yang bisa berlangsung dalam satu waktu. Selesaikan atau batalkan aktivitas sebelumnya terlebih dahulu.")
-                            .setPositiveButton("OK", null)
-                            .show()
+                        val alertBinding = LayoutDialogAlertBinding.inflate(layoutInflater)
+                        val alertDialog = MaterialAlertDialogBuilder(requireContext())
+                            .setView(alertBinding.root)
+                            .setCancelable(true)
+                            .create()
+
+                        alertBinding.tvAlertTitle.text = "Aktivitas Sedang Berjalan"
+                        alertBinding.tvAlertMessage.text = "Hanya satu aktivitas yang bisa berlangsung dalam satu waktu. Selesaikan atau batalkan aktivitas sebelumnya terlebih dahulu."
+                        
+                        alertBinding.btnAlertOk.setOnClickListener {
+                            alertDialog.dismiss()
+                        }
+                        
+                        alertDialog.show()
                     } else {
                         // Jika tidak ada progress, langsung mulai aktivitas (Tanpa dialog konfirmasi kedua)
                         activityPhysicalViewModel.startScheduledActivity(weatherCheck.schedule)
@@ -867,14 +922,22 @@ class ActivityFragment : Fragment() {
             val hasProgress = activityPhysicalViewModel.checkIfUserHasProgressSuspend()
             Log.d("ActivityFragmentDebug", "Has Progress? $hasProgress")
             if (hasProgress) {
-                AlertDialog.Builder(requireContext()).apply {
-                    setTitle("Aktivitas Sedang Berjalan")
-                    setMessage("Hanya satu aktivitas yang bisa berlangsung dalam satu waktu. Selesaikan atau batalkan aktivitas sebelumnya terlebih dahulu.")
-                    setPositiveButton("OK", null)
-                    setOnDismissListener { isCheckingProgress = false }
-                    create()
-                    show()
+                val dialogBinding = LayoutDialogAlertBinding.inflate(layoutInflater)
+                val dialog = MaterialAlertDialogBuilder(requireContext())
+                    .setView(dialogBinding.root)
+                    .setCancelable(true)
+                    .create()
+
+                dialogBinding.tvAlertTitle.text = "Aktivitas Sedang Berjalan"
+                dialogBinding.tvAlertMessage.text = "Hanya satu aktivitas yang bisa berlangsung dalam satu waktu. Selesaikan atau batalkan aktivitas sebelumnya terlebih dahulu."
+                
+                dialogBinding.btnAlertOk.setOnClickListener {
+                    isCheckingProgress = false
+                    dialog.dismiss()
                 }
+
+                dialog.setOnDismissListener { isCheckingProgress = false }
+                dialog.show()
             } else {
                 showConfirmationDialogAfterCheckingProgress(activity)
             }
@@ -889,14 +952,22 @@ class ActivityFragment : Fragment() {
             val hasProgress = activityPhysicalViewModel.checkIfUserHasProgressSuspend()
             Log.d("ActivityFragmentDebug", "Has Progress? $hasProgress")
             if (hasProgress) {
-                AlertDialog.Builder(requireContext()).apply {
-                    setTitle("Aktivitas Sedang Berjalan")
-                    setMessage("Hanya satu aktivitas yang bisa berlangsung dalam satu waktu. Selesaikan atau batalkan aktivitas sebelumnya terlebih dahulu.")
-                    setPositiveButton("OK", null)
-                    setOnDismissListener { isCheckingProgress = false }
-                    create()
-                    show()
+                val dialogBinding = LayoutDialogAlertBinding.inflate(layoutInflater)
+                val dialog = MaterialAlertDialogBuilder(requireContext())
+                    .setView(dialogBinding.root)
+                    .setCancelable(true)
+                    .create()
+
+                dialogBinding.tvAlertTitle.text = "Aktivitas Sedang Berjalan"
+                dialogBinding.tvAlertMessage.text = "Hanya satu aktivitas yang bisa berlangsung dalam satu waktu. Selesaikan atau batalkan aktivitas sebelumnya terlebih dahulu."
+                
+                dialogBinding.btnAlertOk.setOnClickListener {
+                    isCheckingProgress = false
+                    dialog.dismiss()
                 }
+
+                dialog.setOnDismissListener { isCheckingProgress = false }
+                dialog.show()
             } else {
                 if (skipConfirmation) {
                     // Langsung mulai tanpa konfirmasi

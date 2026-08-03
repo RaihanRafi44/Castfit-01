@@ -40,8 +40,12 @@ class RecommendationViewModel (
     private val _allActivities = MutableLiveData<List<PhysicalActivity>>()
     val allActivities: LiveData<List<PhysicalActivity>> = _allActivities
 
+    private val _isLoading = MutableLiveData<Boolean>()
+    val isLoading: LiveData<Boolean> = _isLoading
+
     // Memuat dan menyaring aktivitas berdasarkan cuaca dan usia pengguna
     fun loadActivitiesBasedOnWeather(condition: String) {
+        _isLoading.postValue(true)
         viewModelScope.launch {
             val result = userRepository.getUserDateOfBirthAndAge()
                 .firstOrNull { it is ResultWrapper.Success }
@@ -76,6 +80,7 @@ class RecommendationViewModel (
 
             _indoorActivities.postValue(indoor)
             _outdoorActivities.postValue(outdoor)
+            _isLoading.postValue(false)
         }
     }
 

@@ -57,6 +57,9 @@ class ProfileFragment : Fragment() {
         setupClickListeners()
         binding.layoutProfile.etDateOfBirth.isFocusable = false
         binding.layoutProfile.etDateOfBirth.isClickable = true
+        binding.layoutError.btnRetry.setOnClickListener {
+            checkDateOfBirthStatus()
+        }
     }
 
     private fun setupInputListeners() {
@@ -268,6 +271,10 @@ class ProfileFragment : Fragment() {
         profileViewModel.fetchDateOfBirthAndAge().observe(viewLifecycleOwner) { result ->
             result.proceedWhen(
                 doOnSuccess = {
+                    binding.layoutShimmer.root.isVisible = false
+                    binding.layoutError.root.isVisible = false
+                    binding.layoutProfile.root.isVisible = true
+
                     val (dob, age) = it.payload ?: Pair(null, null)
                     val isEdit = profileViewModel.isEditMode.value == true
 
@@ -301,7 +308,15 @@ class ProfileFragment : Fragment() {
                     }
                 },
                 doOnError = {
+                    binding.layoutShimmer.root.isVisible = false
+                    binding.layoutError.root.isVisible = true
+                    binding.layoutProfile.root.isVisible = false
                     Log.e("ProfileFragment", "Gagal memuat data DOB/age: ${it.exception}")
+                },
+                doOnLoading = {
+                    binding.layoutShimmer.root.isVisible = true
+                    binding.layoutError.root.isVisible = false
+                    binding.layoutProfile.root.isVisible = false
                 }
             )
         }
