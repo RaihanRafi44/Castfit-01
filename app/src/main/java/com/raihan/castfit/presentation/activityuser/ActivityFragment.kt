@@ -239,7 +239,7 @@ class ActivityFragment : Fragment() {
             // Jika current location berubah
             homeViewModel.currentLocation.value?.currentLocation?.let { location ->
                 if (location.latitude != null && location.longitude != null) {
-                    Log.d("ActivityFragment", "Location available for weather refresh: ${location.latitude}, ${location.longitude}")
+                    Log.d("ActivityFragment", "Location available for weather refresh")
                 } else {
                     Log.w("ActivityFragment", "Location coordinates not available for weather refresh")
                 }
@@ -257,7 +257,6 @@ class ActivityFragment : Fragment() {
 
         // Jika current location berubah, fetch weather ulang
         homeViewModel.currentLocation.observe(viewLifecycleOwner) { locationState ->
-            Log.d("ActivityFragment", "Location state: isLoading=${locationState?.isLoading}, location=${locationState?.currentLocation != null}")
 
             locationState?.currentLocation?.let { location ->
                 if (location.latitude != null && location.longitude != null) {
@@ -303,7 +302,7 @@ class ActivityFragment : Fragment() {
                     checkLoadingState()
                 },
                 doOnError = {
-                    Log.e("ActivityFragment", "Error loading schedule: ${it.exception}")
+
                     isScheduleLoaded = true
                     checkLoadingState()
                 },
@@ -350,7 +349,7 @@ class ActivityFragment : Fragment() {
                     checkLoadingState()
                 },
                 doOnError = {
-                    Log.e("ActivityFragment", "Error loading progress: ${it.exception}")
+
                     binding.mcwEmptyOnProgress.visibility = View.VISIBLE
                     binding.rvOnProgressList.visibility = View.GONE
                     stopTimeCounter()
@@ -421,7 +420,6 @@ class ActivityFragment : Fragment() {
 
             // Check weather state for more details
             homeViewModel.weather.value?.let { weatherState ->
-                Log.d("ActivityFragment", "Weather state - isLoading: ${weatherState.isLoading}, error: ${weatherState.error}, data exists: ${weatherState.data != null}")
 
                 if (weatherState.isLoading) {
                     Toast.makeText(
@@ -433,7 +431,7 @@ class ActivityFragment : Fragment() {
                 } else if (weatherState.error != null) {
                     Toast.makeText(
                         requireContext(),
-                        "Gagal memuat data cuaca: ${weatherState.error}. Silakan periksa koneksi internet dan coba lagi.",
+                        "Gagal memuat data cuaca. Silakan periksa koneksi internet dan coba lagi.",
                         Toast.LENGTH_LONG
                     ).show()
                     return
@@ -696,7 +694,6 @@ class ActivityFragment : Fragment() {
         dialogBinding.btnCancelPositive.setOnClickListener {
             activityPhysicalViewModel.removeHistory(history)
             groupAdapter.remove(item) // hapus item dari GroupAdapter
-            Log.d("ActivityLog", "Riwayat aktivitas dengan ID '${history.id}' akan dihapus.")
             dialog.dismiss()
         }
 
@@ -913,36 +910,6 @@ class ActivityFragment : Fragment() {
             startTime.add(Calendar.MINUTE, 30)
         }
     }
-
-    /*private fun handleActivitySelection(activity: ScheduleActivity) {
-        if (isCheckingProgress) return
-        isCheckingProgress = true
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            val hasProgress = activityPhysicalViewModel.checkIfUserHasProgressSuspend()
-            Log.d("ActivityFragmentDebug", "Has Progress? $hasProgress")
-            if (hasProgress) {
-                val dialogBinding = LayoutDialogAlertBinding.inflate(layoutInflater)
-                val dialog = MaterialAlertDialogBuilder(requireContext())
-                    .setView(dialogBinding.root)
-                    .setCancelable(true)
-                    .create()
-
-                dialogBinding.tvAlertTitle.text = "Aktivitas Sedang Berjalan"
-                dialogBinding.tvAlertMessage.text = "Hanya satu aktivitas yang bisa berlangsung dalam satu waktu. Selesaikan atau batalkan aktivitas sebelumnya terlebih dahulu."
-                
-                dialogBinding.btnAlertOk.setOnClickListener {
-                    isCheckingProgress = false
-                    dialog.dismiss()
-                }
-
-                dialog.setOnDismissListener { isCheckingProgress = false }
-                dialog.show()
-            } else {
-                showConfirmationDialogAfterCheckingProgress(activity)
-            }
-        }
-    }*/
 
     private fun handleActivitySelection(activity: ScheduleActivity, skipConfirmation: Boolean = false) {
         if (isCheckingProgress) return

@@ -70,26 +70,18 @@ class UserRepositoryImpl(
     }
 
     override fun getUserDateOfBirthAndAge(): Flow<ResultWrapper<Pair<String?, Int?>>> {
-        Log.d("RepositoryDebug", "getUserDateOfBirthAndAge() DIPANGGIL")
         return proceedFlow {
             val uid = FirebaseAuth.getInstance().currentUser?.uid
                 ?: throw IllegalStateException("User not logged in")
 
-            Log.d("RepositoryDebug", "UID: $uid")
-
             val doc = Firebase.firestore.collection("users").document(uid).get().await()
-
-            Log.d("RepositoryDebug", "Dokumen ada? ${doc.exists()} | Data: ${doc.data}")
 
             val dob = doc.getString("dateOfBirth")
             val age = doc.getLong("age")?.toInt()
 
-            Log.d("RepositoryDebug", "DOB: $dob, AGE: $age")
-
             Pair(dob, age)
         }
     }
-
 
     override fun updateUserDateOfBirthAndAge(dob: String, age: Int): Flow<ResultWrapper<Boolean>> {
         return proceedFlow {
@@ -100,6 +92,4 @@ class UserRepositoryImpl(
             true
         }
     }
-
-
 }

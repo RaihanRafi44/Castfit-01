@@ -48,27 +48,22 @@ class ScheduleViewModel(
                     when (result) {
                         is ResultWrapper.Success -> {
                             currentUser = result.payload
-                            Log.d("ScheduleViewModel", "Current user loaded: ${currentUser?.fullName}")
                         }
                         is ResultWrapper.Error -> {
-                            Log.e("ScheduleViewModel", "Failed to load current user: ${result.exception}")
 
                             val firebaseUser = FirebaseAuth.getInstance().currentUser
                             if (firebaseUser != null) {
                                 currentUser = firebaseUser.toUser()
-                                Log.d("ScheduleViewModel", "Using Firebase Auth user: ${currentUser?.fullName}")
                             }
                         }
                         else -> {}
                     }
                 }
             } catch (e: Exception) {
-                Log.e("ScheduleViewModel", "Error loading user data", e)
 
                 val firebaseUser = FirebaseAuth.getInstance().currentUser
                 if (firebaseUser != null) {
                     currentUser = firebaseUser.toUser()
-                    Log.d("ScheduleViewModel", "Fallback to Firebase Auth user: ${currentUser?.fullName}")
                 }
             }
         }
@@ -137,9 +132,6 @@ class ScheduleViewModel(
             return
         }
 
-        Log.d("ScheduleViewModel", "Found activity: ${selectedActivity.name}, ID: ${selectedActivity.id}")
-        Log.d("ScheduleViewModel", "Current user: ${currentUser?.fullName}, ID: ${currentUser?.id}")
-
         viewModelScope.launch {
             _isLoading.postValue(true)
             try {
@@ -152,18 +144,15 @@ class ScheduleViewModel(
                     _isLoading.postValue(false)
                     when (result) {
                         is ResultWrapper.Success -> {
-                            Log.d("ScheduleViewModel", "Schedule saved successfully: ${result.payload}")
                             _saveScheduleResult.postValue(result.payload == true)
                         }
                         is ResultWrapper.Error -> {
-                            Log.e("ScheduleViewModel", "Failed to save schedule", result.exception)
                             _saveScheduleResult.postValue(false)
                         }
                         is ResultWrapper.Loading -> {
                             Log.d("ScheduleViewModel", "Saving schedule...")
                         }
                         else -> {
-                            Log.w("ScheduleViewModel", "Unexpected result: $result")
                             _saveScheduleResult.postValue(false)
                         }
                     }

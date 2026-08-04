@@ -55,7 +55,6 @@ class RecommendationViewModel (
 
             val allActivities = dataSource.getPhysicalActivitiesData()
             _allActivities.postValue(allActivities)
-            Log.d("RecommendationVM", "Filtered age: $age")
 
             val filteredActivities = if (age != null) {
                 allActivities.filter { it.minAge <= age && it.maxAge >= age }
@@ -89,22 +88,20 @@ class RecommendationViewModel (
         viewModelScope.launch {
             val currentUser = userRepository.getCurrentUser()
             if (currentUser == null) {
-                Log.e("ProgressDebug", "Cannot create progress: user not logged in")
+
                 _progressCreationResult.postValue(false)
                 return@launch
             }
 
             // Validasi user ID
             if (currentUser.id.isEmpty()) {
-                Log.e("ProgressDebug", "Cannot create progress: user ID is empty")
+
                 _progressCreationResult.postValue(false)
                 return@launch
             }
 
             val dateStarted = getCurrentDate()
             val startedAt = getCurrentTime()
-
-            Log.d("ProgressDebug", "Creating progress for ${activity.name}, user=${currentUser.id}")
 
             progressRepository.createProgress(activity, currentUser, dateStarted, startedAt)
                 .collect { result ->

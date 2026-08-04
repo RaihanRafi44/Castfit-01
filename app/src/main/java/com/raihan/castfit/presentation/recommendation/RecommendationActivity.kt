@@ -34,7 +34,6 @@ class RecommendationActivity : AppCompatActivity() {
     private lateinit var indoorAdapter: RecommendationIndoorAdapter
     private lateinit var outdoorAdapter: RecommendationOutdoorAdapter
 
-    //private var isDialogShown = false
     // Menandai apakah sedang memeriksa progress aktivitas
     private var isCheckingProgress = false
 

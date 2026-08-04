@@ -51,39 +51,30 @@ class HistoryActivityRepositoryImpl(
         val currentUserId = firebaseAuth.currentUser?.uid
 
         if (currentUserId == null) {
-            Log.d("GetHistory", "No user logged in, returning empty list")
             return kotlinx.coroutines.flow.flowOf(ResultWrapper.Empty(emptyList()))
         }
 
-        Log.d("GetHistory", "Getting history for user: $currentUserId")
-
         return dataSource.getUserHistory(currentUserId)
             .map {
-                Log.d("GetHistory", "Jumlah data DAO history untuk user $currentUserId = ${it.size}")
                 proceed {
                     it.toHistoryActivityList().also { list ->
-                        Log.d("GetHistory", "Converted to history list: ${list.size} items")
                         list.forEach { history ->
-                            Log.d("GetHistory", "History ID: ${history.id}, Name: ${history.physicalActivityName}, UserId: ${history.userId}")
+                            Log.d("GetHistory", "History get")
                         }
                     }
                 }
             }
             .map {
                 if (it.payload?.isEmpty() == true) {
-                    Log.d("GetHistory", "Returning empty result wrapper")
                     ResultWrapper.Empty(it.payload)
                 } else {
-                    Log.d("GetHistory", "Returning success result wrapper with ${it.payload?.size ?: 0} items")
                     it
                 }
             }
             .catch { e ->
-                Log.e("GetHistory", "Error getting history data", e)
                 emit(ResultWrapper.Error(Exception(e)))
             }
             .onStart {
-                Log.d("GetHistory", "Starting to get history data for user: $currentUserId")
                 emit(ResultWrapper.Loading())
                 delay(1000) // Artificial delay for shimmer
             }
@@ -102,19 +93,16 @@ class HistoryActivityRepositoryImpl(
         return proceedFlow {
             // Validasi progress ID
             if (progress.id == null || progress.id <= 0) {
-                Log.e("CreateHistory", "Cannot create history: Invalid progress ID (${progress.id})")
                 throw IllegalArgumentException("Invalid progress ID")
             }
 
             // Validasi user ownership
             val currentUserId = firebaseAuth.currentUser?.uid
             if (currentUserId.isNullOrEmpty()) {
-                Log.e("CreateHistory", "Cannot create history: User not logged in")
                 throw IllegalArgumentException("User not logged in")
             }
 
             if (currentUserId != progress.userId) {
-                Log.e("CreateHistory", "Cannot create history: User mismatch (current: $currentUserId, progress: ${progress.userId})")
                 throw IllegalArgumentException("User not authorized to create history for this progress")
             }
 
@@ -128,10 +116,7 @@ class HistoryActivityRepositoryImpl(
                 duration = duration
             )
 
-            Log.d("CreateHistory", "Creating history: $historyEntity")
             val insertedId = dataSource.insertHistory(historyEntity)
-            Log.d("CreateHistory", "History inserted with ID = $insertedId")
-            Log.d("HistoryRepository", "Received duration: $duration")
 
             insertedId > 0L // Return true if insertion was successful
         }
@@ -141,36 +126,27 @@ class HistoryActivityRepositoryImpl(
         return proceedFlow {
             // Validasi sebelum delete
             if (history.id == null || history.id <= 0) {
-                Log.e("DeleteHistory", "Cannot delete: Invalid history ID (${history.id})")
                 throw IllegalArgumentException("Invalid history ID")
             }
 
             // Validasi user ownership
             val currentUserId = firebaseAuth.currentUser?.uid
             if (currentUserId == null) {
-                Log.e("DeleteHistory", "Cannot delete: User not logged in")
                 throw IllegalArgumentException("User not logged in")
             }
 
             // FIXED: Validasi menggunakan userId dari history langsung
             if (currentUserId != history.userId) {
-                Log.e("DeleteHistory", "Cannot delete: User mismatch (current: $currentUserId, history: ${history.userId})")
                 throw IllegalArgumentException("User not authorized to delete this history")
             }
 
-            Log.d("DeleteHistory", "Deleting history with ID: ${history.id}")
-
             val entity = history.toHistoryActivityEntity()
-            Log.d("DeleteHistory", "Entity to delete: $entity")
 
             val result = dataSource.deleteHistory(entity)
-            Log.d("DeleteHistory", "Delete result: $result")
 
             if (result > 0) {
-                Log.d("DeleteHistory", "Successfully deleted history with ID: ${history.id}")
                 true
             } else {
-                Log.w("DeleteHistory", "No rows affected when deleting history with ID: ${history.id}")
                 false
             }
         }

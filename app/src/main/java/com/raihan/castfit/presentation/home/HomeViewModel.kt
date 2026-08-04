@@ -80,10 +80,8 @@ class HomeViewModel(
     fun refreshWeather() {
         val currentLocation = _currentLocation.value?.currentLocation
         if (currentLocation?.latitude != null && currentLocation.longitude != null) {
-            Log.d("HomeViewModel", "Refreshing weather data for location: ${currentLocation.latitude}, ${currentLocation.longitude}")
             fetchWeather(currentLocation.latitude, currentLocation.longitude)
         } else {
-            Log.w("HomeViewModel", "Cannot refresh weather: no location available")
             _weather.postValue(WeatherUiState(error = "Location not available for weather refresh"))
         }
     }
@@ -136,7 +134,7 @@ class HomeViewModel(
                         _isProfileComplete.postValue(false)
                     }
                     else -> {
-                        //_isProfileComplete.postValue(false)
+
                     }
                 }
             }
