@@ -14,6 +14,7 @@ import com.raihan.castfit.utils.proceedWhen
 import com.raihan.castfit.R
 import com.raihan.castfit.databinding.ActivityLoginBinding
 import com.raihan.castfit.presentation.main.MainActivity
+import com.raihan.castfit.utils.PreferenceUtils
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -50,7 +51,7 @@ class LoginActivity : AppCompatActivity() {
                     binding.pbLoading.isVisible = false
                     binding.btnLogin.isVisible = true
                     // Simpan tanggal login pertama jika belum ada
-                    val sharedPref = getSharedPreferences("user_prefs", MODE_PRIVATE)
+                    val sharedPref = PreferenceUtils.getEncryptedPrefs(this)
                     // Untuk mengecek apakah sudah ada first_login_date di shared preferences
                     // Jika belum, maka jalankan kode dibawah, jika sudah ada maka kode dilewati
                     if (!sharedPref.contains("first_login_date")) {

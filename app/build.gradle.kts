@@ -138,6 +138,8 @@ dependencies {
     implementation(libs.circleImageView)
     implementation(libs.groupie)
     implementation(libs.groupie.viewbinding)
+    implementation(libs.androidx.security.crypto)
+    implementation(libs.timber)
     testImplementation(libs.junit)
     //testImplementation(libs.junit.jupiter)
     androidTestImplementation(libs.androidx.junit)
