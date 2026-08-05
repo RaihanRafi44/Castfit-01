@@ -40,6 +40,7 @@ googleid = "1.1.1"
 firebaseFirestore = "25.1.4"
 groupie = "2.10.1"
 shimmer = "0.5.0"
+secretsGradlePlugin = "2.0.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -115,4 +116,5 @@ ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
 google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "googleGmsGoogleServices" }
 google-firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "googleFirebaseCrashlytics" }
+secrets-gradle-plugin = { id = "com.google.android.libraries.mapsplatform.secrets-control-sdk.secrets-gradle-plugin", version.ref = "secretsGradlePlugin" }
 

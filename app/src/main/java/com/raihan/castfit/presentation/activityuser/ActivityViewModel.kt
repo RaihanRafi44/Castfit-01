@@ -130,7 +130,6 @@ class ActivityViewModel(
 
             // Validasi ID sebelum delete
             if (item.id == null || item.id <= 0) {
-                Log.e("ActivityViewModel", "Cannot delete: Invalid ID (${item.id})")
                 _deleteOperationResult.postValue(false)
                 return@launch
             }
@@ -140,7 +139,6 @@ class ActivityViewModel(
             progressRepository.deleteProgress(item).collect { result ->
                 when (result) {
                     is ResultWrapper.Success -> {
-                        Log.d("ActivityViewModel", "Successfully deleted activity: ${item.physicalActivityName} with ID: ${item.id}")
                         _deleteOperationResult.postValue(true)
                     }
                     is ResultWrapper.Error -> {
@@ -151,7 +149,6 @@ class ActivityViewModel(
                         Log.d("ActivityViewModel", "Deleting activity in progress...")
                     }
                     else -> {
-                        Log.w("ActivityViewModel", "Unexpected result state: $result")
                         _deleteOperationResult.postValue(false)
                     }
                 }
@@ -178,7 +175,6 @@ class ActivityViewModel(
 
             // Validasi ID sebelum delete
             if (item.id == null || item.id <= 0) {
-                Log.e("ActivityViewModel", "Cannot delete schedule: Invalid ID (${item.id})")
                 _deleteScheduleResult.postValue(false)
                 return@launch
             }
@@ -188,7 +184,6 @@ class ActivityViewModel(
             scheduleRepository.deleteSchedule(item).collect { result ->
                 when (result) {
                     is ResultWrapper.Success -> {
-                        Log.d("ActivityViewModel", "Successfully deleted schedule: ${item.physicalActivityName} with ID: ${item.id}")
                         _deleteScheduleResult.postValue(true)
                     }
                     is ResultWrapper.Error -> {
@@ -199,7 +194,6 @@ class ActivityViewModel(
                         Log.d("ActivityViewModel", "Deleting schedule in progress...")
                     }
                     else -> {
-                        Log.w("ActivityViewModel", "Unexpected result state: $result")
                         _deleteScheduleResult.postValue(false)
                     }
                 }
@@ -342,28 +336,24 @@ class ActivityViewModel(
                                         _startScheduledActivityResult.postValue(true)
                                     }
                                     is ResultWrapper.Error -> {
-                                        Log.e("ActivityViewModel", "Failed to delete schedule after creating progress", deleteResult.exception)
                                         _startScheduledActivityResult.postValue(false)
                                     }
                                     is ResultWrapper.Loading -> {
                                         Log.d("ActivityViewModel", "Deleting schedule...")
                                     }
                                     else -> {
-                                        Log.w("ActivityViewModel", "Unexpected delete result: $deleteResult")
                                         _startScheduledActivityResult.postValue(false)
                                     }
                                 }
                             }
                         }
                         is ResultWrapper.Error -> {
-                            Log.e("ActivityViewModel", "Failed to create progress activity", createResult.exception)
                             _startScheduledActivityResult.postValue(false)
                         }
                         is ResultWrapper.Loading -> {
                             Log.d("ActivityViewModel", "Creating progress activity...")
                         }
                         else -> {
-                            Log.w("ActivityViewModel", "Unexpected create result: $createResult")
                             _startScheduledActivityResult.postValue(false)
                         }
                     }
@@ -394,12 +384,9 @@ class ActivityViewModel(
 
             // Validasi ID sebelum finish
             if (item.id == null || item.id <= 0) {
-                Log.e("ActivityViewModel", "Cannot finish: Invalid ID (${item.id})")
                 _finishOperationResult.postValue(false)
                 return@launch
             }
-
-            Log.d("ActivityViewModel", "Attempting to finish activity: ${item.physicalActivityName} with ID: ${item.id}")
 
             try {
                 // Buat data untuk history
@@ -411,7 +398,6 @@ class ActivityViewModel(
                 val time = item.startedAt
                 val duration = if (date != null && time != null) {
                     val result = calculateDuration(date, time)
-                    Log.d("ActivityViewModel", "Result from calculateDuration(): $result")
                     result
                 } else {
                     null
@@ -498,28 +484,22 @@ class ActivityViewModel(
 
             // Validasi ID sebelum delete
             if (item.id == null || item.id <= 0) {
-                Log.e("ActivityViewModel", "Cannot delete history: Invalid ID (${item.id})")
                 _deleteHistoryResult.postValue(false)
                 return@launch
             }
 
-            Log.d("ActivityViewModel", "Attempting to delete history with ID: ${item.id}")
-
             historyRepository.deleteHistory(item).collect { result ->
                 when (result) {
                     is ResultWrapper.Success -> {
-                        Log.d("ActivityViewModel", "Successfully deleted history with ID: ${item.id}")
                         _deleteHistoryResult.postValue(true)
                     }
                     is ResultWrapper.Error -> {
-                        Log.e("ActivityViewModel", "Failed to delete history", result.exception)
                         _deleteHistoryResult.postValue(false)
                     }
                     is ResultWrapper.Loading -> {
                         Log.d("ActivityViewModel", "Deleting history in progress...")
                     }
                     else -> {
-                        Log.w("ActivityViewModel", "Unexpected result state: $result")
                         _deleteHistoryResult.postValue(false)
                     }
                 }
