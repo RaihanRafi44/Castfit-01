@@ -289,13 +289,11 @@ class ChartsHistoryActivity : AppCompatActivity() {
             // Menangani logika tampilan durasi
             indoorData.add(when {
                 indoorDurationMinutes == 0 -> 0
-                //indoorDurationMinutes < 1 -> 0.5 // Show as 0.5 for chart visualization for very small durations
                 else -> indoorDurationMinutes
             })
 
             outdoorData.add(when {
                 outdoorDurationMinutes == 0 -> 0
-                //outdoorDurationMinutes < 1 -> 0.5 // Show as 0.5 for chart visualization for very small durations
                 else -> outdoorDurationMinutes
             })
         }

@@ -311,7 +311,6 @@ class ProfileFragment : Fragment() {
                     binding.layoutShimmer.root.isVisible = false
                     binding.layoutError.root.isVisible = true
                     binding.layoutProfile.root.isVisible = false
-                    Log.e("ProfileFragment", "Gagal memuat data DOB/age: ${it.exception}")
                 },
                 doOnLoading = {
                     binding.layoutShimmer.root.isVisible = true
