@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
@@ -45,6 +47,12 @@ android {
         dataBinding = true
     }
     flavorDimensions += "env"
+    val properties = Properties()
+    val localPropertiesFile = project.rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        properties.load(localPropertiesFile.inputStream())
+    }
+
     productFlavors {
         create("production"){
             buildConfigField(
@@ -55,7 +63,7 @@ android {
             buildConfigField(
                 type = "String",
                 name = "API_KEY",
-                value = "\"15208e001fe543258d073723250602\"",
+                value = "\"${properties.getProperty("API_KEY")}\""
             )
         }
         create("integration") {
@@ -67,7 +75,7 @@ android {
             buildConfigField(
                 type = "String",
                 name = "API_KEY",
-                value = "\"15208e001fe543258d073723250602\"",
+                value = "\"${properties.getProperty("API_KEY")}\""
             )
         }
     }
@@ -130,6 +138,8 @@ dependencies {
     implementation(libs.circleImageView)
     implementation(libs.groupie)
     implementation(libs.groupie.viewbinding)
+    implementation(libs.androidx.security.crypto)
+    implementation(libs.timber)
     testImplementation(libs.junit)
     //testImplementation(libs.junit.jupiter)
     androidTestImplementation(libs.androidx.junit)

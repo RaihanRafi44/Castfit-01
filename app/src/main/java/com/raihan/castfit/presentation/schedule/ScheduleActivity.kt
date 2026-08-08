@@ -96,7 +96,6 @@ class ScheduleActivity : AppCompatActivity() {
                 val displayDate = String.format("%02d/%02d/%04d", day, month + 1, year)
                 
                 binding.etDateOfSchedule.setText(displayDate)
-                Log.d("ScheduleActivity", "Material Date selected - Display: $displayDate, Database: $selectedDate")
             }
 
             datePicker.show(supportFragmentManager, "MATERIAL_DATE_PICKER")
@@ -177,9 +176,6 @@ class ScheduleActivity : AppCompatActivity() {
             return
         }
 
-        Log.d("ScheduleActivity", "All validations passed, calling ViewModel.saveSchedule")
-
-
         scheduleViewModel.saveSchedule(
             selectedActivityName = activityName,
             selectedDate = dateScheduled,
@@ -193,10 +189,8 @@ class ScheduleActivity : AppCompatActivity() {
             val dbFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
             val date = displayFormat.parse(displayDate)
             val result = dbFormat.format(date!!)
-            Log.d("ScheduleActivity", "Date converted from '$displayDate' to '$result'")
             result
         } catch (e: Exception) {
-            Log.e("ScheduleActivity", "Error converting date: $displayDate", e)
             ""
         }
     }
@@ -214,10 +208,8 @@ class ScheduleActivity : AppCompatActivity() {
             }.time
 
             val isValid = selectedDate != null && !selectedDate.before(today)
-            Log.d("ScheduleActivity", "Date validation for '$dateString': $isValid")
             isValid
         } catch (e: Exception) {
-            Log.e("ScheduleActivity", "Error validating date: $dateString", e)
             false
         }
     }
@@ -243,7 +235,6 @@ class ScheduleActivity : AppCompatActivity() {
 
         scheduleViewModel.isLoading.observe(this) { isLoading ->
             binding.btnSaveSchedule.isEnabled = !isLoading
-            Log.d("ScheduleActivity", "Loading state: $isLoading")
 
         }
     }

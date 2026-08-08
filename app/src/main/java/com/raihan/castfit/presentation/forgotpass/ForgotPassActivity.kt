@@ -54,7 +54,7 @@ class ForgotPassActivity : AppCompatActivity() {
                     binding.btnForgotPassword.isVisible = true
                     Toast.makeText(
                         this,
-                        "Login Failed : ${it.exception?.message.orEmpty()}",
+                        "Action Failed",
                         Toast.LENGTH_SHORT,
                     ).show()
                 },

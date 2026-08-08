@@ -47,20 +47,15 @@ class ScheduleActivityRepositoryImpl(
         val currentUserId = firebaseAuth.currentUser?.uid
 
         if (currentUserId == null) {
-            Log.d("GetSchedule", "No user logged in, returning empty list")
             return kotlinx.coroutines.flow.flowOf(ResultWrapper.Empty(emptyList()))
         }
 
-        Log.d("GetSchedule", "Getting schedule for user: $currentUserId")
-
         return dataSource.getUserSchedule(currentUserId)
             .map {
-                Log.d("GetHistory", "Jumlah data DAO schedule untuk user $currentUserId = ${it.size}")
                 proceed {
                     it.toScheduleActivityList().also { list ->
-                        Log.d("GetScheduled", "Converted to schedule list: ${list.size} items")
                         list.forEach { schedule ->
-                            Log.d("GetScheduled", "Schedule ID: ${schedule.id}, Name: ${schedule.physicalActivityName}, UserId: ${schedule.userId}")
+                            Log.d("GetScheduled", "Schedule get")
                         }
                     }
                 }
@@ -70,16 +65,13 @@ class ScheduleActivityRepositoryImpl(
                     Log.d("GetScheduled", "Returning empty result wrapper")
                     ResultWrapper.Empty(it.payload)
                 } else {
-                    Log.d("GetHistory", "Returning success result wrapper with ${it.payload?.size ?: 0} items")
                     it
                 }
             }
             .catch { e ->
-                Log.e("GetScheduled", "Error getting schedule data", e)
                 emit(ResultWrapper.Error(Exception(e)))
             }
             .onStart {
-                Log.d("GetScheduled", "Starting to get schedule data for user: $currentUserId")
                 emit(ResultWrapper.Loading())
             }
     }
@@ -95,31 +87,20 @@ class ScheduleActivityRepositoryImpl(
         weatherStatus: String
     ): Flow<ResultWrapper<Boolean>> {
         return proceedFlow {
-
-            Log.d("CreateSchedule", "createSchedule called with:")
-            Log.d("CreateSchedule", "- Activity: ${activity.name} (ID: ${activity.id})")
-            Log.d("CreateSchedule", "- User: ${user.fullName} (ID: ${user.id})")
-            Log.d("CreateSchedule", "- Date: $dateScheduled")
-            Log.d("CreateSchedule", "- Weather: $weatherStatus")
             // Validasi user ownership
             val currentUserId = firebaseAuth.currentUser?.uid
             if (currentUserId.isNullOrEmpty()) {
-                Log.e("CreateSchedule", "Cannot create schedule: User not logged in")
                 throw IllegalArgumentException("User not logged in")
             }
 
             // Validasi input
             if (activity.name.isBlank()) {
-                Log.e("CreateSchedule", "Cannot create schedule: Activity name is blank")
                 throw IllegalArgumentException("Activity name cannot be blank")
             }
 
             if (dateScheduled.isBlank()) {
-                Log.e("CreateSchedule", "Cannot create schedule: Date scheduled is blank")
                 throw IllegalArgumentException("Date scheduled cannot be blank")
             }
-
-            Log.d("CreateSchedule", "Creating schedule - Activity: ${activity.name}, Date: $dateScheduled, User: $currentUserId")
 
             val scheduleEntity = ScheduleActivityEntity(
                 userId = currentUserId,
@@ -131,7 +112,6 @@ class ScheduleActivityRepositoryImpl(
             )
 
             val result = dataSource.insertSchedule(scheduleEntity)
-            Log.d("CreateSchedule", "Schedule created with ID: $result")
 
             result > 0
     }
@@ -140,7 +120,7 @@ class ScheduleActivityRepositoryImpl(
     override fun deleteSchedule(schedule: ScheduleActivity): Flow<ResultWrapper<Boolean>> {
         return proceedFlow {
             if (schedule.id == null || schedule.id <= 0) {
-                Log.e("DeleteSchedule", "Cannot delete: Invalid schedule ID (${schedule.id})")
+
                 throw IllegalArgumentException("Invalid schedule ID")
             }
 
@@ -151,16 +131,12 @@ class ScheduleActivityRepositoryImpl(
             }
 
             if (currentUserId != schedule.userId) {
-                Log.e("DeleteSchedule", "Cannot delete: User mismatch (current: $currentUserId, schedule: ${schedule.userId})")
                 throw IllegalArgumentException("User not authorized to delete this schedule")
             }
-
-            Log.d("DeleteSchedule", "Deleting schedule with ID: ${schedule.id}")
 
             val entity = schedule.toScheduleActivityEntity()
             val result = dataSource.deleteSchedule(entity)
 
-            Log.d("DeleteSchedule", "Delete result: $result")
             result > 0
         }
     }

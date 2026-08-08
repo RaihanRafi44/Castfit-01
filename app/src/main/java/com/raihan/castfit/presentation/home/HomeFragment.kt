@@ -22,7 +22,6 @@ import com.raihan.castfit.presentation.chartshistory.ChartsHistoryActivity
 import com.raihan.castfit.presentation.recommendation.RecommendationActivity
 import com.raihan.castfit.presentation.schedule.ScheduleActivity
 import org.koin.androidx.viewmodel.ext.android.activityViewModel
-import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class HomeFragment : Fragment() {
 

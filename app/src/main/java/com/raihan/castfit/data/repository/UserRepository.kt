@@ -37,6 +37,7 @@ interface UserRepository {
     fun getUserData(): Flow<ResultWrapper<User>>
 
     fun getUserDateOfBirthAndAge(): Flow<ResultWrapper<Pair<String?, Int?>>>
+
     fun updateUserDateOfBirthAndAge(dob: String, age: Int): Flow<ResultWrapper<Boolean>>
 
 
