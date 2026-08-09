@@ -133,7 +133,7 @@ class ChartsHistoryActivity : AppCompatActivity() {
             .categories(chartData.categories.toTypedArray())
             .dataLabelsEnabled(true)
             .legendEnabled(false) // Menghilangkan tanda titik keterangan (legenda) di dalam grafik
-            .yAxisTitle("Durasi (menit)")
+            .yAxisTitle("Durasi")
             .yAxisGridLineWidth(0f) 
             .xAxisGridLineWidth(0f) 
             .xAxisVisible(true)
@@ -167,13 +167,46 @@ class ChartsHistoryActivity : AppCompatActivity() {
             .enabled(true)
             .style(AAStyle()
                 .color("#424242") // Warna lebih gelap agar kontras
-                .fontSize(14f)    // Ukuran diperbesar dari 11f ke 14f
+                .fontSize(12f)    // Sedikit dikecilkan agar muat dengan teks
                 .fontWeight(AAChartFontWeightType.Bold))
             .formatter("""
             function () {
-                return this.y > 0 ? this.y : ''; 
+                if (this.y <= 0) return '';
+                var hours = Math.floor(this.y / 3600);
+                var minutes = Math.floor((this.y % 3600) / 60);
+                var seconds = this.y % 60;
+                
+                if (hours > 0) {
+                    return hours + 'j ' + minutes + 'm ' + seconds + 'd';
+                } else if (minutes > 0) {
+                    return minutes + 'm ' + seconds + 'd';
+                } else {
+                    return seconds + 'd';
+                }
             }
         """.trimIndent())
+
+        // Memperbarui Tooltip agar menampilkan format lengkap saat disentuh
+        aaOptions.tooltip = com.github.aachartmodel.aainfographics.aaoptionsmodel.AATooltip()
+            .enabled(true)
+            .formatter("""
+                function () {
+                    var hours = Math.floor(this.y / 3600);
+                    var minutes = Math.floor((this.y % 3600) / 60);
+                    var seconds = this.y % 60;
+                    var durationText = '';
+                    
+                    if (hours > 0) {
+                        durationText = hours + ' jam ' + minutes + ' menit ' + seconds + ' detik';
+                    } else if (minutes > 0) {
+                        durationText = minutes + ' menit ' + seconds + ' detik';
+                    } else {
+                        durationText = seconds + ' detik';
+                    }
+                    return '<b>' + this.series.name + '</b><br/>' +
+                           this.x + ': ' + durationText;
+                }
+            """.trimIndent())
 
         // Membuat batang lebih tebal dan jarak antar tanggal sangat rapat
         aaOptions.plotOptions?.column?.pointPadding = 0.02f // Batang sangat tebal
@@ -189,7 +222,7 @@ class ChartsHistoryActivity : AppCompatActivity() {
         aaOptions.yAxis?.lineColor = "#E0E0E0"
         aaOptions.xAxis?.lineColor = "#E0E0E0"
 
-        // Menambah margin kiri sedikit agar teks "Durasi (menit)" tidak terpotong (tenggelam)
+        // Menambah margin kiri sedikit agar teks "Durasi (detik)" tidak terpotong (tenggelam)
         // Nilai 50f - 60f biasanya cukup untuk menampung teks vertikal dan angka
         aaOptions.chart?.marginLeft = 55f
 
@@ -268,33 +301,33 @@ class ChartsHistoryActivity : AppCompatActivity() {
             categories.add(chartsViewModel.formatDateForChart(date))
 
             // Hitung total durasi untuk aktivitas di dalam dan luar ruangan
-            var indoorDurationMinutes = 0
-            var outdoorDurationMinutes = 0
+            var indoorDurationSeconds = 0
+            var outdoorDurationSeconds = 0
 
             for (activity in activitiesOnDate) {
 
-                val durationMinutes = activity.duration ?: 0
+                val durationSeconds = activity.duration ?: 0
                 val activityType = chartsViewModel.getActivityType(activity.physicalActivityName)
 
-                Log.d("ChartData", "Activity: ${activity.physicalActivityName}, Duration: $durationMinutes minutes, Type: $activityType")
+                Log.d("ChartData", "Activity: ${activity.physicalActivityName}, Duration: $durationSeconds seconds, Type: $activityType")
 
                 when (activityType) {
-                    "Indoor" -> indoorDurationMinutes += durationMinutes
-                    "Outdoor" -> outdoorDurationMinutes += durationMinutes
+                    "Indoor" -> indoorDurationSeconds += durationSeconds
+                    "Outdoor" -> outdoorDurationSeconds += durationSeconds
                 }
             }
 
-            Log.d("ChartData", "Date: $dateString, Indoor: $indoorDurationMinutes min, Outdoor: $outdoorDurationMinutes min")
+            Log.d("ChartData", "Date: $dateString, Indoor: $indoorDurationSeconds sec, Outdoor: $outdoorDurationSeconds sec")
 
             // Menangani logika tampilan durasi
             indoorData.add(when {
-                indoorDurationMinutes == 0 -> 0
-                else -> indoorDurationMinutes
+                indoorDurationSeconds == 0 -> 0
+                else -> indoorDurationSeconds
             })
 
             outdoorData.add(when {
-                outdoorDurationMinutes == 0 -> 0
-                else -> outdoorDurationMinutes
+                outdoorDurationSeconds == 0 -> 0
+                else -> outdoorDurationSeconds
             })
         }
 

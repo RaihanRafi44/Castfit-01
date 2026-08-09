@@ -14,7 +14,7 @@ import com.raihan.castfit.data.source.local.database.entity.ScheduleActivityEnti
 
 @Database(
     entities = [ProgressActivityEntity::class, HistoryActivityEntity::class, ScheduleActivityEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -29,6 +29,13 @@ abstract class AppDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
+        private val MIGRATION_2_3 = object : androidx.room.migration.Migration(2, 3) {
+            override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                // Konversi durasi dari menit ke detik untuk data yang sudah ada
+                database.execSQL("UPDATE history SET duration = duration * 60 WHERE duration IS NOT NULL")
+            }
+        }
+
         fun createInstance(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 Log.d("Database", "Creating new database instance")
@@ -36,7 +43,10 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "Castfit.db"
-                ).fallbackToDestructiveMigration().build()
+                )
+                    .addMigrations(MIGRATION_2_3)
+                    .fallbackToDestructiveMigration()
+                    .build()
                 INSTANCE = instance
                 instance
             }

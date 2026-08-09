@@ -55,6 +55,7 @@ class ProfileFragment : Fragment() {
         observeEditMode()
         setupInputListeners()
         setupClickListeners()
+        checkDateOfBirthStatus()
         binding.layoutProfile.etDateOfBirth.isFocusable = false
         binding.layoutProfile.etDateOfBirth.isClickable = true
         binding.layoutError.btnRetry.setOnClickListener {
@@ -106,7 +107,7 @@ class ProfileFragment : Fragment() {
             // Tombol logout hanya muncul saat TIDAK dalam mode edit agar rapi
             binding.layoutProfile.btnLogout.isVisible = !isEdit
 
-            checkDateOfBirthStatus()
+            updateDateOfBirthState(isEdit)
         }
     }
 
@@ -120,7 +121,6 @@ class ProfileFragment : Fragment() {
 
     private fun enterEditMode() {
         profileViewModel.changeEditMode()
-        checkDateOfBirthStatus()
     }
 
     private fun exitEditMode() {
@@ -287,25 +287,10 @@ class ProfileFragment : Fragment() {
                         hasSavedAge = true
                         originalAge = age // Simpan usia asli
                         binding.layoutProfile.tvUserCurrentAge.text = "$age Tahun"
-                        binding.layoutProfile.etDateOfBirth.isEnabled = false
-                        binding.layoutProfile.etDateOfBirth.setOnClickListener(null)
                     } else {
                         hasSavedAge = false
-                        if (isEdit) {
-                            binding.layoutProfile.etDateOfBirth.isEnabled = true
-                            binding.layoutProfile.etDateOfBirth.setOnClickListener {
-                                AlertDialog.Builder(requireContext())
-                                    .setTitle("Input Tanggal Lahir")
-                                    .setMessage("Tanggal lahir hanya bisa diisi satu kali dan tidak bisa diubah. Lanjutkan?")
-                                    .setPositiveButton("Ya") { _, _ -> showDatePickerDialog() }
-                                    .setNegativeButton("Batal", null)
-                                    .show()
-                            }
-                        } else {
-                            binding.layoutProfile.etDateOfBirth.isEnabled = false
-                            binding.layoutProfile.etDateOfBirth.setOnClickListener(null)
-                        }
                     }
+                    updateDateOfBirthState(isEdit)
                 },
                 doOnError = {
                     binding.layoutShimmer.root.isVisible = false
@@ -318,6 +303,28 @@ class ProfileFragment : Fragment() {
                     binding.layoutProfile.root.isVisible = false
                 }
             )
+        }
+    }
+
+    private fun updateDateOfBirthState(isEdit: Boolean) {
+        if (hasSavedAge) {
+            binding.layoutProfile.etDateOfBirth.isEnabled = false
+            binding.layoutProfile.etDateOfBirth.setOnClickListener(null)
+        } else {
+            if (isEdit) {
+                binding.layoutProfile.etDateOfBirth.isEnabled = true
+                binding.layoutProfile.etDateOfBirth.setOnClickListener {
+                    AlertDialog.Builder(requireContext())
+                        .setTitle("Input Tanggal Lahir")
+                        .setMessage("Tanggal lahir hanya bisa diisi satu kali dan tidak bisa diubah. Lanjutkan?")
+                        .setPositiveButton("Ya") { _, _ -> showDatePickerDialog() }
+                        .setNegativeButton("Batal", null)
+                        .show()
+                }
+            } else {
+                binding.layoutProfile.etDateOfBirth.isEnabled = false
+                binding.layoutProfile.etDateOfBirth.setOnClickListener(null)
+            }
         }
     }
 
