@@ -53,4 +53,11 @@
     <string name="text_error_name_cannot_empty">Name cannot be empty</string>
     <string name="text_password_does_not_match">Password doesn\'t match</string>
     <string name="text_username_login">Hi %1$s</string>
+    <string name="text_title_dob_warning">Penting!</string>
+    <string name="text_msg_dob_warning">Tanggal lahir hanya bisa diisi satu kali dan tidak dapat diubah di masa mendatang. Pastikan data yang Anda masukkan sudah benar.</string>
+    <string name="text_btn_continue">Lanjutkan</string>
+    <string name="text_btn_cancel">Batal</string>
+    <string name="text_title_logout">Keluar Akun?</string>
+    <string name="text_msg_logout_confirmation">Apakah Anda yakin ingin keluar dari akun CastFit Anda?</string>
+    <string name="text_btn_logout">Keluar</string>
 </resources>
