@@ -191,76 +191,70 @@
                 android:textColor="@color/md_theme_onSecondaryContainer"
                 app:iconTint="@color/md_theme_onSecondaryContainer" />
 
-            <View
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:layout_weight="1" />
-
             <com.google.android.material.chip.Chip
                 android:id="@+id/chip_selected_date_range"
                 style="@style/Widget.Material3.Chip.Suggestion"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:visibility="gone"
+                android:layout_marginStart="8dp"
                 android:textSize="12sp"
                 app:chipBackgroundColor="@color/md_theme_surfaceContainerHighest"
                 app:chipStrokeWidth="0dp"
                 app:closeIconVisible="true"
                 tools:text="01/07/2025 - 31/07/2025" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/ll_history_legend"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginHorizontal="16dp"
-            android:layout_marginTop="16dp"
-            android:gravity="center"
-            android:visibility="gone">
 
             <LinearLayout
-                android:layout_width="wrap_content"
+                android:id="@+id/ll_history_legend"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:orientation="horizontal"
-                android:gravity="center_vertical">
-                <View
-                    android:layout_width="12dp"
-                    android:layout_height="12dp"
-                    android:background="@drawable/bg_circle_outline"
-                    android:backgroundTint="#E1BEE7" />
-                <TextView
+                android:gravity="center">
+
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text="Indoor"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:textColor="#757575" />
-            </LinearLayout>
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+                    <View
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:background="@drawable/bg_circle_outline"
+                        android:backgroundTint="#E1BEE7" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="Indoor"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="#757575" />
+                </LinearLayout>
 
-            <View
-                android:layout_width="32dp"
-                android:layout_height="0dp" />
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
                 <View
-                    android:layout_width="12dp"
-                    android:layout_height="12dp"
-                    android:background="@drawable/bg_circle_outline"
-                    android:backgroundTint="#B2DFDB" />
-                <TextView
+                    android:layout_width="40dp"
+                    android:layout_height="0dp" />
+
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text="Outdoor"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:textColor="#757575" />
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+                    <View
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:background="@drawable/bg_circle_outline"
+                        android:backgroundTint="#B2DFDB" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="Outdoor"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="#757575" />
+                </LinearLayout>
             </LinearLayout>
         </LinearLayout>
 
