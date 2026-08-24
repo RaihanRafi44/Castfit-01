@@ -101,6 +101,7 @@ class ProfileFragment : Fragment() {
             binding.layoutProfile.etEmail.isEnabled = false 
             binding.layoutProfile.etEmail.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.darker_gray))
 
+            // Tombol edit profile
             binding.layoutProfile.btnEditProfile.isVisible = !isEdit
             binding.layoutProfile.btnCancelEdit.isVisible = isEdit
             
