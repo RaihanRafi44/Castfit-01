@@ -13,3 +13,15 @@ fun String.toReadableDate(): String {
         this
     }
 }
+
+fun Int.toReadableDuration(): String {
+    val hours = this / 3600
+    val minutes = (this % 3600) / 60
+    val seconds = this % 60
+    
+    return when {
+        hours > 0 -> "${hours} jam ${minutes} mnt ${seconds} dtk"
+        minutes > 0 -> "${minutes} mnt ${seconds} dtk"
+        else -> "${seconds} dtk"
+    }
+}

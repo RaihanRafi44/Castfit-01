@@ -633,7 +633,7 @@ class ActivityFragment : Fragment() {
             val durationInMillis = System.currentTimeMillis() - startTime.time
             val durationInSeconds = durationInMillis / 1000
 
-            if (durationInSeconds < 60) {
+            if (durationInSeconds < 1) {
                 val infoBinding = LayoutDialogInfoBinding.inflate(layoutInflater)
                 val infoDialog = MaterialAlertDialogBuilder(requireContext())
                     .setView(infoBinding.root)
@@ -641,7 +641,7 @@ class ActivityFragment : Fragment() {
                     .create()
 
                 infoBinding.tvInfoDialogTitle.text = "Aktivitas Terlalu Singkat"
-                infoBinding.tvInfoDialogMessage.text = "Aktivitas harus dijalankan minimal 1 menit agar dapat tercatat dalam grafik perkembangan."
+                infoBinding.tvInfoDialogMessage.text = "Aktivitas harus dijalankan minimal 1 detik agar dapat tercatat dalam grafik perkembangan."
                 infoBinding.btnInfoPositive.setOnClickListener { infoDialog.dismiss() }
                 
                 infoDialog.show()

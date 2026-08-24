@@ -15,6 +15,7 @@ import com.raihan.castfit.databinding.LayoutActivityHistoryBinding
 import com.raihan.castfit.databinding.LayoutDateHeaderHistoryBinding
 import com.raihan.castfit.presentation.activityuser.ActivityAdapter.ItemProgressViewHolder
 import com.raihan.castfit.utils.toReadableDate
+import com.raihan.castfit.utils.toReadableDuration
 import com.xwray.groupie.viewbinding.BindableItem
 
 class DateHeaderHistoryAdapter(private val dateHistory: String) : BindableItem<LayoutDateHeaderHistoryBinding>(){
@@ -41,7 +42,7 @@ class HistoryItem(
     override fun bind(viewBinding: LayoutActivityHistoryBinding, position: Int) {
         viewBinding.tvActivityHistory.text = historyActivity.physicalActivityName ?: "Unknown Activity"
         viewBinding.tvDate.text = historyActivity.dateEnded?.toReadableDate()
-        viewBinding.tvDuration.text = "${historyActivity.duration ?: 0} menit"
+        viewBinding.tvDuration.text = historyActivity.duration?.toReadableDuration() ?: "0 detik"
         viewBinding.btnCancelActivity.setOnClickListener {
             listener(this, historyActivity) // Kirim referensi item + data
         }

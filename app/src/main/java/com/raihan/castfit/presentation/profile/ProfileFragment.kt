@@ -1,7 +1,5 @@
 package com.raihan.castfit.presentation.profile
 
-import android.annotation.SuppressLint
-import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -9,12 +7,15 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.DatePicker
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
+import com.google.android.material.datepicker.CalendarConstraints
+import com.google.android.material.datepicker.DateValidatorPointBackward
+import com.google.android.material.datepicker.MaterialDatePicker
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.firestore
@@ -22,9 +23,12 @@ import com.raihan.castfit.presentation.login.LoginActivity
 import com.raihan.castfit.utils.proceedWhen
 import com.raihan.castfit.R
 import com.raihan.castfit.databinding.FragmentProfileBinding
+import com.raihan.castfit.databinding.LayoutDialogDobWarningBinding
+import com.raihan.castfit.databinding.LayoutDialogLogoutBinding
 import com.raihan.castfit.utils.calculateAge
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.util.Calendar
+import java.util.TimeZone
 
 class ProfileFragment : Fragment() {
     private lateinit var binding: FragmentProfileBinding
@@ -55,6 +59,7 @@ class ProfileFragment : Fragment() {
         observeEditMode()
         setupInputListeners()
         setupClickListeners()
+        checkDateOfBirthStatus()
         binding.layoutProfile.etDateOfBirth.isFocusable = false
         binding.layoutProfile.etDateOfBirth.isClickable = true
         binding.layoutError.btnRetry.setOnClickListener {
@@ -96,6 +101,7 @@ class ProfileFragment : Fragment() {
             binding.layoutProfile.etEmail.isEnabled = false 
             binding.layoutProfile.etEmail.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.darker_gray))
 
+            // Tombol edit profile
             binding.layoutProfile.btnEditProfile.isVisible = !isEdit
             binding.layoutProfile.btnCancelEdit.isVisible = isEdit
             
@@ -106,7 +112,7 @@ class ProfileFragment : Fragment() {
             // Tombol logout hanya muncul saat TIDAK dalam mode edit agar rapi
             binding.layoutProfile.btnLogout.isVisible = !isEdit
 
-            checkDateOfBirthStatus()
+            updateDateOfBirthState(isEdit)
         }
     }
 
@@ -120,7 +126,6 @@ class ProfileFragment : Fragment() {
 
     private fun enterEditMode() {
         profileViewModel.changeEditMode()
-        checkDateOfBirthStatus()
     }
 
     private fun exitEditMode() {
@@ -219,25 +224,46 @@ class ProfileFragment : Fragment() {
     }
 
     private fun showLogoutConfirmationDialog() {
-        AlertDialog.Builder(requireContext())
-            .setMessage("Apakah kamu ingin logout?")
-            .setPositiveButton("Ya") { _, _ ->
-                profileViewModel.doLogout()
-                startActivity(Intent(requireContext(), LoginActivity::class.java))
-            }
-            .setNegativeButton("Tidak", null)
-            .show()
+        val dialogBinding = LayoutDialogLogoutBinding.inflate(layoutInflater)
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setView(dialogBinding.root)
+            .create()
+
+        dialogBinding.btnLogoutConfirm.setOnClickListener {
+            dialog.dismiss()
+            profileViewModel.doLogout()
+            startActivity(Intent(requireContext(), LoginActivity::class.java))
+            requireActivity().finish()
+        }
+
+        dialogBinding.btnLogoutCancel.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
 
     private fun showDatePickerDialog() {
         if (hasSavedAge) return
 
-        val calendar = Calendar.getInstance()
-        val year = calendar.get(Calendar.YEAR)
-        val month = calendar.get(Calendar.MONTH)
-        val day = calendar.get(Calendar.DAY_OF_MONTH)
+        val constraintsBuilder = CalendarConstraints.Builder()
+            .setValidator(DateValidatorPointBackward.now())
 
-        val datePickerDialog = DatePickerDialog(requireContext(), { _, selectedYear, selectedMonth, selectedDay ->
+        val datePicker = MaterialDatePicker.Builder.datePicker()
+            .setTitleText("Pilih Tanggal Lahir")
+            .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
+            .setCalendarConstraints(constraintsBuilder.build())
+            .setTheme(R.style.CustomDatePickerDialog)
+            .build()
+
+        datePicker.addOnPositiveButtonClickListener { selection ->
+            val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+            calendar.timeInMillis = selection
+
+            val selectedYear = calendar.get(Calendar.YEAR)
+            val selectedMonth = calendar.get(Calendar.MONTH)
+            val selectedDay = calendar.get(Calendar.DAY_OF_MONTH)
+
             val age = calculateAge(selectedYear, selectedMonth, selectedDay)
             val dobString = "${selectedDay}/${selectedMonth + 1}/${selectedYear}"
 
@@ -254,17 +280,15 @@ class ProfileFragment : Fragment() {
 
             // Dialog peringatan jika usia < 5 tahun
             if (age < 5) {
-                AlertDialog.Builder(requireContext())
+                MaterialAlertDialogBuilder(requireContext())
                     .setTitle("Peringatan Usia")
                     .setMessage("Aplikasi tidak menyediakan rekomendasi aktivitas fisik untuk anak di bawah usia 5 tahun.")
                     .setPositiveButton("Oke", null)
                     .show()
             }
+        }
 
-        }, year, month, day)
-
-        datePickerDialog.datePicker.maxDate = System.currentTimeMillis()
-        datePickerDialog.show()
+        datePicker.show(childFragmentManager, "DOB_PICKER")
     }
 
     private fun checkDateOfBirthStatus() {
@@ -287,25 +311,10 @@ class ProfileFragment : Fragment() {
                         hasSavedAge = true
                         originalAge = age // Simpan usia asli
                         binding.layoutProfile.tvUserCurrentAge.text = "$age Tahun"
-                        binding.layoutProfile.etDateOfBirth.isEnabled = false
-                        binding.layoutProfile.etDateOfBirth.setOnClickListener(null)
                     } else {
                         hasSavedAge = false
-                        if (isEdit) {
-                            binding.layoutProfile.etDateOfBirth.isEnabled = true
-                            binding.layoutProfile.etDateOfBirth.setOnClickListener {
-                                AlertDialog.Builder(requireContext())
-                                    .setTitle("Input Tanggal Lahir")
-                                    .setMessage("Tanggal lahir hanya bisa diisi satu kali dan tidak bisa diubah. Lanjutkan?")
-                                    .setPositiveButton("Ya") { _, _ -> showDatePickerDialog() }
-                                    .setNegativeButton("Batal", null)
-                                    .show()
-                            }
-                        } else {
-                            binding.layoutProfile.etDateOfBirth.isEnabled = false
-                            binding.layoutProfile.etDateOfBirth.setOnClickListener(null)
-                        }
                     }
+                    updateDateOfBirthState(isEdit)
                 },
                 doOnError = {
                     binding.layoutShimmer.root.isVisible = false
@@ -319,6 +328,41 @@ class ProfileFragment : Fragment() {
                 }
             )
         }
+    }
+
+    private fun updateDateOfBirthState(isEdit: Boolean) {
+        if (hasSavedAge) {
+            binding.layoutProfile.etDateOfBirth.isEnabled = false
+            binding.layoutProfile.etDateOfBirth.setOnClickListener(null)
+        } else {
+            if (isEdit) {
+                binding.layoutProfile.etDateOfBirth.isEnabled = true
+                binding.layoutProfile.etDateOfBirth.setOnClickListener {
+                    showDobWarningDialog()
+                }
+            } else {
+                binding.layoutProfile.etDateOfBirth.isEnabled = false
+                binding.layoutProfile.etDateOfBirth.setOnClickListener(null)
+            }
+        }
+    }
+
+    private fun showDobWarningDialog() {
+        val dialogBinding = LayoutDialogDobWarningBinding.inflate(layoutInflater)
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setView(dialogBinding.root)
+            .create()
+
+        dialogBinding.btnConfirm.setOnClickListener {
+            dialog.dismiss()
+            showDatePickerDialog()
+        }
+
+        dialogBinding.btnCancel.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
 
     private fun saveDateOfBirthToFirestore(dobString: String, age: Int) {

@@ -404,7 +404,7 @@ class ActivityViewModel(
                 }
 
 
-                Log.d("ActivityViewModel", "Creating history with duration: $duration minutes")
+                Log.d("ActivityViewModel", "Creating history with duration: $duration seconds")
 
                 if (duration != null) {
                     // Buat history
@@ -560,13 +560,12 @@ class ActivityViewModel(
                 return 0
             }
 
-            val diffInMinutes = (diffInMillis / (1000 * 60)).toInt()
+            val diffInSeconds = (diffInMillis / 1000).toInt()
 
-            Log.d("ActivityViewModel", "Calculated duration: $diffInMinutes minutes")
+            Log.d("ActivityViewModel", "Calculated duration: $diffInSeconds seconds")
             Log.d("ActivityViewModel", "Difference in millis: $diffInMillis")
-            Log.d("ActivityViewModel", "Difference in seconds: ${diffInMillis / 1000}")
 
-            return diffInMinutes
+            return diffInSeconds
 
         } catch (e: Exception) {
             Log.e("ActivityViewModel", "Error calculating duration", e)

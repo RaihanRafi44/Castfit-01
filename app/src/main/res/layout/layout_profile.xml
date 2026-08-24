@@ -226,6 +226,7 @@
                 android:textAllCaps="false"
                 android:textSize="16sp"
                 android:textStyle="bold"
+                android:textColor="@color/md_theme_onPrimary"
                 app:cornerRadius="16dp"
                 android:backgroundTint="#4CAF50" />
 
